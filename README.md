@@ -5,6 +5,12 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.9.
 
+preview -> master 
+git checkout master
+git pull
+git merge preview
+git push origin master
+
 ## Development server
 
 To start a local development server, run:
