@@ -1,4 +1,7 @@
-# BetVerse
+
+
+# Name : BetVerse - The Fantasy Betting MMO
+# Slogan :  Play the bets, not the odds
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.9.
 
