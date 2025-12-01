@@ -11,6 +11,18 @@ git pull
 git merge preview
 git push origin master
 
+# Architecture
+
+features/ = composants orientés pages
+
+data-access/ = APIS services + NgRx Signals pour chaque domaine
+
+shared/ = UI réutilisable partout
+
+core/ = singletons (auth, guards, interceptors, config, GSAP)
+
+ui/ = éléments transversaux d’application (shell, navbars, drawers)
+
 ## Development server
 
 To start a local development server, run:
