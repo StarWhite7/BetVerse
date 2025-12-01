@@ -1,0 +1,171 @@
+:host {
+    font-family: 'Audiowide', sans-serif;
+}
+
+/* === BACKGROUND ANIMÉ : GRILLE + SCANLINES + PARTICULES === */
+
+.background {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, #120012, #050005 70%);
+    overflow: hidden;
+    z-index: -3;
+}
+
+/* Scanlines */
+.scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 0, 255, 0.05) 0px,
+        rgba(255, 0, 255, 0.05) 2px,
+        transparent 3px
+    );
+    animation: scan 6s linear infinite;
+}
+
+@keyframes scan {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+}
+
+/* Neon grid */
+.grid {
+    position: absolute;
+    inset: 0;
+    background-size: 60px 60px;
+    background-image:
+        linear-gradient(90deg, rgba(255, 0, 255, 0.15) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255, 0, 255, 0.15) 1px, transparent 1px);
+    animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+    0%   { transform: perspective(400px) rotateX(60deg) translateY(0); }
+    100% { transform: perspective(400px) rotateX(60deg) translateY(200px); }
+}
+
+/* Particles */
+.particles::before,
+.particles::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle, rgba(255, 0, 255, 0.6) 2px, transparent 2px);
+    background-size: 4px 4px;
+    animation: particles 12s linear infinite;
+    opacity: 0.1;
+}
+
+.particles::after {
+    animation-duration: 20s;
+    opacity: 0.05;
+}
+
+@keyframes particles {
+    from { transform: translateY(-10%); }
+    to   { transform: translateY(10%); }
+}
+
+/* === CONTAINER === */
+
+.container {
+    background: transparent;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+/* === NEON TITLE + GLOW ANIMATION === */
+
+.neon {
+    font-size: 3.5rem;
+    letter-spacing: 5px;
+    color: #ff2bff;
+    text-shadow: 0 0 5px #ff2bff, 0 0 15px #ff2bff, 0 0 30px #ff2bff;
+    animation: glowPulse 2s infinite alternate ease-in-out;
+}
+
+/* Pulsation de lumière */
+@keyframes glowPulse {
+    0% {
+        text-shadow:
+            0 0 8px #ff2bff,
+            0 0 18px #ff2bff,
+            0 0 35px #ff2bff;
+        opacity: 0.7;
+    }
+    100% {
+        text-shadow:
+            0 0 15px #ff2bff,
+            0 0 30px #ff2bff,
+            0 0 60px #ff2bff;
+        opacity: 1;
+    }
+}
+
+/* === GLITCH EFFECT === */
+
+.glitch {
+    position: relative;
+}
+
+
+
+/* Blue & red offset colors */
+.glitch::before {
+    left: 3px;
+    text-shadow: -2px 0 cyan;
+    animation: glitchTop 1.5s infinite;
+}
+
+.glitch::after {
+    left: -3px;
+    text-shadow: -2px 0 magenta;
+    animation: glitchBottom 1.7s infinite;
+}
+
+@keyframes glitchTop {
+    0%   { clip-path: inset(0 0 80% 0); transform: translate(2px,-2px); }
+    50%  { clip-path: inset(0 0 20% 0); transform: translate(-2px,1px); }
+    100% { clip-path: inset(0 0 60% 0); transform: translate(1px,0); }
+}
+
+@keyframes glitchBottom {
+    0%   { clip-path: inset(80% 0 0 0); transform: translate(-2px,0); }
+    50%  { clip-path: inset(20% 0 0 0); transform: translate(2px,2px); }
+    100% { clip-path: inset(60% 0 0 0); transform: translate(-1px,-1px); }
+}
+
+/* === LOADER BAR === */
+
+.loader-wrapper {
+    width: 60%;
+    height: 18px;
+    background: rgba(255, 0, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 30px;
+    box-shadow:
+        0 0 10px #ff2bff,
+        inset 0 0 10px #ff2bff;
+}
+
+.loader-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ff2bff, #ff7bff);
+    box-shadow: 0 0 20px #ff2bff, 0 0 40px #ff2bff;
+    transition: width 0.2s ease-out;
+}
+
+.percent {
+    margin-top: 20px;
+    font-size: 1.5rem;
+    color: #ff8aff;
+    text-shadow: 0 0 10px #ff2bff;
+}
