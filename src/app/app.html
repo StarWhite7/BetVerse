@@ -1,2 +1,6 @@
-BetVerse content !
-Test
+<router-outlet></router-outlet>
+<div class="toast-container" *ngIf="toasts().length">
+  <div class="toast" *ngFor="let toast of toasts()" [class.error]="toast.type === 'error'">
+    {{ toast.message }}
+  </div>
+</div>

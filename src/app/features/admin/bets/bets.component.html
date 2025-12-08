@@ -1,1 +1,137 @@
-<!-- bets -->
+<section class="admin-bets">
+  <header class="admin-bets__header">
+    <div>
+      <p>Gestion</p>
+      <h1>Pari joueurs</h1>
+    </div>
+    <div class="admin-bets__filters">
+      <button
+        *ngFor="let f of filters"
+        type="button"
+        [class.active]="f.value === filter()"
+        (click)="applyFilter(f.value)"
+      >
+        {{ f.label }}
+      </button>
+    </div>
+  </header>
+
+  <p class="admin-bets__error" *ngIf="error()">
+    {{ error() }}
+  </p>
+
+  <section class="bets-table">
+    <header>
+      <div>
+        <h3>Liste des paris</h3>
+        <span>{{ filteredBets().length }} entrées</span>
+      </div>
+      <div class="bets-table__filters">
+        <label>
+          Recherche
+          <input type="text" placeholder="Match ou ID" [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)" />
+        </label>
+        <select [value]="searchColumn()" (change)="searchColumn.set($any($event.target).value)">
+          <option value="match">Match</option>
+          <option value="id">ID</option>
+        </select>
+        <button type="button" (click)="loadBets()" [disabled]="loading()">
+          {{ loading() ? 'Chargement...' : 'Actualiser' }}
+        </button>
+      </div>
+    </header>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Match</th>
+          <th>Mise</th>
+          <th>Cote</th>
+          <th>Potentiel</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="loading()">
+          <td colspan="7">Chargement...</td>
+        </tr>
+        <tr *ngFor="let bet of filteredBets(); trackBy: trackByBet">
+          <td>{{ bet.id }}</td>
+          <td>
+            <strong>{{ bet.match }}</strong>
+            <span class="bets-table__meta">ID match: {{ bet.matchId || '—' }}</span>
+          </td>
+          <td>{{ bet.amount | number: '1.0-0' }} ƒ'ª</td>
+          <td>{{ bet.odds }}</td>
+          <td>{{ (bet.amount * bet.odds) | number: '1.0-0' }} ƒ'ª</td>
+          <td>
+            <span
+              class="status"
+              [class.pending]="bet.status === 'PENDING'"
+              [class.won]="bet.status === 'WON'"
+              [class.lost]="bet.status === 'LOST'"
+            >
+              {{ bet.status }}
+            </span>
+          </td>
+          <td>{{ bet.createdAt | date: 'short' }}</td>
+          <td class="bets-table__actions">
+            <button
+              type="button"
+              (click)="openResolveModal(bet)"
+              [disabled]="bet.status !== 'PENDING'"
+            >
+              Resoudre
+            </button>
+            <button
+              type="button"
+              class="ghost"
+              (click)="quickResolve(bet, 'WON')"
+              [disabled]="bet.status !== 'PENDING'"
+            >
+              Marquer gagne
+            </button>
+            <button
+              type="button"
+              class="ghost"
+              (click)="quickResolve(bet, 'LOST')"
+              [disabled]="bet.status !== 'PENDING'"
+            >
+              Marquer perdu
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="!bets().length && !loading()">
+          <td colspan="7">Aucun pari pour ce filtre.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</section>
+
+<div class="bets-modal" *ngIf="resolveModalOpen()">
+  <div class="bets-modal__backdrop" (click)="closeResolveModal()"></div>
+  <div class="bets-modal__content">
+    <h3>Resoudre un pari</h3>
+    <p>
+      {{ resolveTarget()?.match }}
+    </p>
+    <label>
+      Resultat
+      <select [value]="resolveResult()" (change)="updateResolveResult($event)">
+        <option value="WON">Gagne</option>
+        <option value="LOST">Perdu</option>
+      </select>
+    </label>
+    <div class="bets-modal__actions">
+      <button type="button" class="ghost" (click)="closeResolveModal()" [disabled]="resolveSubmitting()">
+        Annuler
+      </button>
+      <button type="button" (click)="resolveBet()" [disabled]="resolveSubmitting()">
+        {{ resolveSubmitting() ? 'Validation...' : 'Confirmer' }}
+      </button>
+    </div>
+  </div>
+</div>

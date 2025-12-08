@@ -1,0 +1,79 @@
+<section class="history-header">
+  <div>
+    <p>Wallet</p>
+    <h1>Historique complet</h1>
+  </div>
+  <a routerLink="/wallet">Retour au wallet</a>
+</section>
+
+<div class="history-controls">
+  <div class="history-filters">
+    <button
+      *ngFor="let f of filters"
+      type="button"
+      [class.active]="f.value === filter()"
+      (click)="applyFilter(f.value)"
+    >
+      {{ f.label }}
+    </button>
+  </div>
+  <div class="history-dates">
+    <label>
+      Du
+      <input type="date" [value]="startDate()" (change)="updateStartDate($event.target.value)" />
+    </label>
+    <label>
+      Au
+      <input type="date" [value]="endDate()" (change)="updateEndDate($event.target.value)" />
+    </label>
+    <button type="button" class="ghost" (click)="clearDates()">Reset</button>
+  </div>
+</div>
+
+<p class="history-error" *ngIf="error()">
+  {{ error() }}
+</p>
+
+<section class="history-table">
+  <header>
+    <h3>Transactions</h3>
+    <div class="history-actions">
+      <button type="button" (click)="exportCsv()" [disabled]="!filteredTransactions().length">
+        Export CSV
+      </button>
+      <button type="button" (click)="loadHistory()" [disabled]="loading()">
+        {{ loading() ? 'Chargement...' : 'Actualiser' }}
+      </button>
+    </div>
+  </header>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Montant</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngIf="loading()">
+        <td colspan="4">Chargement des transactions...</td>
+      </tr>
+      <tr *ngFor="let tx of filteredTransactions(); trackBy: trackByTx">
+        <td>{{ tx.id }}</td>
+        <td>
+          <span class="badge" [class.credit]="tx.type === 'CREDIT'">
+            {{ tx.type }}
+          </span>
+        </td>
+        <td [class.credit]="tx.type === 'CREDIT'">
+          {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
+        </td>
+        <td>{{ tx.createdAt | date: 'short' }}</td>
+      </tr>
+      <tr *ngIf="!filteredTransactions().length && !loading()">
+        <td colspan="4">Aucune transaction pour ce filtre.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

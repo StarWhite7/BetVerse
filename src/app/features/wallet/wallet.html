@@ -1,0 +1,133 @@
+<ng-container *ngIf="!loading(); else walletLoading">
+  <ng-container *ngIf="wallet(); else walletMissing">
+    <section class="wallet-overview">
+      <div class="wallet-card primary">
+        <p>Solde disponible</p>
+        <h2>{{ wallet()?.balance | number: '1.0-0' }} ƒ'ª</h2>
+        <span>{{ transactions().length }} transactions recentes</span>
+        <div class="wallet-card__actions">
+          <button type="button" (click)="openModal('credit')" [disabled]="submitting()">
+            {{ submitting() && modalMode() === 'credit' ? 'En cours...' : 'Deposer' }}
+          </button>
+          <button
+            type="button"
+            class="ghost"
+            (click)="openModal('debit')"
+            [disabled]="submitting()"
+          >
+            {{ submitting() && modalMode() === 'debit' ? 'En cours...' : 'Retirer' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="wallet-card secondary">
+        <p>Activite recente</p>
+        <div class="wallet-card__stat positive">
+          <span>Credits</span>
+          <strong>+{{ stats().credits | number: '1.0-0' }} ƒ'ª</strong>
+        </div>
+        <div class="wallet-card__stat negative">
+          <span>Debits</span>
+          <strong>-{{ stats().debits | number: '1.0-0' }} ƒ'ª</strong>
+        </div>
+        <ul class="wallet-card__list">
+          <li *ngFor="let tx of recentTransactions(); trackBy: trackByTx">
+            <span>{{ tx.createdAt | date: 'short' }}</span>
+            <strong [class.credit]="tx.type === 'CREDIT'">
+              {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
+            </strong>
+          </li>
+          <li *ngIf="!recentTransactions().length">
+            <span>Aucune transaction recente</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </ng-container>
+</ng-container>
+
+<ng-template #walletLoading>
+  <div class="wallet-skeleton">
+    <div class="wallet-skeleton__card"></div>
+    <div class="wallet-skeleton__card"></div>
+    <div class="wallet-skeleton__table"></div>
+  </div>
+</ng-template>
+
+<ng-template #walletMissing>
+  <div class="wallet-error">
+    Aucun wallet disponible pour le moment.
+  </div>
+</ng-template>
+
+<p class="wallet-error" *ngIf="error()">
+  {{ error() }}
+</p>
+
+<section class="wallet-history">
+  <header>
+    <h3>Transactions recentes</h3>
+    <div class="wallet-history__actions">
+      <a routerLink="/wallet/history">Voir l'historique</a>
+      <button type="button" (click)="refreshHistory()" [disabled]="historyLoading()">
+        {{ historyLoading() ? 'Actualisation...' : 'Actualiser' }}
+      </button>
+    </div>
+  </header>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Montant</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngIf="historyLoading()">
+        <td colspan="4">Chargement de l'historique...</td>
+      </tr>
+      <tr *ngFor="let tx of transactions()">
+        <td>{{ tx.id }}</td>
+        <td>
+          <span class="badge" [class.credit]="tx.type === 'CREDIT'">
+            {{ tx.type === 'CREDIT' ? 'Credit' : 'Debit' }}
+          </span>
+        </td>
+        <td [class.credit]="tx.type === 'CREDIT'">
+          {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
+        </td>
+        <td>{{ tx.createdAt | date: 'short' }}</td>
+      </tr>
+      <tr *ngIf="!transactions().length && !historyLoading()">
+        <td colspan="4">Aucune transaction pour le moment.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="wallet-modal" *ngIf="modalOpen()">
+  <div class="wallet-modal__backdrop" (click)="closeModal()"></div>
+  <div class="wallet-modal__content">
+    <h3>{{ modalMode() === 'credit' ? 'Deposer' : 'Retirer' }} des fonds</h3>
+    <label>
+      Montant
+      <input type="number" min="1" [(ngModel)]="modalAmountValue" />
+    </label>
+    <p class="wallet-modal__hint">
+      Solde disponible : {{ wallet()?.balance | number: '1.0-0' }} ƒ'ª
+    </p>
+    <p class="wallet-error" *ngIf="modalError()">
+      {{ modalError() }}
+    </p>
+    <div class="wallet-modal__actions">
+      <button type="button" class="ghost" (click)="closeModal()" [disabled]="submitting()">
+        Annuler
+      </button>
+      <button type="button" (click)="submitOperation()" [disabled]="submitting()">
+        {{ submitting() ? 'En cours...' : (modalMode() === 'credit' ? 'Deposer' : 'Retirer') }}
+      </button>
+    </div>
+  </div>
+</div>

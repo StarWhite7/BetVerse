@@ -1,0 +1,98 @@
+<section class="matches-header">
+  <div>
+    <p>Agenda neon</p>
+    <h1>Matchs disponibles</h1>
+    <span>{{ matches().length }} rencontres a venir</span>
+  </div>
+  <div class="matches-header__meta">
+    <div class="matches-header__balance">
+      <span>Solde disponible</span>
+      <strong *ngIf="walletBalance() !== null; else balanceFallback">
+        {{ walletBalance() | number: '1.0-0' }} ƒ'ª
+      </strong>
+    </div>
+    <button type="button" (click)="loadMatches()">Rafraichir</button>
+  </div>
+</section>
+
+<ng-template #balanceFallback>
+  <strong class="muted">{{ walletLoading() ? 'Chargement...' : 'N/A' }}</strong>
+</ng-template>
+
+<p class="matches-error" *ngIf="error()">
+  {{ error() }}
+</p>
+
+<section class="matches-grid" *ngIf="!loading() && matches().length; else matchesPlaceholder">
+  <article class="match-card" *ngFor="let match of matches()">
+    <header>
+      <div>
+        <p>{{ match.homeTeam }} / {{ match.awayTeam }}</p>
+        <h3>{{ match.homeTeam }} vs {{ match.awayTeam }}</h3>
+      </div>
+      <span>{{ match.startDate | date: 'short' }}</span>
+    </header>
+
+    <div class="match-card__odds">
+      <div>
+        <p>Home</p>
+        <strong>{{ match.oddsHome | number: '1.0-2' }}</strong>
+        <button type="button" (click)="openBetModal(match, 'HOME')">Parier</button>
+      </div>
+      <div *ngIf="match.oddsDraw">
+        <p>Draw</p>
+        <strong>{{ match.oddsDraw | number: '1.0-2' }}</strong>
+        <button type="button" (click)="openBetModal(match, 'DRAW')">Parier</button>
+      </div>
+      <div>
+        <p>Away</p>
+        <strong>{{ match.oddsAway | number: '1.0-2' }}</strong>
+        <button type="button" (click)="openBetModal(match, 'AWAY')">Parier</button>
+      </div>
+    </div>
+  </article>
+</section>
+
+<ng-template #matchesPlaceholder>
+  <div class="matches-loading" *ngIf="loading()">Chargement des rencontres...</div>
+  <p class="matches-empty" *ngIf="!loading()">Aucun match a afficher pour le moment.</p>
+</ng-template>
+
+<div class="match-bet-modal" *ngIf="betModalOpen()">
+  <div class="match-bet-modal__backdrop" (click)="closeBetModal()"></div>
+  <div class="match-bet-modal__content">
+    <h3>Parier sur {{ selectedMatch()?.homeTeam }} vs {{ selectedMatch()?.awayTeam }}</h3>
+    <div class="match-bet-modal__details">
+      <div>
+        <span>Selection</span>
+        <strong>{{ selectionLabel() }}</strong>
+      </div>
+      <div>
+        <span>Cote</span>
+        <strong>{{ betOdds() | number: '1.0-2' }}</strong>
+      </div>
+      <div>
+        <span>Gain potentiel</span>
+        <strong>{{ potentialPayout() | number: '1.0-2' }} ƒ'ª</strong>
+      </div>
+    </div>
+    <label>
+      Montant (ƒ'ª)
+      <input type="number" min="1" [(ngModel)]="betAmountValue" />
+    </label>
+    <p class="match-bet-modal__balance">
+      Solde: {{ walletBalance() !== null ? (walletBalance() | number: '1.0-0') + " ƒ'ª" : 'Non disponible' }}
+    </p>
+    <p class="matches-error" *ngIf="betError()">
+      {{ betError() }}
+    </p>
+    <div class="match-bet-modal__actions">
+      <button type="button" class="ghost" (click)="closeBetModal()" [disabled]="betting()">
+        Annuler
+      </button>
+      <button type="button" (click)="submitBet()" [disabled]="betting()">
+        {{ betting() ? 'Envoi...' : 'Confirmer le pari' }}
+      </button>
+    </div>
+  </div>
+</div>

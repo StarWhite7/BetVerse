@@ -1,1 +1,35 @@
-<!-- login -->
+<section class="auth-card">
+  <p class="auth-card__eyebrow">BetVerse Access</p>
+  <h1>Connexion</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+    <label>
+      Email
+      <input type="email" formControlName="email" placeholder="john@betverse.gg" />
+      <span class="field-error" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+        Email invalide
+      </span>
+    </label>
+
+    <label>
+      Mot de passe
+      <input type="password" formControlName="password" placeholder="********" />
+      <span class="field-error" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">
+        6 caracteres minimum
+      </span>
+    </label>
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Connexion...' : 'Se connecter' }}
+    </button>
+  </form>
+
+  <p class="form-error" *ngIf="error()">
+    {{ error() }}
+  </p>
+
+  <p class="form-footer">
+    Pas encore de compte ?
+    <a routerLink="/auth/signup">Creer un compte</a>
+  </p>
+</section>

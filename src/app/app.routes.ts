@@ -1,26 +1,56 @@
 import { Routes } from '@angular/router';
-import { MainComponent } from './features/home/main/main.component';
-
-
+import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+import { MainLayout } from './core/layout/main-layout/main-layout';
+import { AuthLayout } from './core/layout/auth-layout/auth-layout';
+import { AdminLayout } from './core/layout/admin-layout/admin-layout';
 
 export const routes: Routes = [
   {
     path: '',
-    loadChildren: () => import('./features/home/home.routes'),
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        loadChildren: () =>
+          import('./features/home/home.routes').then((m) => m.default),
+      },
+      {
+        path: 'wallet',
+        loadChildren: () =>
+          import('./features/wallet/wallet.routes').then((m) => m.default),
+      },
+      {
+        path: 'matches',
+        loadChildren: () =>
+          import('./features/matches/matches.routes').then((m) => m.default),
+      },
+      {
+        path: 'profile',
+        canActivate: [authGuard],
+        loadChildren: () =>
+          import('./features/profile/profile.routes').then((m) => m.default),
+      },
+      {
+        path: 'bets',
+        loadChildren: () =>
+          import('./features/bets/bets.routes').then((m) => m.default),
+        canActivate: [authGuard, roleGuard(['USER'])],
+      },
+    ],
   },
   {
     path: 'auth',
-    loadChildren: () => import('./features/auth/auth.routes'),
-  },
-  {
-    path: 'bets',
-    loadChildren: () => import('./features/bets/bets.routes'),
-    canActivate: [authGuard, roleGuard(['user'])]
+    component: AuthLayout,
+    loadChildren: () =>
+      import('./features/auth/auth.routes').then((m) => m.default),
   },
   {
     path: 'admin',
-    loadChildren: () => import('./features/admin/admin.routes'),
-    canActivate: [authGuard, roleGuard(['admin', 'superadmin'])]
+    component: AdminLayout,
+    loadChildren: () =>
+      import('./features/admin/admin.routes').then((m) => m.default),
+    canActivate: [authGuard, roleGuard(['ADMIN', 'SUPERADMIN'])]
   },
   {
     path: '**',

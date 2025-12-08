@@ -1,1 +1,138 @@
-<p>home works!</p>
+<section class="home-hero">
+  <div>
+    <p class="home-hero__eyebrow">Neon Sportsbook</p>
+    <h1>Construis ton edge avec BetVerse</h1>
+    <p class="home-hero__subtitle">
+      Wallet connecté, paris sécurisés, résolution instantanée. Tout est prêt pour ton prochain move.
+    </p>
+    <div class="home-hero__actions">
+      <a routerLink="/matches">Créer un pari</a>
+      <a routerLink="/matches" class="ghost">Voir les matchs</a>
+    </div>
+  </div>
+  <div class="home-hero__glow"></div>
+</section>
+
+<p class="home-error" *ngIf="error()">
+  {{ error() }}
+</p>
+
+<section class="home-stats" *ngIf="!loading()">
+  <article class="stat-card" *ngFor="let stat of stats()">
+    <p>{{ stat.label }}</p>
+    <h3>{{ stat.value }}</h3>
+    <span>{{ stat.trend }}</span>
+  </article>
+</section>
+
+<section class="home-actions" *ngIf="!loading()">
+  <article
+    class="action-card"
+    *ngFor="let action of quickActions()"
+    [class.secondary]="action.accent === 'secondary'"
+    [class.ghost]="action.accent === 'ghost'"
+  >
+    <div>
+      <p>{{ action.title }}</p>
+      <span>{{ action.description }}</span>
+    </div>
+    <a [routerLink]="action.link">{{ action.cta }}</a>
+  </article>
+</section>
+
+<section class="home-grid">
+  <article class="panel">
+    <header>
+      <h2>Activité paris</h2>
+      <a routerLink="/bets">Gérer</a>
+    </header>
+    <div class="panel__body">
+      <section class="activity-list">
+        <h3>En attente</h3>
+        <ul>
+          <li *ngFor="let bet of pendingBets()">
+            <div>
+              <strong>{{ bet.match }}</strong>
+              <span>Mise {{ formatCurrency(bet.amount) }}</span>
+            </div>
+            <div class="bet-meta">
+              <span>Cote {{ bet.odds }}</span>
+              <span>{{ bet.createdAt | date: 'short' }}</span>
+            </div>
+          </li>
+          <li *ngIf="!pendingBets().length">
+            <span>Aucun pari en attente.</span>
+          </li>
+        </ul>
+      </section>
+      <section class="activity-history">
+        <h3>Derniers résultats</h3>
+        <ul>
+          <li *ngFor="let bet of recentBets()">
+            <div>
+              <strong>{{ bet.match }}</strong>
+              <span>{{ bet.createdAt | date: 'short' }}</span>
+            </div>
+            <span
+              class="badge"
+              [class.pending]="bet.status === 'PENDING'"
+              [class.won]="bet.status === 'WON'"
+              [class.lost]="bet.status === 'LOST'"
+            >
+              {{ bet.status }}
+            </span>
+          </li>
+          <li *ngIf="!recentBets().length">
+            <span>Aucune activité récente.</span>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </article>
+
+  <article class="panel">
+    <header>
+      <h2>Matchs mis en avant</h2>
+      <a routerLink="/matches">Explorer</a>
+    </header>
+    <ul>
+      <li *ngFor="let match of featuredMatches()">
+        <div>
+          <strong>{{ match.title }}</strong>
+          <span>{{ match.start }}</span>
+        </div>
+        <div class="match-meta">
+          <span>Home {{ match.oddsHome }}</span>
+          <span *ngIf="match.oddsDraw">Draw {{ match.oddsDraw }}</span>
+          <span>Away {{ match.oddsAway }}</span>
+        </div>
+      </li>
+      <li *ngIf="!featuredMatches().length">
+        <span>Aucun match disponible.</span>
+      </li>
+    </ul>
+  </article>
+
+  <article class="panel admin-panel" *ngIf="hasAdminAccess()">
+    <header>
+      <h2>Raccourcis admin</h2>
+      <a routerLink="/admin">Panel</a>
+    </header>
+    <ul>
+      <li>
+        <div>
+          <strong>Résoudre sur les matchs</strong>
+          <span>Créer/clore les rencontres officielles</span>
+        </div>
+        <a routerLink="/admin/matches">Ouvrir</a>
+      </li>
+      <li>
+        <div>
+          <strong>Pari gagnant/perdant</strong>
+          <span>Valider manuellement les résultats</span>
+        </div>
+        <a routerLink="/admin/bets">Accéder</a>
+      </li>
+    </ul>
+  </article>
+</section>

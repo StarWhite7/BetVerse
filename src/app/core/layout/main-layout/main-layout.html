@@ -1,1 +1,38 @@
-<p>main-layout works!</p>
+<div class="shell">
+  <aside class="shell__sidebar">
+    <div class="shell__logo">BETVERSE</div>
+    <nav class="shell__nav">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/bets" routerLinkActive="active">
+        <span>Mes paris</span>
+      </a>
+      <a routerLink="/matches" routerLinkActive="active">
+        <span>Matchs</span>
+      </a>
+      <a routerLink="/wallet" routerLinkActive="active">
+        <span>Wallet</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="shell__content">
+    <header class="shell__header">
+      <div class="shell__breadcrumbs">
+        <span *ngIf="user(); else guest">
+          Bonjour, {{ user()?.email }}
+        </span>
+        <ng-template #guest>Bienvenue</ng-template>
+      </div>
+      <div class="shell__cta">
+        <button type="button">Deposer</button>
+        <button type="button" class="ghost" (click)="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main class="shell__main">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
