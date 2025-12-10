@@ -11,10 +11,11 @@ const hostApi =
     ? {
         'betverse.fr': 'https://api.betverse.fr',
         'www.betverse.fr': 'https://api.betverse.fr',
-        'bet-verse.vercel.app': 'https://api.bet-verse.vercel.app',
+        'bet-verse.vercel.app': 'https://betverse-backend.vercel.app',
+        'betverse.vercel.app': 'https://betverse-backend.vercel.app',
       }[window.location.hostname]
     : undefined;
 
 export const environment = {
-  apiUrl: globalApi || metaApi || hostApi || 'http://localhost:3001',
+  apiUrl: hostApi || globalApi || metaApi || 'http://localhost:3001',
 };
