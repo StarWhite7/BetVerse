@@ -27,6 +27,11 @@ const getHostApi = (hostname: string) => {
 
 const hostApi = typeof window !== 'undefined' ? getHostApi(window.location.hostname) : undefined;
 
+const fallbackApi =
+  typeof window !== 'undefined' && window.location.hostname.includes('localhost')
+    ? 'http://localhost:3001'
+    : 'https://betverse-backend.vercel.app';
+
 export const environment = {
-  apiUrl: hostApi || globalApi || metaApi || 'http://localhost:3001',
+  apiUrl: hostApi || globalApi || metaApi || fallbackApi,
 };
