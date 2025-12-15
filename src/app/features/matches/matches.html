@@ -1,23 +1,9 @@
 <section class="matches-header">
   <div>
-    <p>Agenda neon</p>
     <h1>Matchs disponibles</h1>
     <span>{{ matches().length }} rencontres a venir</span>
   </div>
-  <div class="matches-header__meta">
-    <div class="matches-header__balance">
-      <span>Solde disponible</span>
-      <strong *ngIf="walletBalance() !== null; else balanceFallback">
-        {{ walletBalance() | number: '1.0-0' }} ƒ'ª
-      </strong>
-    </div>
-    <button type="button" (click)="loadMatches()">Rafraichir</button>
-  </div>
 </section>
-
-<ng-template #balanceFallback>
-  <strong class="muted">{{ walletLoading() ? 'Chargement...' : 'N/A' }}</strong>
-</ng-template>
 
 <p class="matches-error" *ngIf="error()">
   {{ error() }}

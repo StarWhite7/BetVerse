@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, tap } from 'rxjs';
+import { Observable, of, tap, catchError, throwError } from 'rxjs';
 import { User } from '../../shared/models/user.model';
 import { environment } from '../config/environment';
 
@@ -117,6 +117,13 @@ export class AuthService {
             localStorage.setItem(this.userKey, JSON.stringify(user));
           }
         }
+      }),
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 401 || error.status === 403) {
+          this.clearSession();
+          return of(null);
+        }
+        return throwError(() => error);
       }),
     );
   }

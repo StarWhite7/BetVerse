@@ -1,15 +1,12 @@
 <div class="shell">
   <aside class="shell__sidebar">
-    <div class="shell__logo">BETVERSE</div>
+    <a class="shell__logo" routerLink="/">BETVERSE</a>
     <nav class="shell__nav">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-        <span>Dashboard</span>
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <span>Tableau de bord</span>
       </a>
       <a routerLink="/bets" routerLinkActive="active">
         <span>Mes paris</span>
-      </a>
-      <a routerLink="/matches" routerLinkActive="active">
-        <span>Matchs</span>
       </a>
       <a routerLink="/wallet" routerLinkActive="active">
         <span>Wallet</span>
@@ -26,8 +23,30 @@
         <ng-template #guest>Bienvenue</ng-template>
       </div>
       <div class="shell__cta">
-        <button type="button">Deposer</button>
-        <button type="button" class="ghost" (click)="logout()">Logout</button>
+        <button
+          type="button"
+          (click)="claimDailyVerses()"
+          [disabled]="claimLoading() || !claimAvailable()"
+        >
+          <ng-container *ngIf="claimAvailable(); else claimCountdownTpl">
+            {{ claimLoading() ? 'Réclamation...' : 'Réclamer' }}
+          </ng-container>
+        </button>
+        <ng-template #claimCountdownTpl>
+          <span class="claim-countdown">{{ claimCountdown() }}</span>
+        </ng-template>
+        <div class="wallet-balance" aria-live="polite">
+          <div class="wallet-balance__label">Verse</div>
+          <ng-container *ngIf="!walletLoading(); else balanceLoading">
+            <div class="wallet-balance__value">
+              {{ wallet()?.balance ?? 0 | number: '1.0-0' }}
+            </div>
+          </ng-container>
+          <ng-template #balanceLoading>
+            <div class="wallet-balance__value wallet-balance__value--loading">...</div>
+          </ng-template>
+        </div>
+        <button type="button" class="ghost" (click)="logout()">Déconnecter</button>
       </div>
     </header>
 

@@ -14,17 +14,22 @@ export const routes: Routes = [
       {
         path: '',
         loadChildren: () =>
+          import('./features/matches/matches.routes').then((m) => m.default),
+      },
+      {
+        path: 'matches',
+        pathMatch: 'full',
+        redirectTo: '',
+      },
+      {
+        path: 'dashboard',
+        loadChildren: () =>
           import('./features/home/home.routes').then((m) => m.default),
       },
       {
         path: 'wallet',
         loadChildren: () =>
           import('./features/wallet/wallet.routes').then((m) => m.default),
-      },
-      {
-        path: 'matches',
-        loadChildren: () =>
-          import('./features/matches/matches.routes').then((m) => m.default),
       },
       {
         path: 'profile',

@@ -28,10 +28,12 @@
 }
 
 .shell__logo {
+  display: inline-block;
   font-size: 1.4rem;
   font-weight: 600;
   letter-spacing: 0.2em;
   color: #f472b6;
+  text-decoration: none;
 }
 
 .shell__nav {
@@ -100,11 +102,68 @@
   cursor: pointer;
 }
 
+.shell__cta button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .shell__cta button.ghost {
   background: transparent;
   border: 1px solid rgba(148, 163, 184, 0.4);
   color: #e2e8f0;
   box-shadow: none;
+}
+
+.claim-countdown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  color: #f8fafc;
+}
+
+.wallet-balance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  min-width: 120px;
+}
+
+.wallet-balance__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.wallet-balance__value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.wallet-balance__value--loading {
+  animation: pulse 1.2s ease-in-out infinite;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
 }
 
 .shell__main {
