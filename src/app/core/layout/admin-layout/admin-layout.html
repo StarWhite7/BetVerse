@@ -1,0 +1,31 @@
+<div class="admin-shell">
+  <aside class="admin-shell__sidebar">
+    <div class="admin-shell__logo">BETVERSE // ADMIN</div>
+    <nav class="admin-shell__nav">
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        Overview
+      </a>
+      <a routerLink="/admin/matches" routerLinkActive="active">
+        Matches
+      </a>
+      <a routerLink="/admin/bets" routerLinkActive="active">
+        Bets
+      </a>
+      <a routerLink="/admin/rewards" routerLinkActive="active">
+        Rewards
+      </a>
+      <a routerLink="/admin/users" routerLinkActive="active">
+        Users
+      </a>
+    </nav>
+  </aside>
+  <section class="admin-shell__content">
+    <header class="admin-shell__header">
+      <h1>Panel Administrateur</h1>
+      <button type="button">Créer un match</button>
+    </header>
+    <main class="admin-shell__main">
+      <router-outlet></router-outlet>
+    </main>
+  </section>
+</div>

@@ -1,0 +1,2 @@
+// Models for clans
+export {};

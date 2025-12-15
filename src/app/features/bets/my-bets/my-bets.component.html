@@ -1,0 +1,62 @@
+<section class="bets-header">
+  <div>
+    <p>Historique</p>
+    <h1>Mes paris</h1>
+  </div>
+  <div class="bets-header__filters">
+    <button
+      *ngFor="let filter of filters"
+      type="button"
+      [class.active]="filter.value === activeFilter()"
+      (click)="selectFilter(filter.value)"
+    >
+      {{ filter.label }}
+    </button>
+  </div>
+</section>
+
+<p class="bets-error" *ngIf="error()">
+  {{ error() }}
+</p>
+
+<section class="bets-table">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Match</th>
+        <th>Type</th>
+        <th>Mise</th>
+        <th>Cote</th>
+        <th>Statut</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngIf="loading()">
+        <td colspan="7">Chargement des paris...</td>
+      </tr>
+      <tr *ngFor="let bet of bets(); trackBy: trackByBet">
+        <td>{{ bet.id }}</td>
+        <td>{{ bet.match }}</td>
+        <td>{{ bet.betType }}</td>
+        <td>{{ bet.amount | number: '1.0-0' }} ƒ'ª</td>
+        <td>{{ bet.odds | number: '1.0-2' }}</td>
+        <td>
+          <span
+            class="badge"
+            [class.pending]="bet.status === 'PENDING'"
+            [class.won]="bet.status === 'WON'"
+            [class.lost]="bet.status === 'LOST'"
+          >
+            {{ bet.status }}
+          </span>
+        </td>
+        <td>{{ bet.createdAt | date: 'short' }}</td>
+      </tr>
+      <tr *ngIf="!bets().length && !loading()">
+        <td colspan="7">Aucun pari pour le moment.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

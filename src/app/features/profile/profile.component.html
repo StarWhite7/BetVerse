@@ -1,0 +1,88 @@
+<section class="profile-header">
+  <div>
+    <p>Identite</p>
+    <h1>{{ user()?.email }}</h1>
+    <span class="profile-header__id">ID: {{ user()?.id }}</span>
+  </div>
+  <div class="profile-header__actions">
+    <button
+      type="button"
+      (click)="manualRefresh()"
+      [disabled]="profileLoading() || walletLoading() || historyLoading()"
+    >
+      {{ profileLoading() || walletLoading() ? 'Actualisation...' : 'Actualiser' }}
+    </button>
+    <a routerLink="/wallet" class="ghost">Ouvrir le wallet</a>
+  </div>
+</section>
+
+<p class="profile-error" *ngIf="error()">
+  {{ error() }}
+</p>
+
+<section class="profile-grid">
+  <article class="profile-card">
+    <h3>Informations utilisateur</h3>
+    <ul>
+      <li>
+        <span>Email</span>
+        <strong>{{ user()?.email }}</strong>
+      </li>
+      <li>
+        <span>Role</span>
+        <strong>{{ user()?.role }}</strong>
+      </li>
+    </ul>
+  </article>
+
+  <article class="profile-card" *ngIf="wallet(); else walletPlaceholder">
+    <h3>Wallet</h3>
+    <p class="profile-card__balance">
+      {{ wallet()?.balance | number: '1.0-0' }} ƒ'ª
+    </p>
+    <div class="profile-card__meta">
+      <span>ID Wallet</span>
+      <strong>{{ wallet()?.id }}</strong>
+    </div>
+    <div class="profile-card__meta">
+      <span>Derniere mise a jour</span>
+      <strong>{{ wallet()?.updatedAt | date: 'short' }}</strong>
+    </div>
+  </article>
+
+  <ng-template #walletPlaceholder>
+    <article class="profile-card empty">
+      <h3>Wallet</h3>
+      <p *ngIf="walletLoading(); else walletEmpty">
+        Chargement du wallet...
+      </p>
+      <ng-template #walletEmpty>
+        <p>Aucune information wallet disponible.</p>
+      </ng-template>
+    </article>
+  </ng-template>
+</section>
+
+<section class="profile-history">
+  <header>
+    <h3>Transactions recentes</h3>
+    <button type="button" (click)="refreshTransactions()" [disabled]="historyLoading()">
+      {{ historyLoading() ? 'Chargement...' : 'Actualiser' }}
+    </button>
+  </header>
+  <ul>
+    <li *ngIf="historyLoading()">Chargement de l'historique...</li>
+    <li *ngFor="let tx of transactionsPreview(); trackBy: trackByTx">
+      <div>
+        <span>{{ tx.createdAt | date: 'short' }}</span>
+        <small>{{ tx.type }}</small>
+      </div>
+      <strong [class.credit]="tx.type === 'CREDIT'">
+        {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
+      </strong>
+    </li>
+    <li *ngIf="!transactionsPreview().length && !historyLoading()">
+      Aucune transaction recente.
+    </li>
+  </ul>
+</section>

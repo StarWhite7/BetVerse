@@ -1,0 +1,50 @@
+<section class="auth-card">
+  <p class="auth-card__eyebrow">BetVerse Access</p>
+  <h1>Creer un compte</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+    <label>
+      Email
+      <input type="email" formControlName="email" placeholder="john@betverse.gg" />
+      <span class="field-error" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+        Email invalide
+      </span>
+    </label>
+
+    <label>
+      Mot de passe
+      <input type="password" formControlName="password" placeholder="********" />
+      <span class="field-error" *ngIf="form.get('password')?.touched && (form.get('password')?.hasError('strongPassword') || form.get('password')?.hasError('required'))">
+        8 caracteres minimum avec majuscule, minuscule et chiffre
+      </span>
+    </label>
+
+    <label>
+      Confirmation
+      <input type="password" formControlName="confirmPassword" placeholder="********" />
+      <span
+        class="field-error"
+        *ngIf="
+          form.get('confirmPassword')?.touched &&
+          (form.get('confirmPassword')?.hasError('mismatch') ||
+            form.get('confirmPassword')?.hasError('required'))
+        "
+      >
+        Confirmation requise et identique au mot de passe
+      </span>
+    </label>
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Creation...' : 'Creer mon compte' }}
+    </button>
+  </form>
+
+  <p class="form-error" *ngIf="error()">
+    {{ error() }}
+  </p>
+
+  <p class="form-footer">
+    Deja inscrit ?
+    <a routerLink="/auth/login">Se connecter</a>
+  </p>
+</section>
