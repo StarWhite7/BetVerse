@@ -24,6 +24,7 @@ export class MatchesComponent implements OnInit {
   matches = signal<MatchEntity[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
+  lastApiCallAt = signal<Date | null>(null);
 
   betModalOpen = signal(false);
   selectedMatch = signal<MatchEntity | null>(null);
@@ -56,6 +57,7 @@ export class MatchesComponent implements OnInit {
   loadMatches() {
     this.loading.set(true);
     this.error.set(null);
+    this.lastApiCallAt.set(new Date());
     this.matchesApi.getMatches('UPCOMING').subscribe({
       next: (matches) => {
         this.matches.set(matches);
@@ -144,5 +146,9 @@ export class MatchesComponent implements OnInit {
           this.betting.set(false);
         },
       });
+  }
+
+  noopRefresh() {
+    // Le bouton ne fait rien pour le moment.
   }
 }

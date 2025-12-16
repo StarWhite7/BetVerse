@@ -11,6 +11,41 @@
   gap: 2rem;
 }
 
+.matches-refresh {
+  margin-left: auto;
+  padding: 0.9rem 1.2rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(5, 10, 20, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.matches-refresh span {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.matches-refresh strong {
+  display: block;
+  font-size: 1rem;
+  color: #f8fafc;
+}
+
+.matches-refresh button {
+  padding: 0.55rem 1.1rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(99, 102, 241, 0.6);
+  background: transparent;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
 .matches-header h1 {
   margin: 0.3rem 0;
   font-size: clamp(1.8rem, 2.5vw, 2.4rem);
