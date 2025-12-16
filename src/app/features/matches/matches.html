@@ -21,17 +21,17 @@
 
     <div class="match-card__odds">
       <div>
-        <p>Home</p>
+        <p>{{ match.homeTeam }}</p>
         <strong>{{ match.oddsHome | number: '1.0-2' }}</strong>
         <button type="button" (click)="openBetModal(match, 'HOME')">Parier</button>
       </div>
       <div *ngIf="match.oddsDraw">
-        <p>Draw</p>
+        <p>Nul</p>
         <strong>{{ match.oddsDraw | number: '1.0-2' }}</strong>
         <button type="button" (click)="openBetModal(match, 'DRAW')">Parier</button>
       </div>
       <div>
-        <p>Away</p>
+        <p>{{ match.awayTeam }}</p>
         <strong>{{ match.oddsAway | number: '1.0-2' }}</strong>
         <button type="button" (click)="openBetModal(match, 'AWAY')">Parier</button>
       </div>
