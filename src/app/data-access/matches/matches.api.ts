@@ -37,6 +37,13 @@ export interface OddsUsageSnapshot {
   lastCallAt: string | null;
 }
 
+export interface SyncMatchesPayload {
+  next?: number;
+  last?: number;
+  sports?: string[];
+  force?: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MatchesApiService {
   private readonly baseUrl = `${environment.apiUrl}/matches`;
@@ -67,5 +74,12 @@ export class MatchesApiService {
 
   getOddsUsage() {
     return this.http.get<OddsUsageSnapshot>(`${this.baseUrl}/usage`);
+  }
+
+  syncMatches(payload: SyncMatchesPayload = {}) {
+    return this.http.post<{ sports: string[]; events: number; upserts: number }>(
+      `${this.baseUrl}/sync`,
+      payload,
+    );
   }
 }

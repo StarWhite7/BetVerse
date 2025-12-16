@@ -17,6 +17,11 @@
   gap: 1rem;
 }
 
+.admin-usage__actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
 .admin-usage header p {
   margin: 0;
   text-transform: uppercase;
@@ -38,6 +43,10 @@
   color: #e2e8f0;
   font-weight: 600;
   cursor: pointer;
+}
+
+.admin-usage header button.ghost {
+  border-color: rgba(56, 189, 248, 0.5);
 }
 
 .admin-usage__grid {

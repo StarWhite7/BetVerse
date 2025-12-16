@@ -4,9 +4,14 @@
       <p>Monitoring Odds API</p>
       <h1>Consommation des requetes</h1>
     </div>
-    <button type="button" (click)="loadUsage()" [disabled]="loading()">
-      {{ loading() ? 'Actualisation...' : 'Rafraichir' }}
-    </button>
+    <div class="admin-usage__actions">
+      <button type="button" class="ghost" (click)="syncApi()" [disabled]="syncing()">
+        {{ refreshApiLabel() }}
+      </button>
+      <button type="button" (click)="loadUsage()" [disabled]="loading()">
+        {{ loading() ? 'Actualisation...' : 'Rafraichir' }}
+      </button>
+    </div>
   </header>
 
   <p class="admin-usage__error" *ngIf="error()">
