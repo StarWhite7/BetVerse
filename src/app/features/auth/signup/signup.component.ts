@@ -10,7 +10,7 @@ import {
   matchControlValidator,
 } from '../../../shared/utils/validators';
 
-type Credentials = { email: string; password: string };
+type Credentials = { email: string; password: string; username: string };
 
 @Component({
   selector: 'auth-signup',
@@ -29,6 +29,15 @@ export class SignupComponent {
   protected readonly form = this.fb.group(
     {
       email: ['', [Validators.required, Validators.email]],
+      username: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(24),
+          Validators.pattern(/^[a-zA-Z0-9_.-]+$/),
+        ],
+      ],
       password: [
         '',
         [Validators.required, strongPasswordValidator()],
@@ -49,10 +58,11 @@ export class SignupComponent {
       return;
     }
 
-    const { email, password } = this.form.getRawValue();
+    const { email, password, username } = this.form.getRawValue();
     const credentials: Credentials = {
       email: email ?? '',
       password: password ?? '',
+      username: (username ?? '').toLowerCase(),
     };
 
     this.loading.set(true);
@@ -60,7 +70,14 @@ export class SignupComponent {
 
     this.auth
       .register(credentials)
-      .pipe(switchMap(() => this.auth.login(credentials)))
+      .pipe(
+        switchMap(() =>
+          this.auth.login({
+            identifier: credentials.email,
+            password: credentials.password,
+          }),
+        ),
+      )
       .subscribe({
         next: () => {
           this.loading.set(false);

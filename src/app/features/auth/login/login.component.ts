@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
-type Credentials = { email: string; password: string };
+type Credentials = { identifier: string; password: string };
 
 @Component({
   selector: 'auth-login',
@@ -22,7 +22,7 @@ export class LoginComponent {
   protected readonly error = signal<string | null>(null);
 
   protected readonly form = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    identifier: ['', [Validators.required, Validators.minLength(3)]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 

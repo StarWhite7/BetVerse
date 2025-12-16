@@ -1,1 +1,93 @@
-<!-- global -->
+<section class="leaderboard-page">
+  <header class="leaderboard-header">
+    <div class="leaderboard-header__copy">
+      <p class="eyebrow">Classement</p>
+      <h1>Les strateges qui dominent BetVerse</h1>
+      <p class="subtitle">
+        Choisis une vue pour afficher le classement par Verse gagnes, paris gagnes ou niveau general. Les donnees
+        evoluent en direct selon les performances de la communaute.
+      </p>
+    </div>
+    <div class="metric-toggle">
+      <button
+        type="button"
+        *ngFor="let option of metricOptions; trackBy: trackByMetric"
+        (click)="selectMetric(option.id)"
+        [class.active]="option.id === selectedMetric()"
+      >
+        <span>{{ option.label }}</span>
+        <small>{{ option.description }}</small>
+      </button>
+    </div>
+  </header>
+
+  <section class="leaderboard-status" *ngIf="loading() || error()">
+    <div class="status-card" *ngIf="loading()">Chargement du classement...</div>
+    <div class="status-card error" *ngIf="error() && !loading()">
+      <span>{{ error() }}</span>
+      <button type="button" (click)="reload()">Reessayer</button>
+    </div>
+  </section>
+
+  <section class="leaderboard-highlight" *ngIf="!loading() && !error() && topPlayers().length">
+    <article class="highlight-card" *ngFor="let player of topPlayers(); trackBy: trackByEntry">
+      <div class="highlight-rank">#{{ player.rank }}</div>
+      <div class="highlight-identity">
+        <span class="avatar" [style.--avatar-accent]="player.accent">
+          {{ player.initials }}
+        </span>
+        <div>
+          <p>{{ player.username }}</p>
+          <span>{{ player.clan || 'Solo queue' }}</span>
+        </div>
+      </div>
+      <div class="highlight-value">
+        <p>{{ formatPrimaryValue(player) }}</p>
+        <span>{{ formatSecondaryValue(player) }}</span>
+      </div>
+      <div class="highlight-meta">
+        <span>{{ player.winRate }}% winrate</span>
+        <span>{{ player.currentStreak }} serie en cours</span>
+      </div>
+    </article>
+  </section>
+
+  <section class="leaderboard-list" *ngIf="!loading() && !error()">
+    <header class="leaderboard-list__header" *ngIf="players().length">
+      <div>
+        <p class="eyebrow">Vue active</p>
+        <h2>{{ activeMetric().label }}</h2>
+      </div>
+      <span>{{ players().length }} joueurs</span>
+    </header>
+
+    <article class="leaderboard-row" *ngFor="let player of otherPlayers(); trackBy: trackByEntry">
+      <div class="leaderboard-row__rank">#{{ player.rank }}</div>
+      <div class="leaderboard-row__identity">
+        <span class="avatar" [style.--avatar-accent]="player.accent">{{ player.initials }}</span>
+        <div>
+          <p>{{ player.username }}</p>
+          <span>{{ player.clan || 'Solo queue' }}</span>
+        </div>
+      </div>
+      <div class="leaderboard-row__stat">
+        <p>{{ formatPrimaryValue(player) }}</p>
+        <span>{{ formatSecondaryValue(player) }}</span>
+      </div>
+      <div class="leaderboard-row__meta">
+        <span>{{ player.winRate }}% winrate</span>
+        <span>{{ player.betsPlayed }} paris joues</span>
+      </div>
+      <div class="leaderboard-row__progress">
+        <div class="progress-bar">
+          <div class="progress-bar__value" [style.width.%]="progressValue(player)"></div>
+        </div>
+        <span>{{ progressValue(player) }}%</span>
+      </div>
+    </article>
+
+    <p class="leaderboard-empty" *ngIf="!otherPlayers().length && !topPlayers().length">
+      Aucun joueur n'est disponible pour cette vue.
+    </p>
+  </section>
+</section>

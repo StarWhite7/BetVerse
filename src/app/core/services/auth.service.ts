@@ -6,13 +6,14 @@ import { User } from '../../shared/models/user.model';
 import { environment } from '../config/environment';
 
 interface LoginPayload {
-  email: string;
+  identifier: string;
   password: string;
 }
 
 interface RegisterPayload {
   email: string;
   password: string;
+  username: string;
 }
 
 interface LoginResponse {
@@ -60,11 +61,10 @@ export class AuthService {
 
   private persistSession(token: string, user: User) {
     this.tokenSignal.set(token);
-    this.userSignal.set(user);
     if (this.canUseStorage) {
       localStorage.setItem(this.tokenKey, token);
-      localStorage.setItem(this.userKey, JSON.stringify(user));
     }
+    this.syncUser(user);
   }
 
   private clearSession() {
@@ -112,10 +112,7 @@ export class AuthService {
     return this.http.get<User>(`${this.apiUrl}/auth/me`).pipe(
       tap((user) => {
         if (user) {
-          this.userSignal.set(user);
-          if (this.canUseStorage) {
-            localStorage.setItem(this.userKey, JSON.stringify(user));
-          }
+          this.syncUser(user);
         }
       }),
       catchError((error: HttpErrorResponse) => {
@@ -126,6 +123,13 @@ export class AuthService {
         return throwError(() => error);
       }),
     );
+  }
+
+  syncUser(user: User) {
+    this.userSignal.set(user);
+    if (this.canUseStorage) {
+      localStorage.setItem(this.userKey, JSON.stringify(user));
+    }
   }
 
   logout(navigateToLogin = true) {

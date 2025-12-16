@@ -1,20 +1,26 @@
 import { Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { WalletApiService, WalletEntity } from '../../../data-access/wallet/wallet.api';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { UsersApiService } from '../../../data-access/users/users.api';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ReactiveFormsModule],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.css',
 })
 export class MainLayout implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly walletApi = inject(WalletApiService);
+  private readonly usersApi = inject(UsersApiService);
+  private readonly notifications = inject(NotificationService);
+  private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly claimCooldownMs = 24 * 60 * 60 * 1000;
   private readonly claimStoragePrefix = 'betverse_next_claim_';
@@ -26,6 +32,36 @@ export class MainLayout implements OnInit {
   nextClaimTime = signal<number | null>(null);
   claimCountdown = signal('');
   claimAvailable = computed(() => this.nextClaimTime() === null);
+  usernamePromptVisible = signal(false);
+  usernamePromptSubmitting = signal(false);
+  usernamePromptForm = this.fb.nonNullable.group({
+    username: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(24),
+        Validators.pattern(/^[a-zA-Z0-9_.-]+$/),
+      ],
+    ],
+  });
+  profileInitials = computed(() => {
+    const current = this.user();
+    if (!current) {
+      return 'BV';
+    }
+    const source = current.username ?? current.email ?? '';
+    const letters = source.replace(/[^a-zA-Z0-9]/g, '').slice(0, 2);
+    return letters ? letters.toUpperCase() : 'BV';
+  });
+  profileLabel = computed(() => {
+    const current = this.user();
+    if (!current) {
+      return 'Profil';
+    }
+    return current.username ?? current.email ?? 'Profil';
+  });
+  hasWalletAccess = computed(() => this.user()?.role === 'ADMIN');
 
   private readonly claimStorageEffect = effect(() => {
     const currentUser = this.user();
@@ -43,6 +79,23 @@ export class MainLayout implements OnInit {
     }
 
     this.nextClaimTime.set(stored);
+  });
+
+  private readonly usernamePromptEffect = effect(() => {
+    const current = this.user();
+    if (!current) {
+      this.usernamePromptVisible.set(false);
+      this.usernamePromptForm.reset();
+      return;
+    }
+
+    if (!current.username) {
+      const fallback = this.deriveUsernameFromEmail(current.email);
+      this.usernamePromptVisible.set(true);
+      this.usernamePromptForm.reset({ username: fallback });
+    } else {
+      this.usernamePromptVisible.set(false);
+    }
   });
 
   private readonly claimCountdownEffect = effect((onCleanup) => {
@@ -83,6 +136,30 @@ export class MainLayout implements OnInit {
   logout() {
     this.walletApi.clearCachedWallet();
     this.auth.logout();
+  }
+
+  submitUsernamePrompt() {
+    if (this.usernamePromptForm.invalid || this.usernamePromptSubmitting()) {
+      this.usernamePromptForm.markAllAsTouched();
+      return;
+    }
+
+    const username = this.sanitizeUsername(this.usernamePromptForm.controls.username.value);
+    this.usernamePromptSubmitting.set(true);
+    this.usersApi
+      .updateProfile({ username })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (user) => {
+          this.usernamePromptSubmitting.set(false);
+          this.auth.syncUser(user);
+          this.notifications.success('Pseudo mis a jour.');
+        },
+        error: () => {
+          this.usernamePromptSubmitting.set(false);
+          this.notifications.error("Impossible d'enregistrer le pseudo.");
+        },
+      });
   }
 
   claimDailyVerses() {
@@ -214,5 +291,13 @@ export class MainLayout implements OnInit {
 
   private storageKey(userId: string) {
     return `${this.claimStoragePrefix}${userId}`;
+  }
+
+  private deriveUsernameFromEmail(email: string) {
+    return (email?.split('@')[0] ?? 'betverse').toLowerCase();
+  }
+
+  private sanitizeUsername(value: string) {
+    return value.trim().toLowerCase();
   }
 }

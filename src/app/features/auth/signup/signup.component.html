@@ -12,6 +12,14 @@
     </label>
 
     <label>
+      Pseudo
+      <input type="text" formControlName="username" placeholder="neonverse" autocomplete="off" />
+      <span class="field-error" *ngIf="form.get('username')?.touched && form.get('username')?.invalid">
+        Entre 3 et 24 caracteres (lettres, chiffres, . _ -)
+      </span>
+    </label>
+
+    <label>
       Mot de passe
       <input type="password" formControlName="password" placeholder="********" />
       <span class="field-error" *ngIf="form.get('password')?.touched && (form.get('password')?.hasError('strongPassword') || form.get('password')?.hasError('required'))">

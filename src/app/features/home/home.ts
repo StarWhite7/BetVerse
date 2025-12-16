@@ -54,10 +54,8 @@ export class Home implements OnInit {
   loading = signal(true);
   error = signal<string | null>(null);
   user = computed(() => this.auth.currentUser());
-  hasAdminAccess = computed(() => {
-    const role = this.user()?.role;
-    return role === 'ADMIN' || role === 'SUPERADMIN';
-  });
+  hasAdminAccess = computed(() => this.user()?.role === 'ADMIN');
+  hasWalletAccess = computed(() => this.user()?.role === 'ADMIN');
 
   stats = computed<StatCard[]>(() => {
     const wallet = this.wallet();
@@ -117,29 +115,35 @@ export class Home implements OnInit {
       })),
   );
   quickActions = computed<ActionCard[]>(() => {
-    const actions: ActionCard[] = [
-      {
+    const actions: ActionCard[] = [];
+
+    if (this.hasWalletAccess()) {
+      actions.push({
         title: 'Crediter ton wallet',
         description: 'Ajoute des fonds avant ton prochain ticket.',
         cta: 'Deposer',
         link: '/wallet',
         accent: 'primary',
-      },
-      {
-        title: 'Parier sur un match',
-        description: 'Consulte les cotes en direct.',
-        cta: 'Voir les matchs',
-        link: '/matches',
-        accent: 'secondary',
-      },
-      {
+      });
+    }
+
+    actions.push({
+      title: 'Parier sur un match',
+      description: 'Consulte les cotes en direct.',
+      cta: 'Voir les matchs',
+      link: '/matches',
+      accent: 'secondary',
+    });
+
+    if (this.hasWalletAccess()) {
+      actions.push({
         title: 'Mon historique',
         description: 'Transactions et paris passes.',
         cta: 'Consulter',
         link: '/wallet/history',
         accent: 'ghost',
-      },
-    ];
+      });
+    }
 
     if (this.hasAdminAccess()) {
       actions.push({
