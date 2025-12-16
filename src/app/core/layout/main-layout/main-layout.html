@@ -24,7 +24,7 @@
     <header class="shell__header">
       <div class="shell__breadcrumbs">
         <span *ngIf="user(); else guest">
-          Bonjour, {{ user()?.email }}
+          Bonjour, {{ user()?.username ?? user()?.email }}
         </span>
         <ng-template #guest>Bienvenue</ng-template>
       </div>
