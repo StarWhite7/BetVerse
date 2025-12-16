@@ -3,19 +3,6 @@
     <h1>Matchs disponibles</h1>
     <span>{{ matches().length }} rencontres a venir</span>
   </div>
-  <div class="matches-refresh">
-    <div>
-      <span>Dernier appel API</span>
-      <strong>
-        {{
-          lastApiCallAt()
-            ? (lastApiCallAt() | date: 'dd/MM/yyyy HH:mm:ss')
-            : 'Jamais'
-        }}
-      </strong>
-    </div>
-    <button type="button" (click)="noopRefresh()">Rafraichir</button>
-  </div>
 </section>
 
 <p class="matches-error" *ngIf="error()">

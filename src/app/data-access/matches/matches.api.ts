@@ -30,6 +30,13 @@ export interface UpdateMatchPayload extends Partial<CreateMatchPayload> {
   status?: MatchStatus;
 }
 
+export interface OddsUsageSnapshot {
+  remaining: number | null;
+  used: number | null;
+  total: number | null;
+  lastCallAt: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MatchesApiService {
   private readonly baseUrl = `${environment.apiUrl}/matches`;
@@ -56,5 +63,9 @@ export class MatchesApiService {
 
   finishMatch(id: string, result: MatchResult) {
     return this.http.post<MatchEntity>(`${this.baseUrl}/${id}/finish`, { result });
+  }
+
+  getOddsUsage() {
+    return this.http.get<OddsUsageSnapshot>(`${this.baseUrl}/usage`);
   }
 }

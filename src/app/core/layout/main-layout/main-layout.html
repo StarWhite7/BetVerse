@@ -14,6 +14,9 @@
       <a routerLink="/leaderboard" routerLinkActive="active">
         <span>Classement</span>
       </a>
+      <a *ngIf="hasAdminAccess()" routerLink="/admin-usage" routerLinkActive="active">
+        <span>Admin</span>
+      </a>
     </nav>
   </aside>
 

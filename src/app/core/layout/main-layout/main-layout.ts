@@ -62,6 +62,7 @@ export class MainLayout implements OnInit {
     return current.username ?? current.email ?? 'Profil';
   });
   hasWalletAccess = computed(() => this.user()?.role === 'ADMIN');
+  hasAdminAccess = computed(() => this.user()?.role === 'ADMIN');
 
   private readonly claimStorageEffect = effect(() => {
     const currentUser = this.user();

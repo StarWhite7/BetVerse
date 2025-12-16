@@ -1,0 +1,84 @@
+:host {
+  display: block;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.admin-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-usage header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-usage header p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.65);
+}
+
+.admin-usage header h1 {
+  margin: 0.3rem 0 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.admin-usage header button {
+  padding: 0.65rem 1.3rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  background: transparent;
+  color: #e2e8f0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-usage__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.admin-usage__grid article {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(5, 10, 20, 0.85);
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.admin-usage__grid span {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.admin-usage__grid strong {
+  font-size: 1.6rem;
+  color: #f8fafc;
+}
+
+.admin-usage__error {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(127, 29, 29, 0.2);
+  color: #fecaca;
+  padding: 0.8rem 1rem;
+}
+
+.admin-usage__hint {
+  color: rgba(226, 232, 240, 0.7);
+  border-radius: 0.9rem;
+  border: 1px dashed rgba(148, 163, 184, 0.3);
+  padding: 1rem 1.2rem;
+}
