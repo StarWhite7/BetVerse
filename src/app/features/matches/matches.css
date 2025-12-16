@@ -186,6 +186,70 @@
   border-color: rgba(226, 232, 240, 0.6);
 }
 
+.matches-competition-filter {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 0.9rem 1.3rem;
+  background: rgba(7, 11, 24, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.matches-competition-filter h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.matches-competition-filter__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.matches-competition-filter__buttons button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  color: #f8fafc;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  flex: 1 0 auto;
+  min-width: 140px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .matches-competition-filter__buttons {
+    flex-direction: column;
+  }
+
+  .matches-competition-filter__buttons button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.matches-competition-filter__buttons button.active {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.matches-competition-filter__buttons button:hover {
+  border-color: rgba(226, 232, 240, 0.6);
+}
+
+.matches-competition-filter__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.65);
+}
+
 .match-card {
   border-radius: 1.2rem;
   border: 1px solid rgba(148, 163, 184, 0.2);

@@ -49,14 +49,43 @@ export class MatchesComponent implements OnInit {
   ];
   private readonly fallbackSportKey =
     this.sportFilters.find((filter) => filter.fallback)?.key ?? this.sportFilters[0].key;
+  readonly competitionAllKey = 'ALL_COMPETITIONS';
   selectedSport = signal<string>(this.fallbackSportKey);
-  filteredMatches = computed(() => {
+  selectedCompetition = signal<string>(this.competitionAllKey);
+  matchesBySelectedSport = computed(() => {
     const selected = this.selectedSport();
     return this.matches().filter((match) => this.resolveSportKey(match) === selected);
+  });
+  availableCompetitions = computed(() => {
+    const unique = new Set<string>();
+    for (const match of this.matchesBySelectedSport()) {
+      const label = this.resolveCompetitionLabel(match);
+      if (label) {
+        unique.add(label);
+      }
+    }
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  });
+  filteredMatches = computed(() => {
+    const matchesBySport = this.matchesBySelectedSport();
+    const competition = this.selectedCompetition();
+    if (competition === this.competitionAllKey) {
+      return matchesBySport;
+    }
+    return matchesBySport.filter(
+      (match) => this.resolveCompetitionLabel(match) === competition,
+    );
   });
   activeSportLabel = computed(() => {
     const current = this.selectedSport();
     return this.sportFilters.find((filter) => filter.key === current)?.label ?? 'ce sport';
+  });
+  activeCompetitionLabel = computed(() => {
+    const current = this.selectedCompetition();
+    if (current === this.competitionAllKey) {
+      return 'toutes les compétitions';
+    }
+    return current;
   });
   selectionLabel = computed(() => {
     const match = this.selectedMatch();
@@ -134,6 +163,16 @@ export class MatchesComponent implements OnInit {
   selectSport(sport: string) {
     if (this.sportFilters.some((filter) => filter.key === sport)) {
       this.selectedSport.set(sport);
+      this.selectedCompetition.set(this.competitionAllKey);
+    }
+  }
+  selectCompetition(competition: string) {
+    if (competition === this.competitionAllKey) {
+      this.selectedCompetition.set(competition);
+      return;
+    }
+    if (this.availableCompetitions().includes(competition)) {
+      this.selectedCompetition.set(competition);
     }
   }
 
@@ -202,5 +241,18 @@ export class MatchesComponent implements OnInit {
     }
 
     return this.fallbackSportKey;
+  }
+
+  private resolveCompetitionLabel(match: MatchEntity): string | null {
+    const candidates = [match.competition, match.league];
+    for (const entry of candidates) {
+      if (typeof entry === 'string') {
+        const trimmed = entry.trim();
+        if (trimmed.length) {
+          return trimmed;
+        }
+      }
+    }
+    return null;
   }
 }

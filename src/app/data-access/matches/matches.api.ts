@@ -26,6 +26,10 @@ export interface CreateMatchPayload {
   homeTeam: string;
   awayTeam: string;
   startDate: string;
+  sportKey?: string | null;
+  sportTitle?: string | null;
+  league?: string | null;
+  competition?: string | null;
   oddsHome: number;
   oddsAway: number;
   oddsDraw?: number | null;
