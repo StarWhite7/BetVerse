@@ -7,6 +7,13 @@ import { NotificationService } from '../../core/services/notification.service';
 import { BetsStore } from '../../data-access/bets/bets.store';
 import { WalletApiService } from '../../data-access/wallet/wallet.api';
 
+type SportFilter = {
+  key: string;
+  label: string;
+  keywords: string[];
+  fallback?: boolean;
+};
+
 @Component({
   selector: 'app-matches',
   standalone: true,
@@ -35,6 +42,22 @@ export class MatchesComponent implements OnInit {
   betting = signal(false);
   walletBalance = signal<number | null>(null);
   walletLoading = signal(false);
+  readonly sportFilters: SportFilter[] = [
+    { key: 'FOOTBALL', label: 'Football', keywords: ['football', 'soccer'], fallback: true },
+    { key: 'TENNIS', label: 'Tennis', keywords: ['tennis'] },
+    { key: 'BASKETBALL', label: 'Basketball', keywords: ['basketball'] },
+  ];
+  private readonly fallbackSportKey =
+    this.sportFilters.find((filter) => filter.fallback)?.key ?? this.sportFilters[0].key;
+  selectedSport = signal<string>(this.fallbackSportKey);
+  filteredMatches = computed(() => {
+    const selected = this.selectedSport();
+    return this.matches().filter((match) => this.resolveSportKey(match) === selected);
+  });
+  activeSportLabel = computed(() => {
+    const current = this.selectedSport();
+    return this.sportFilters.find((filter) => filter.key === current)?.label ?? 'ce sport';
+  });
   selectionLabel = computed(() => {
     const match = this.selectedMatch();
     const currentType = this.betType();
@@ -108,6 +131,12 @@ export class MatchesComponent implements OnInit {
     this.betAmount.set(value);
   }
 
+  selectSport(sport: string) {
+    if (this.sportFilters.some((filter) => filter.key === sport)) {
+      this.selectedSport.set(sport);
+    }
+  }
+
   submitBet() {
     const match = this.selectedMatch();
     const amount = this.betAmount();
@@ -150,5 +179,28 @@ export class MatchesComponent implements OnInit {
 
   noopRefresh() {
     // Le bouton ne fait rien pour le moment.
+  }
+
+  private resolveSportKey(match: MatchEntity): string {
+    const rawValues = [
+      match.sportTitle,
+      match.sport,
+      match.sportKey,
+      match.league,
+      match.competition,
+    ]
+      .map((entry) => (typeof entry === 'string' ? entry.toLowerCase() : ''))
+      .filter((entry) => entry.length);
+
+    for (const filter of this.sportFilters) {
+      const matchesFilter = rawValues.some((value) =>
+        filter.keywords.some((keyword) => value.includes(keyword.toLowerCase())),
+      );
+      if (matchesFilter) {
+        return filter.key;
+      }
+    }
+
+    return this.fallbackSportKey;
   }
 }

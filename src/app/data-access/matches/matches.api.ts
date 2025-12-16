@@ -15,6 +15,11 @@ export interface MatchEntity {
   oddsHome: number;
   oddsAway: number;
   oddsDraw?: number | null;
+  sportTitle?: string | null;
+  sport?: string | null;
+  sportKey?: string | null;
+  league?: string | null;
+  competition?: string | null;
 }
 
 export interface CreateMatchPayload {

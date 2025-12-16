@@ -10,7 +10,20 @@
 </p>
 
 <section class="matches-grid" *ngIf="!loading() && matches().length; else matchesPlaceholder">
-  <article class="match-card" *ngFor="let match of matches()">
+  <div class="matches-sport-filter">
+    <h4>Choisir un sport</h4>
+    <div class="matches-sport-filter__buttons">
+      <button
+        type="button"
+        *ngFor="let sport of sportFilters"
+        [class.active]="selectedSport() === sport.key"
+        (click)="selectSport(sport.key)"
+      >
+        {{ sport.label }}
+      </button>
+    </div>
+  </div>
+  <article class="match-card" *ngFor="let match of filteredMatches()">
     <header>
       <div>
         <p>{{ match.homeTeam }} / {{ match.awayTeam }}</p>
@@ -37,6 +50,9 @@
       </div>
     </div>
   </article>
+  <p class="matches-empty" *ngIf="!filteredMatches().length">
+    Aucun match pour {{ activeSportLabel() }} pour le moment.
+  </p>
 </section>
 
 <ng-template #matchesPlaceholder>
