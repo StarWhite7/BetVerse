@@ -76,7 +76,7 @@
               {{ bet.status }}
             </span>
           </td>
-          <td>{{ bet.createdAt | date: 'short' }}</td>
+          <td>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
           <td class="bets-table__actions">
             <button
               type="button"

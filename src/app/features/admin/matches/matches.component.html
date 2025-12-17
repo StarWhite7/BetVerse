@@ -50,7 +50,7 @@
                 {{ match.status }}
               </span>
             </td>
-            <td>{{ match.startDate | date: 'short' }}</td>
+            <td>{{ match.startDate | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
             <td class="matches-table__actions">
               <button type="button" (click)="selectMatch(match)">Editer</button>
               <button

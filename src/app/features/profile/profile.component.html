@@ -51,7 +51,7 @@
     </div>
     <div class="profile-card__meta">
       <span>Derniere mise a jour</span>
-      <strong>{{ wallet()?.updatedAt | date: 'short' }}</strong>
+      <strong>{{ wallet()?.updatedAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</strong>
     </div>
   </article>
 
@@ -151,7 +151,7 @@
     <li *ngIf="historyLoading()">Chargement de l'historique...</li>
     <li *ngFor="let tx of transactionsPreview(); trackBy: trackByTx">
       <div>
-        <span>{{ tx.createdAt | date: 'short' }}</span>
+        <span>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
         <small>{{ tx.type }}</small>
       </div>
       <strong [class.credit]="tx.type === 'CREDIT'">

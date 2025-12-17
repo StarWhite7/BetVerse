@@ -52,7 +52,7 @@
             {{ bet.status }}
           </span>
         </td>
-        <td>{{ bet.createdAt | date: 'short' }}</td>
+        <td>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
       </tr>
       <tr *ngIf="!bets().length && !loading()">
         <td colspan="7">Aucun pari pour le moment.</td>

@@ -69,7 +69,7 @@
         <td [class.credit]="tx.type === 'CREDIT'">
           {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
         </td>
-        <td>{{ tx.createdAt | date: 'short' }}</td>
+        <td>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
       </tr>
       <tr *ngIf="!filteredTransactions().length && !loading()">
         <td colspan="4">Aucune transaction pour ce filtre.</td>

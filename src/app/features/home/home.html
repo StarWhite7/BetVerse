@@ -57,7 +57,7 @@
             </div>
             <div class="bet-meta">
               <span>Cote {{ bet.odds }}</span>
-              <span>{{ bet.createdAt | date: 'short' }}</span>
+              <span>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
             </div>
           </li>
           <li *ngIf="!pendingBets().length">
@@ -71,7 +71,7 @@
           <li *ngFor="let bet of recentBets()">
             <div>
               <strong>{{ bet.match }}</strong>
-              <span>{{ bet.createdAt | date: 'short' }}</span>
+              <span>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
             </div>
             <span
               class="badge"
