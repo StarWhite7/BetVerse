@@ -14,6 +14,29 @@ type SportFilter = {
   fallback?: boolean;
 };
 
+const TEAM_LOGO_MAP: Record<string, string> = {
+  arsenal: '/club/Premier_League/Arsenal_FC.png',
+  astonvilla: '/club/Premier_League/Aston_Villa_FC.png',
+  bournemouth: '/club/Premier_League/Bournemouth_AFC.png',
+  brentford: '/club/Premier_League/Brentford_FC.png',
+  brightonandhovealbion: '/club/Premier_League/Brighton.png',
+  burnley: '/club/Premier_League/Burnley.png',
+  chelsea: '/club/Premier_League/Chelsea.png',
+  crystalpalace: '/club/Premier_League/Crystal_Palace_FC.png',
+  everton: '/club/Premier_League/Everton_FC.png',
+  fulham: '/club/Premier_League/Logo_Fulham.png',
+  leedsunited: '/club/Premier_League/Leeds_United_FC.png',
+  liverpool: '/club/Premier_League/liverpool-fc.png',
+  manchestercity: '/club/Premier_League/Manchester_City_FC.png',
+  manchesterunited: '/club/Premier_League/Manchester_United_FC.png',
+  newcastleunited: '/club/Premier_League/Newcastle_United_FC.png',
+  nottinghamforest: '/club/Premier_League/Nottingham_Forest.png',
+  sunderland: '/club/Premier_League/Sunderland_AFC.png',
+  tottenhamhotspur: '/club/Premier_League/Tottenham_Hotspur.png',
+  westhamunited: '/club/Premier_League/West_Ham_United_FC.png',
+  wolverhamptonwanderers: '/club/Premier_League/Wolverhampton_Wanderer.png',
+};
+
 @Component({
   selector: 'app-matches',
   standalone: true,
@@ -258,5 +281,33 @@ export class MatchesComponent implements OnInit {
       }
     }
     return null;
+  }
+
+  teamLogoUrl(team: string): string {
+    const normalized = this.normalizeTeamName(team);
+    const matched = TEAM_LOGO_MAP[normalized];
+    if (matched) {
+      return matched;
+    }
+    const initials = this.teamInitials(team);
+    const base = 'https://placehold.co/80x80/020617/ffffff?text=';
+    return `${base}${encodeURIComponent(initials)}`;
+  }
+
+  private teamInitials(team: string): string {
+    return team
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word) => word.charAt(0).toUpperCase())
+      .join('') || team.charAt(0).toUpperCase();
+  }
+
+  private normalizeTeamName(team: string): string {
+    return team
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
   }
 }
