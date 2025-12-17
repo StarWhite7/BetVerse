@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { GlobalComponent } from './global/global.component';
+import { AdminUsageComponent } from './admin-usage';
 
 const routes: Routes = [
   {
     path: '',
-    component: GlobalComponent,
+    component: AdminUsageComponent,
   },
 ];
 

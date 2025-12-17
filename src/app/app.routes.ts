@@ -30,6 +30,18 @@ export const routes: Routes = [
         path: 'wallet',
         loadChildren: () =>
           import('./features/wallet/wallet.routes').then((m) => m.default),
+        canActivate: [roleGuard(['ADMIN'])],
+      },
+      {
+        path: 'leaderboard',
+        loadChildren: () =>
+          import('./features/leaderboard/leaderboard.routes').then((m) => m.default),
+      },
+      {
+        path: 'admin-usage',
+        loadChildren: () =>
+          import('./features/admin-usage/admin-usage.routes').then((m) => m.default),
+        canActivate: [roleGuard(['ADMIN'])],
       },
       {
         path: 'profile',
@@ -41,7 +53,12 @@ export const routes: Routes = [
         path: 'bets',
         loadChildren: () =>
           import('./features/bets/bets.routes').then((m) => m.default),
-        canActivate: [authGuard, roleGuard(['USER'])],
+        canActivate: [authGuard, roleGuard(['USER', 'ADMIN'])],
+      },
+      {
+        path: 'classement',
+        pathMatch: 'full',
+        redirectTo: 'leaderboard',
       },
     ],
   },
@@ -56,7 +73,7 @@ export const routes: Routes = [
     component: AdminLayout,
     loadChildren: () =>
       import('./features/admin/admin.routes').then((m) => m.default),
-    canActivate: [authGuard, roleGuard(['ADMIN', 'SUPERADMIN'])]
+    canActivate: [authGuard, roleGuard(['ADMIN'])]
   },
   {
     path: '**',

@@ -1,8 +1,9 @@
 <section class="profile-header">
   <div>
     <p>Identite</p>
-    <h1>{{ user()?.email }}</h1>
-    <span class="profile-header__id">ID: {{ user()?.id }}</span>
+    <h1>{{ displayName() }}</h1>
+    <span class="profile-header__id">ID utilisateur : {{ user()?.id }}</span>
+    <span class="profile-header__email">Email : {{ user()?.email }}</span>
   </div>
   <div class="profile-header__actions">
     <button
@@ -12,7 +13,7 @@
     >
       {{ profileLoading() || walletLoading() ? 'Actualisation...' : 'Actualiser' }}
     </button>
-    <a routerLink="/wallet" class="ghost">Ouvrir le wallet</a>
+    <a routerLink="/wallet" class="ghost" *ngIf="hasWalletAccess()">Ouvrir le wallet</a>
   </div>
 </section>
 
@@ -32,13 +33,17 @@
         <span>Role</span>
         <strong>{{ user()?.role }}</strong>
       </li>
+      <li>
+        <span>Nom d'utilisateur</span>
+        <strong>{{ user()?.username || 'Non defini' }}</strong>
+      </li>
     </ul>
   </article>
 
   <article class="profile-card" *ngIf="wallet(); else walletPlaceholder">
     <h3>Wallet</h3>
     <p class="profile-card__balance">
-      {{ wallet()?.balance | number: '1.0-0' }} ƒ'ª
+      {{ wallet()?.balance | number: '1.0-0' }} ▓''Іі
     </p>
     <div class="profile-card__meta">
       <span>ID Wallet</span>
@@ -46,7 +51,7 @@
     </div>
     <div class="profile-card__meta">
       <span>Derniere mise a jour</span>
-      <strong>{{ wallet()?.updatedAt | date: 'short' }}</strong>
+      <strong>{{ wallet()?.updatedAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</strong>
     </div>
   </article>
 
@@ -63,6 +68,78 @@
   </ng-template>
 </section>
 
+<section class="profile-account">
+  <article class="profile-card form-card">
+    <header>
+      <div>
+        <p>Coordonnees</p>
+        <h3>Email & pseudo</h3>
+      </div>
+      <span class="profile-badge">{{ user()?.role }}</span>
+    </header>
+
+    <div class="profile-field">
+      <span>Email</span>
+      <strong>{{ user()?.email }}</strong>
+    </div>
+
+    <form class="profile-form" [formGroup]="usernameForm" (ngSubmit)="onUsernameSubmit()">
+      <label for="username">Nom d'utilisateur</label>
+      <div class="input-row">
+        <input
+          type="text"
+          id="username"
+          formControlName="username"
+          placeholder="neon-trader"
+          autocomplete="off"
+          [class.invalid]="usernameForm.invalid && (usernameForm.dirty || usernameForm.touched)"
+        />
+        <button
+          type="submit"
+          [disabled]="usernameForm.invalid || !usernameForm.dirty || usernameSubmitting()"
+        >
+          {{ usernameSubmitting() ? 'Mise a jour...' : 'Enregistrer' }}
+        </button>
+      </div>
+      <small class="input-hint">
+        3-24 caracteres. Lettres, chiffres, ".", "_" ou "-".
+      </small>
+    </form>
+  </article>
+
+  <article class="profile-card form-card">
+    <header>
+      <div>
+        <p>Securite</p>
+        <h3>Changer le mot de passe</h3>
+      </div>
+    </header>
+    <form class="profile-form" [formGroup]="passwordForm" (ngSubmit)="onPasswordSubmit()">
+      <label for="currentPassword">Mot de passe actuel</label>
+      <input
+        type="password"
+        id="currentPassword"
+        formControlName="currentPassword"
+        autocomplete="current-password"
+        placeholder="********"
+      />
+
+      <label for="newPassword">Nouveau mot de passe</label>
+      <input
+        type="password"
+        id="newPassword"
+        formControlName="newPassword"
+        autocomplete="new-password"
+        placeholder="********"
+      />
+      <small class="input-hint">6 caracteres minimum.</small>
+      <button type="submit" class="primary" [disabled]="passwordForm.invalid || passwordSubmitting()">
+        {{ passwordSubmitting() ? 'Modification...' : 'Mettre a jour' }}
+      </button>
+    </form>
+  </article>
+</section>
+
 <section class="profile-history">
   <header>
     <h3>Transactions recentes</h3>
@@ -74,11 +151,11 @@
     <li *ngIf="historyLoading()">Chargement de l'historique...</li>
     <li *ngFor="let tx of transactionsPreview(); trackBy: trackByTx">
       <div>
-        <span>{{ tx.createdAt | date: 'short' }}</span>
+        <span>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
         <small>{{ tx.type }}</small>
       </div>
       <strong [class.credit]="tx.type === 'CREDIT'">
-        {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
+        {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ▓''Іі
       </strong>
     </li>
     <li *ngIf="!transactionsPreview().length && !historyLoading()">

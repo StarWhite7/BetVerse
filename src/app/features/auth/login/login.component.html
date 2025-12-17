@@ -4,10 +4,10 @@
 
   <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
     <label>
-      Email
-      <input type="email" formControlName="email" placeholder="john@betverse.gg" />
-      <span class="field-error" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
-        Email invalide
+      Email ou pseudo
+      <input type="text" formControlName="identifier" placeholder="john@betverse.gg ou neonverse" />
+      <span class="field-error" *ngIf="form.get('identifier')?.touched && form.get('identifier')?.invalid">
+        Identifiant requis (3 caracteres min)
       </span>
     </label>
 

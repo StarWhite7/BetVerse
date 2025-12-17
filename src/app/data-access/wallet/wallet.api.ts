@@ -73,4 +73,14 @@ export class WalletApiService {
       }),
     );
   }
+
+  transfer(username: string, amount: number) {
+    return this.http
+      .post<WalletEntity>(`${this.baseUrl}/transfer`, { username, amount })
+      .pipe(
+        tap((wallet) => {
+          this.pushWallet(wallet);
+        }),
+      );
+  }
 }

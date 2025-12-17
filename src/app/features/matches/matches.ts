@@ -7,6 +7,13 @@ import { NotificationService } from '../../core/services/notification.service';
 import { BetsStore } from '../../data-access/bets/bets.store';
 import { WalletApiService } from '../../data-access/wallet/wallet.api';
 
+type SportFilter = {
+  key: string;
+  label: string;
+  keywords: string[];
+  fallback?: boolean;
+};
+
 @Component({
   selector: 'app-matches',
   standalone: true,
@@ -24,6 +31,7 @@ export class MatchesComponent implements OnInit {
   matches = signal<MatchEntity[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
+  lastApiCallAt = signal<Date | null>(null);
 
   betModalOpen = signal(false);
   selectedMatch = signal<MatchEntity | null>(null);
@@ -34,6 +42,55 @@ export class MatchesComponent implements OnInit {
   betting = signal(false);
   walletBalance = signal<number | null>(null);
   walletLoading = signal(false);
+  readonly sportFilters: SportFilter[] = [
+    { key: 'FOOTBALL', label: 'Football', keywords: ['football', 'soccer'], fallback: true },
+    { key: 'TENNIS', label: 'Tennis', keywords: ['tennis'] },
+    { key: 'BASKETBALL', label: 'Basketball', keywords: ['basketball'] },
+  ];
+  private readonly competitionLabelMap: Record<string, string> = {
+    EPL: 'Premier League',
+    France: 'Ligue 1',
+  };
+  private readonly fallbackSportKey =
+    this.sportFilters.find((filter) => filter.fallback)?.key ?? this.sportFilters[0].key;
+  readonly competitionAllKey = 'ALL_COMPETITIONS';
+  selectedSport = signal<string>(this.fallbackSportKey);
+  selectedCompetition = signal<string>(this.competitionAllKey);
+  matchesBySelectedSport = computed(() => {
+    const selected = this.selectedSport();
+    return this.matches().filter((match) => this.resolveSportKey(match) === selected);
+  });
+  availableCompetitions = computed(() => {
+    const unique = new Set<string>();
+    for (const match of this.matchesBySelectedSport()) {
+      const label = this.resolveCompetitionLabel(match);
+      if (label) {
+        unique.add(label);
+      }
+    }
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  });
+  filteredMatches = computed(() => {
+    const matchesBySport = this.matchesBySelectedSport();
+    const competition = this.selectedCompetition();
+    if (competition === this.competitionAllKey) {
+      return matchesBySport;
+    }
+    return matchesBySport.filter(
+      (match) => this.resolveCompetitionLabel(match) === competition,
+    );
+  });
+  activeSportLabel = computed(() => {
+    const current = this.selectedSport();
+    return this.sportFilters.find((filter) => filter.key === current)?.label ?? 'ce sport';
+  });
+  activeCompetitionLabel = computed(() => {
+    const current = this.selectedCompetition();
+    if (current === this.competitionAllKey) {
+      return 'toutes les compétitions';
+    }
+    return current;
+  });
   selectionLabel = computed(() => {
     const match = this.selectedMatch();
     const currentType = this.betType();
@@ -56,6 +113,7 @@ export class MatchesComponent implements OnInit {
   loadMatches() {
     this.loading.set(true);
     this.error.set(null);
+    this.lastApiCallAt.set(new Date());
     this.matchesApi.getMatches('UPCOMING').subscribe({
       next: (matches) => {
         this.matches.set(matches);
@@ -106,6 +164,22 @@ export class MatchesComponent implements OnInit {
     this.betAmount.set(value);
   }
 
+  selectSport(sport: string) {
+    if (this.sportFilters.some((filter) => filter.key === sport)) {
+      this.selectedSport.set(sport);
+      this.selectedCompetition.set(this.competitionAllKey);
+    }
+  }
+  selectCompetition(competition: string) {
+    if (competition === this.competitionAllKey) {
+      this.selectedCompetition.set(competition);
+      return;
+    }
+    if (this.availableCompetitions().includes(competition)) {
+      this.selectedCompetition.set(competition);
+    }
+  }
+
   submitBet() {
     const match = this.selectedMatch();
     const amount = this.betAmount();
@@ -144,5 +218,45 @@ export class MatchesComponent implements OnInit {
           this.betting.set(false);
         },
       });
+  }
+
+  noopRefresh() {
+    // Le bouton ne fait rien pour le moment.
+  }
+
+  private resolveSportKey(match: MatchEntity): string {
+    const rawValues = [
+      match.sportTitle,
+      match.sport,
+      match.sportKey,
+      match.league,
+      match.competition,
+    ]
+      .map((entry) => (typeof entry === 'string' ? entry.toLowerCase() : ''))
+      .filter((entry) => entry.length);
+
+    for (const filter of this.sportFilters) {
+      const matchesFilter = rawValues.some((value) =>
+        filter.keywords.some((keyword) => value.includes(keyword.toLowerCase())),
+      );
+      if (matchesFilter) {
+        return filter.key;
+      }
+    }
+
+    return this.fallbackSportKey;
+  }
+
+  private resolveCompetitionLabel(match: MatchEntity): string | null {
+    const candidates = [match.competition, match.league];
+    for (const entry of candidates) {
+      if (typeof entry === 'string') {
+        const trimmed = entry.trim();
+        if (trimmed.length) {
+          return this.competitionLabelMap[trimmed] ?? trimmed;
+        }
+      }
+    }
+    return null;
   }
 }

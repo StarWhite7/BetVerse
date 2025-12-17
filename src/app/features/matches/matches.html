@@ -10,33 +10,86 @@
 </p>
 
 <section class="matches-grid" *ngIf="!loading() && matches().length; else matchesPlaceholder">
-  <article class="match-card" *ngFor="let match of matches()">
+  <div class="matches-sport-filter">
+    <h4>Choisir un sport</h4>
+    <div class="matches-sport-filter__buttons">
+      <button
+        type="button"
+        *ngFor="let sport of sportFilters"
+        [class.active]="selectedSport() === sport.key"
+        (click)="selectSport(sport.key)"
+      >
+        {{ sport.label }}
+      </button>
+    </div>
+  </div>
+  <div class="matches-competition-filter">
+    <h5>Choisir une compétition</h5>
+    <ng-container *ngIf="availableCompetitions().length; else noCompetitions">
+      <div class="matches-competition-filter__buttons">
+        <button
+          type="button"
+          [class.active]="selectedCompetition() === competitionAllKey"
+          (click)="selectCompetition(competitionAllKey)"
+        >
+          Toutes les compétitions
+        </button>
+        <button
+          type="button"
+          *ngFor="let competition of availableCompetitions()"
+          [class.active]="selectedCompetition() === competition"
+          (click)="selectCompetition(competition)"
+        >
+          <img
+            *ngIf="competition === 'Ligue 1'"
+            src="flags/France.png"
+            alt="France flag"
+            class="matches-competition-flag"
+          />
+          <img
+            *ngIf="competition === 'Premier League'"
+            src="flags/Angleterre.png"
+            alt="England flag"
+            class="matches-competition-flag"
+          />
+          {{ competition }}
+        </button>
+      </div>
+    </ng-container>
+    <ng-template #noCompetitions>
+      <p class="matches-competition-filter__empty">Aucune compétition détectée pour ce sport.</p>
+    </ng-template>
+  </div>
+  <article class="match-card" *ngFor="let match of filteredMatches()">
     <header>
       <div>
         <p>{{ match.homeTeam }} / {{ match.awayTeam }}</p>
         <h3>{{ match.homeTeam }} vs {{ match.awayTeam }}</h3>
       </div>
-      <span>{{ match.startDate | date: 'short' }}</span>
+      <span>{{ match.startDate | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
     </header>
 
     <div class="match-card__odds">
       <div>
-        <p>Home</p>
+        <p>{{ match.homeTeam }}</p>
         <strong>{{ match.oddsHome | number: '1.0-2' }}</strong>
         <button type="button" (click)="openBetModal(match, 'HOME')">Parier</button>
       </div>
       <div *ngIf="match.oddsDraw">
-        <p>Draw</p>
+        <p>Nul</p>
         <strong>{{ match.oddsDraw | number: '1.0-2' }}</strong>
         <button type="button" (click)="openBetModal(match, 'DRAW')">Parier</button>
       </div>
       <div>
-        <p>Away</p>
+        <p>{{ match.awayTeam }}</p>
         <strong>{{ match.oddsAway | number: '1.0-2' }}</strong>
         <button type="button" (click)="openBetModal(match, 'AWAY')">Parier</button>
       </div>
     </div>
   </article>
+  <p class="matches-empty" *ngIf="!filteredMatches().length">
+    Aucun match pour {{ activeSportLabel() }} ({{ activeCompetitionLabel() }}) pour le moment.
+  </p>
 </section>
 
 <ng-template #matchesPlaceholder>

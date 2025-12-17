@@ -17,6 +17,15 @@
           >
             {{ submitting() && modalMode() === 'debit' ? 'En cours...' : 'Retirer' }}
           </button>
+          <button
+            type="button"
+            class="ghost"
+            (click)="openModal('transfer')"
+            [disabled]="submitting()"
+            *ngIf="canTransfer()"
+          >
+            {{ submitting() && modalMode() === 'transfer' ? 'En cours...' : 'Transferer' }}
+          </button>
         </div>
       </div>
 
@@ -32,7 +41,7 @@
         </div>
         <ul class="wallet-card__list">
           <li *ngFor="let tx of recentTransactions(); trackBy: trackByTx">
-            <span>{{ tx.createdAt | date: 'short' }}</span>
+            <span>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
             <strong [class.credit]="tx.type === 'CREDIT'">
               {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
             </strong>
@@ -98,7 +107,7 @@
         <td [class.credit]="tx.type === 'CREDIT'">
           {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
         </td>
-        <td>{{ tx.createdAt | date: 'short' }}</td>
+        <td>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
       </tr>
       <tr *ngIf="!transactions().length && !historyLoading()">
         <td colspan="4">Aucune transaction pour le moment.</td>
@@ -108,15 +117,57 @@
 </section>
 
 <div class="wallet-modal" *ngIf="modalOpen()">
-  <div class="wallet-modal__backdrop" (click)="closeModal()"></div>
   <div class="wallet-modal__content">
-    <h3>{{ modalMode() === 'credit' ? 'Deposer' : 'Retirer' }} des fonds</h3>
+    <h3>
+      {{
+        modalMode() === 'credit'
+          ? 'Deposer des fonds'
+          : modalMode() === 'debit'
+            ? 'Retirer des fonds'
+            : 'Transferer des Verse'
+      }}
+    </h3>
+    <label *ngIf="modalMode() === 'transfer'">
+      Destinataire (pseudo)
+      <div class="wallet-autocomplete">
+        <input
+          type="text"
+          autocomplete="off"
+          [(ngModel)]="transferUsernameValue"
+          placeholder="pseudo-cible"
+        />
+        <div class="wallet-autocomplete__panel" *ngIf="usernameDropdownVisible()">
+          <p class="wallet-autocomplete__status" *ngIf="usernameSearchLoading()">
+            Recherche...
+          </p>
+          <button
+            type="button"
+            class="wallet-autocomplete__option"
+            *ngFor="let suggestion of usernameSuggestions()"
+            (click)="selectUsername(suggestion.username)"
+          >
+            <strong>{{ suggestion.username }}</strong>
+            <span>{{ suggestion.email }}</span>
+          </button>
+          <p
+            class="wallet-autocomplete__status"
+            *ngIf="
+              !usernameSearchLoading() &&
+              usernameSuggestions().length === 0 &&
+              usernameSearchPerformed()
+            "
+          >
+            Aucun pseudo trouve
+          </p>
+        </div>
+      </div>
+    </label>
     <label>
       Montant
       <input type="number" min="1" [(ngModel)]="modalAmountValue" />
     </label>
     <p class="wallet-modal__hint">
-      Solde disponible : {{ wallet()?.balance | number: '1.0-0' }} ƒ'ª
+      Solde disponible : {{ wallet()?.balance | number: '1.0-0' }} ?'?
     </p>
     <p class="wallet-error" *ngIf="modalError()">
       {{ modalError() }}
@@ -126,7 +177,15 @@
         Annuler
       </button>
       <button type="button" (click)="submitOperation()" [disabled]="submitting()">
-        {{ submitting() ? 'En cours...' : (modalMode() === 'credit' ? 'Deposer' : 'Retirer') }}
+        {{
+          submitting()
+            ? 'En cours...'
+            : modalMode() === 'credit'
+              ? 'Deposer'
+              : modalMode() === 'debit'
+                ? 'Retirer'
+                : 'Transferer'
+        }}
       </button>
     </div>
   </div>

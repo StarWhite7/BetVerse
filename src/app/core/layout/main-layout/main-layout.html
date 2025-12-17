@@ -8,8 +8,14 @@
       <a routerLink="/bets" routerLinkActive="active">
         <span>Mes paris</span>
       </a>
-      <a routerLink="/wallet" routerLinkActive="active">
+      <a *ngIf="hasWalletAccess()" routerLink="/wallet" routerLinkActive="active">
         <span>Wallet</span>
+      </a>
+      <a routerLink="/leaderboard" routerLinkActive="active">
+        <span>Classement</span>
+      </a>
+      <a *ngIf="hasAdminAccess()" routerLink="/admin-usage" routerLinkActive="active">
+        <span>Admin</span>
       </a>
     </nav>
   </aside>
@@ -18,7 +24,7 @@
     <header class="shell__header">
       <div class="shell__breadcrumbs">
         <span *ngIf="user(); else guest">
-          Bonjour, {{ user()?.email }}
+          Bonjour, {{ user()?.username ?? user()?.email }}
         </span>
         <ng-template #guest>Bienvenue</ng-template>
       </div>
@@ -46,6 +52,13 @@
             <div class="wallet-balance__value wallet-balance__value--loading">...</div>
           </ng-template>
         </div>
+        <a class="profile-chip" routerLink="/profile">
+          <span class="profile-chip__avatar">{{ profileInitials() }}</span>
+          <div class="profile-chip__body">
+            <strong>{{ profileLabel() }}</strong>
+            <small>Voir profil</small>
+          </div>
+        </a>
         <button type="button" class="ghost" (click)="logout()">Déconnecter</button>
       </div>
     </header>
@@ -55,3 +68,35 @@
     </main>
   </div>
 </div>
+
+<section class="username-overlay" *ngIf="usernamePromptVisible()">
+  <div class="username-modal">
+    <div>
+      <p class="username-modal__eyebrow">Personnalisation requise</p>
+      <h2>Choisis ton pseudo BetVerse</h2>
+      <p>
+        Tu peux utiliser des lettres, chiffres ainsi que ".", "_" ou "-". Ce pseudo servira pour
+        t'identifier sur les classements et pour la connexion.
+      </p>
+    </div>
+    <form [formGroup]="usernamePromptForm" (ngSubmit)="submitUsernamePrompt()">
+      <label for="prompt-username">Pseudo</label>
+      <input
+        id="prompt-username"
+        type="text"
+        formControlName="username"
+        placeholder="neonverse"
+        autocomplete="off"
+      />
+      <span
+        class="field-error"
+        *ngIf="usernamePromptForm.get('username')?.touched && usernamePromptForm.get('username')?.invalid"
+      >
+        3-24 caracteres (lettres, chiffres, . _ -)
+      </span>
+      <button type="submit" [disabled]="usernamePromptSubmitting() || usernamePromptForm.invalid">
+        {{ usernamePromptSubmitting() ? 'Enregistrement...' : 'Valider mon pseudo' }}
+      </button>
+    </form>
+  </div>
+</section>

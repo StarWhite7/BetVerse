@@ -15,12 +15,21 @@ export interface MatchEntity {
   oddsHome: number;
   oddsAway: number;
   oddsDraw?: number | null;
+  sportTitle?: string | null;
+  sport?: string | null;
+  sportKey?: string | null;
+  league?: string | null;
+  competition?: string | null;
 }
 
 export interface CreateMatchPayload {
   homeTeam: string;
   awayTeam: string;
   startDate: string;
+  sportKey?: string | null;
+  sportTitle?: string | null;
+  league?: string | null;
+  competition?: string | null;
   oddsHome: number;
   oddsAway: number;
   oddsDraw?: number | null;
@@ -28,6 +37,20 @@ export interface CreateMatchPayload {
 
 export interface UpdateMatchPayload extends Partial<CreateMatchPayload> {
   status?: MatchStatus;
+}
+
+export interface OddsUsageSnapshot {
+  remaining: number | null;
+  used: number | null;
+  total: number | null;
+  lastCallAt: string | null;
+}
+
+export interface SyncMatchesPayload {
+  next?: number;
+  last?: number;
+  sports?: string[];
+  force?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -56,5 +79,16 @@ export class MatchesApiService {
 
   finishMatch(id: string, result: MatchResult) {
     return this.http.post<MatchEntity>(`${this.baseUrl}/${id}/finish`, { result });
+  }
+
+  getOddsUsage() {
+    return this.http.get<OddsUsageSnapshot>(`${this.baseUrl}/usage`);
+  }
+
+  syncMatches(payload: SyncMatchesPayload = {}) {
+    return this.http.post<{ sports: string[]; events: number; upserts: number }>(
+      `${this.baseUrl}/sync`,
+      payload,
+    );
   }
 }
