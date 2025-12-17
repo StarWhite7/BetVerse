@@ -32,10 +32,10 @@ export class SignupComponent {
       username: [
         '',
         [
-          Validators.required,
-          Validators.minLength(3),
-          Validators.maxLength(24),
-          Validators.pattern(/^[a-zA-Z0-9_.-]+$/),
+         Validators.required,
+         Validators.minLength(3),
+         Validators.maxLength(24),
+         Validators.pattern(/^[a-zA-Z0-9_.-]+$/),
         ],
       ],
       password: [

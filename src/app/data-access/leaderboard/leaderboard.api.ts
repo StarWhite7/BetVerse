@@ -14,7 +14,7 @@ type MetricField = 'verseEarned' | 'betsWon' | 'level';
 export class LeaderboardApiService {
   private readonly baseUrl = `${environment.apiUrl}/leaderboard`;
   private readonly metricField: Record<LeaderboardMetric, MetricField> = {
-    VERSE: 'verseEarned',
+   VERSE: 'verseEarned',
     WINS: 'betsWon',
     LEVEL: 'level',
   };

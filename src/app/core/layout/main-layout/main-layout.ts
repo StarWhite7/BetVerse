@@ -38,10 +38,10 @@ export class MainLayout implements OnInit {
     username: [
       '',
       [
-        Validators.required,
-        Validators.minLength(3),
-        Validators.maxLength(24),
-        Validators.pattern(/^[a-zA-Z0-9_.-]+$/),
+       Validators.required,
+       Validators.minLength(3),
+       Validators.maxLength(24),
+       Validators.pattern(/^[a-zA-Z0-9_.-]+$/),
       ],
     ],
   });

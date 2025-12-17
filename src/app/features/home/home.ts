@@ -42,9 +42,7 @@ export class Home implements OnInit {
   private readonly betsApi = inject(BetsApiService);
   private readonly matchesApi = inject(MatchesApiService);
   private readonly auth = inject(AuthService);
-  private readonly currency = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
+  private readonly verseFormatter = new Intl.NumberFormat('fr-FR', {
     maximumFractionDigits: 0,
   });
 
@@ -70,8 +68,8 @@ export class Home implements OnInit {
     return [
       {
         label: 'Solde wallet',
-        value: wallet ? this.currency.format(wallet.balance) : '—',
-        trend: pendingAmount ? `${pendingAmount} € engagés` : 'Aucun pari en attente',
+        value: wallet ? this.formatVerse(wallet.balance) : '0 V',
+        trend: pendingAmount ? `${pendingAmount} V engagés` : 'Aucun pari en attente',
       },
       {
         label: 'Paris gagnés',
@@ -80,7 +78,7 @@ export class Home implements OnInit {
       },
       {
         label: 'Gain potentiel',
-        value: wonAmount ? this.currency.format(wonAmount) : '—',
+        value: wonAmount ? this.formatVerse(wonAmount) : '0 V',
         trend: 'Basé sur les gains cumulés',
       },
       {
@@ -184,7 +182,11 @@ export class Home implements OnInit {
     });
   }
 
+  private formatVerse(amount: number): string {
+    return `${this.verseFormatter.format(amount)} V`;
+  }
+
   formatCurrency(amount: number) {
-    return this.currency.format(amount);
+    return this.formatVerse(amount);
   }
 }

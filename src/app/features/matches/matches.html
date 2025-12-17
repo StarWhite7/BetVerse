@@ -121,15 +121,15 @@
       </div>
       <div>
         <span>Gain potentiel</span>
-        <strong>{{ potentialPayout() | number: '1.0-2' }} ƒ'ª</strong>
+        <strong>{{ potentialPayout() | number: '1.0-2' }} V</strong>
       </div>
     </div>
     <label>
-      Montant (ƒ'ª)
+      Montant (V)
       <input type="number" min="1" [(ngModel)]="betAmountValue" />
     </label>
     <p class="match-bet-modal__balance">
-      Solde: {{ walletBalance() !== null ? (walletBalance() | number: '1.0-0') + " ƒ'ª" : 'Non disponible' }}
+      Solde: {{ walletBalance() !== null ? (walletBalance() | number: '1.0-0') + " V" : 'Non disponible' }}
     </p>
     <p class="matches-error" *ngIf="betError()">
       {{ betError() }}

@@ -26,7 +26,7 @@ type MetricField = 'verseEarned' | 'betsWon' | 'level';
 export class GlobalComponent implements OnInit {
   private readonly leaderboardApi = inject(LeaderboardApiService);
   private readonly metricField: Record<LeaderboardMetric, MetricField> = {
-    VERSE: 'verseEarned',
+   VERSE: 'verseEarned',
     WINS: 'betsWon',
     LEVEL: 'level',
   };

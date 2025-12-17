@@ -3,7 +3,7 @@
     <section class="wallet-overview">
       <div class="wallet-card primary">
         <p>Solde disponible</p>
-        <h2>{{ wallet()?.balance | number: '1.0-0' }} ƒ'ª</h2>
+        <h2>{{ wallet()?.balance | number: '1.0-0' }} V</h2>
         <span>{{ transactions().length }} transactions recentes</span>
         <div class="wallet-card__actions">
           <button type="button" (click)="openModal('credit')" [disabled]="submitting()">
@@ -33,17 +33,17 @@
         <p>Activite recente</p>
         <div class="wallet-card__stat positive">
           <span>Credits</span>
-          <strong>+{{ stats().credits | number: '1.0-0' }} ƒ'ª</strong>
+          <strong>+{{ stats().credits | number: '1.0-0' }} V</strong>
         </div>
         <div class="wallet-card__stat negative">
           <span>Debits</span>
-          <strong>-{{ stats().debits | number: '1.0-0' }} ƒ'ª</strong>
+          <strong>-{{ stats().debits | number: '1.0-0' }} V</strong>
         </div>
         <ul class="wallet-card__list">
           <li *ngFor="let tx of recentTransactions(); trackBy: trackByTx">
             <span>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
             <strong [class.credit]="tx.type === 'CREDIT'">
-              {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
+              {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} V
             </strong>
           </li>
           <li *ngIf="!recentTransactions().length">
@@ -105,7 +105,7 @@
           </span>
         </td>
         <td [class.credit]="tx.type === 'CREDIT'">
-          {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} ƒ'ª
+          {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} V
         </td>
         <td>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
       </tr>
@@ -167,7 +167,7 @@
       <input type="number" min="1" [(ngModel)]="modalAmountValue" />
     </label>
     <p class="wallet-modal__hint">
-      Solde disponible : {{ wallet()?.balance | number: '1.0-0' }} ?'?
+      Solde disponible : {{ wallet()?.balance | number: '1.0-0' }} V
     </p>
     <p class="wallet-error" *ngIf="modalError()">
       {{ modalError() }}
