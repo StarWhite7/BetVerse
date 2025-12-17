@@ -40,6 +40,18 @@
           [class.active]="selectedCompetition() === competition"
           (click)="selectCompetition(competition)"
         >
+          <img
+            *ngIf="competition === 'Ligue 1'"
+            src="flags/France.png"
+            alt="France flag"
+            class="matches-competition-flag"
+          />
+          <img
+            *ngIf="competition === 'Premier League'"
+            src="flags/Angleterre.png"
+            alt="England flag"
+            class="matches-competition-flag"
+          />
           {{ competition }}
         </button>
       </div>

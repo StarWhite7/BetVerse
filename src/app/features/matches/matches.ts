@@ -47,6 +47,10 @@ export class MatchesComponent implements OnInit {
     { key: 'TENNIS', label: 'Tennis', keywords: ['tennis'] },
     { key: 'BASKETBALL', label: 'Basketball', keywords: ['basketball'] },
   ];
+  private readonly competitionLabelMap: Record<string, string> = {
+    EPL: 'Premier League',
+    France: 'Ligue 1',
+  };
   private readonly fallbackSportKey =
     this.sportFilters.find((filter) => filter.fallback)?.key ?? this.sportFilters[0].key;
   readonly competitionAllKey = 'ALL_COMPETITIONS';
@@ -249,7 +253,7 @@ export class MatchesComponent implements OnInit {
       if (typeof entry === 'string') {
         const trimmed = entry.trim();
         if (trimmed.length) {
-          return trimmed;
+          return this.competitionLabelMap[trimmed] ?? trimmed;
         }
       }
     }

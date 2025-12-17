@@ -222,6 +222,10 @@
   flex: 1 0 auto;
   min-width: 140px;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 @media (max-width: 640px) {
@@ -242,6 +246,14 @@
 
 .matches-competition-filter__buttons button:hover {
   border-color: rgba(226, 232, 240, 0.6);
+}
+
+.matches-competition-flag {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 6px rgba(2, 6, 23, 0.6);
 }
 
 .matches-competition-filter__empty {
