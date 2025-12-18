@@ -67,12 +67,16 @@
       </span>
       <div class="match-card__teams">
         <div class="match-card__team">
-          <img [src]="teamLogoUrl(match.homeTeam)" [alt]="match.homeTeam + ' logo'" />
+          <div class="match-card__team-logo">
+            <img [src]="teamLogoUrl(match.homeTeam)" [alt]="match.homeTeam + ' logo'" />
+          </div>
           <span>{{ match.homeTeam }}</span>
         </div>
         <span class="match-card__vs">vs</span>
         <div class="match-card__team">
-          <img [src]="teamLogoUrl(match.awayTeam)" [alt]="match.awayTeam + ' logo'" />
+          <div class="match-card__team-logo">
+            <img [src]="teamLogoUrl(match.awayTeam)" [alt]="match.awayTeam + ' logo'" />
+          </div>
           <span>{{ match.awayTeam }}</span>
         </div>
       </div>
