@@ -19,6 +19,8 @@
       </span>
     </label>
 
+    <a routerLink="/auth/forgot-password" class="form-link">Mot de passe oublié ?</a>
+
     <button type="submit" [disabled]="loading()">
       {{ loading() ? 'Connexion...' : 'Se connecter' }}
     </button>

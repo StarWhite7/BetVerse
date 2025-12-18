@@ -21,6 +21,15 @@ interface LoginResponse {
   user: User;
 }
 
+interface ForgotPasswordPayload {
+  identifier: string;
+}
+
+interface ResetPasswordPayload {
+  token: string;
+  password: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly apiUrl = environment.apiUrl;
@@ -102,6 +111,14 @@ export class AuthService {
 
   register(payload: RegisterPayload) {
     return this.http.post<User>(`${this.apiUrl}/auth/register`, payload);
+  }
+
+  requestPasswordReset(payload: ForgotPasswordPayload) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/forgot-password`, payload);
+  }
+
+  resetPassword(payload: ResetPasswordPayload) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/auth/reset-password`, payload);
   }
 
   fetchProfile(): Observable<User | null> {

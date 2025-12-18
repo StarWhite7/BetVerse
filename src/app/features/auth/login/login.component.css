@@ -72,3 +72,15 @@ button[disabled] {
   font-size: 0.75rem;
   margin-bottom: 0.5rem;
 }
+.form-success {
+  color: #34d399;
+  text-align: center;
+}
+.form-link {
+  display: inline-block;
+  margin-top: -0.5rem;
+  font-size: 0.85rem;
+  text-align: right;
+  color: #a78bfa;
+  text-decoration: none;
+}
