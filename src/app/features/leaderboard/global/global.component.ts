@@ -58,6 +58,16 @@ export class GlobalComponent implements OnInit {
   readonly error = signal<string | null>(null);
 
   readonly topPlayers = computed(() => this.players().slice(0, 3));
+  readonly topPodium = computed(() => {
+    const top = this.topPlayers();
+    if (top.length <= 1) {
+      return top;
+    }
+    if (top.length === 2) {
+      return [top[1], top[0]];
+    }
+    return [top[1], top[0], top[2]];
+  });
   readonly otherPlayers = computed(() => this.players().slice(3));
   readonly activeMetric = computed(
     () => this.metricOptions.find((option) => option.id === this.selectedMetric()) ?? this.metricOptions[0],
@@ -95,6 +105,30 @@ export class GlobalComponent implements OnInit {
     return Math.round((current / topValue) * 100);
   }
 
+  xpProgress(entry: LeaderboardEntry) {
+    const currentLevel = entry.level ?? 1;
+    const currentXp = entry.xp ?? 0;
+    const floor = this.xpForLevel(currentLevel);
+    const ceil = this.xpForLevel(currentLevel + 1);
+    const needed = Math.max(1, ceil - floor);
+    const gained = Math.max(0, currentXp - floor);
+    return Math.min(100, Math.max(0, Math.round((gained / needed) * 100)));
+  }
+
+  xpCurrent(entry: LeaderboardEntry) {
+    const currentLevel = entry.level ?? 1;
+    const currentXp = entry.xp ?? 0;
+    const floor = this.xpForLevel(currentLevel);
+    return Math.max(0, currentXp - floor);
+  }
+
+  xpNeeded(entry: LeaderboardEntry) {
+    const currentLevel = entry.level ?? 1;
+    const floor = this.xpForLevel(currentLevel);
+    const ceil = this.xpForLevel(currentLevel + 1);
+    return Math.max(1, ceil - floor);
+  }
+
   formatPrimaryValue(entry: LeaderboardEntry) {
     switch (this.selectedMetric()) {
       case 'VERSE':
@@ -123,6 +157,14 @@ export class GlobalComponent implements OnInit {
 
   trackByEntry(_index: number, entry: LeaderboardEntry) {
     return entry.id;
+  }
+
+  private xpForLevel(level: number) {
+    const base = 500;
+    const growth = 250;
+    const safeLevel = Math.max(1, Math.floor(level));
+    const steps = safeLevel - 1;
+    return Math.max(0, Math.floor(steps * base + (steps * (steps - 1) * growth) / 2));
   }
 
   private loadLeaderboard() {

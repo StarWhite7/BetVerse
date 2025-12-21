@@ -1,4 +1,4 @@
-<section class="leaderboard-page">
+<section class="leaderboard-page" [class.leaderboard-level]="selectedMetric() === 'LEVEL'">
   <header class="leaderboard-header">
     <div class="leaderboard-header__copy">
       <p class="eyebrow">Classement</p>
@@ -30,7 +30,13 @@
   </section>
 
   <section class="leaderboard-highlight" *ngIf="!loading() && !error() && topPlayers().length">
-    <article class="highlight-card" *ngFor="let player of topPlayers(); trackBy: trackByEntry">
+    <article
+      class="highlight-card"
+      *ngFor="let player of topPodium(); trackBy: trackByEntry"
+      [class.highlight-card--first]="player.rank === 1"
+      [class.highlight-card--second]="player.rank === 2"
+      [class.highlight-card--third]="player.rank === 3"
+    >
       <div class="highlight-rank">#{{ player.rank }}</div>
       <div class="highlight-identity">
         <span class="avatar" [style.--avatar-accent]="player.accent">
@@ -41,14 +47,27 @@
           <span>{{ player.clan || 'Solo queue' }}</span>
         </div>
       </div>
-      <div class="highlight-value">
-        <p>{{ formatPrimaryValue(player) }}</p>
-        <span>{{ formatSecondaryValue(player) }}</span>
-      </div>
-      <div class="highlight-meta">
-        <span>{{ player.winRate }}% winrate</span>
-        <span>{{ player.currentStreak }} serie en cours</span>
-      </div>
+      <ng-container *ngIf="selectedMetric() === 'LEVEL'; else highlightDefault">
+        <div class="highlight-level">
+          <span>Niveau {{ player.level }}</span>
+          <div class="highlight-xp">
+            <div class="progress-bar">
+              <div class="progress-bar__value" [style.width.%]="xpProgress(player)"></div>
+            </div>
+            <span>{{ xpCurrent(player) | number: '1.0-0' }} / {{ xpNeeded(player) | number: '1.0-0' }} XP</span>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #highlightDefault>
+        <div class="highlight-value">
+          <p>{{ formatPrimaryValue(player) }}</p>
+          <span>{{ formatSecondaryValue(player) }}</span>
+        </div>
+        <div class="highlight-meta">
+          <span>{{ player.winRate }}% winrate</span>
+          <span>{{ player.currentStreak }} serie en cours</span>
+        </div>
+      </ng-template>
     </article>
   </section>
 
@@ -70,20 +89,31 @@
           <span>{{ player.clan || 'Solo queue' }}</span>
         </div>
       </div>
-      <div class="leaderboard-row__stat">
-        <p>{{ formatPrimaryValue(player) }}</p>
-        <span>{{ formatSecondaryValue(player) }}</span>
-      </div>
-      <div class="leaderboard-row__meta">
-        <span>{{ player.winRate }}% winrate</span>
-        <span>{{ player.betsPlayed }} paris joues</span>
-      </div>
-      <div class="leaderboard-row__progress">
-        <div class="progress-bar">
-          <div class="progress-bar__value" [style.width.%]="progressValue(player)"></div>
+      <ng-container *ngIf="selectedMetric() === 'LEVEL'; else rowDefault">
+        <div class="leaderboard-row__level">Niveau {{ player.level }}</div>
+        <div class="leaderboard-row__xp">
+          <div class="progress-bar">
+            <div class="progress-bar__value" [style.width.%]="xpProgress(player)"></div>
+          </div>
+          <span>{{ xpCurrent(player) | number: '1.0-0' }} / {{ xpNeeded(player) | number: '1.0-0' }} XP</span>
         </div>
-        <span>{{ progressValue(player) }}%</span>
-      </div>
+      </ng-container>
+      <ng-template #rowDefault>
+        <div class="leaderboard-row__stat">
+          <p>{{ formatPrimaryValue(player) }}</p>
+          <span>{{ formatSecondaryValue(player) }}</span>
+        </div>
+        <div class="leaderboard-row__meta">
+          <span>{{ player.winRate }}% winrate</span>
+          <span>{{ player.betsPlayed }} paris joues</span>
+        </div>
+        <div class="leaderboard-row__progress">
+          <div class="progress-bar">
+            <div class="progress-bar__value" [style.width.%]="progressValue(player)"></div>
+          </div>
+          <span>{{ progressValue(player) }}%</span>
+        </div>
+      </ng-template>
     </article>
 
     <p class="leaderboard-empty" *ngIf="!otherPlayers().length && !topPlayers().length">

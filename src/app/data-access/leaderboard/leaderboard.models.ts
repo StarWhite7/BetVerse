@@ -7,6 +7,7 @@ export interface LeaderboardPlayer {
   initials: string;
   accent: string;
   level: number;
+  xp: number;
   verseEarned: number;
   betsWon: number;
   betsPlayed: number;
