@@ -186,6 +186,6 @@ export class ProfileComponent implements OnInit {
   }
 
   private sanitizeUsername(value: string) {
-    return value.trim().toLowerCase();
+    return value.trim();
   }
 }
