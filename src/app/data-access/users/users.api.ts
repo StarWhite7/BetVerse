@@ -37,4 +37,16 @@ export class UsersApiService {
     const params = new HttpParams().set('q', query);
     return this.http.get<UserSearchResult[]>(`${this.baseUrl}/search`, { params });
   }
+
+  addXp() {
+    return this.http.patch<User>(`${this.baseUrl}/me/xp/add`, {});
+  }
+
+  removeXp() {
+    return this.http.patch<User>(`${this.baseUrl}/me/xp/remove`, {});
+  }
+
+  resetXp() {
+    return this.http.patch<User>(`${this.baseUrl}/me/xp/reset`, {});
+  }
 }

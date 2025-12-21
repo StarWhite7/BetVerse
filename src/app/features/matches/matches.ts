@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatchesApiService, MatchEntity } from '../../data-access/matches/matches.api';
 import { BetsApiService } from '../../data-access/bets/bets.api';
 import { NotificationService } from '../../core/services/notification.service';
+import { AuthService } from '../../core/services/auth.service';
 import { BetsStore } from '../../data-access/bets/bets.store';
 import { WalletApiService } from '../../data-access/wallet/wallet.api';
 
@@ -93,6 +94,7 @@ export class MatchesComponent implements OnInit {
   private readonly matchesApi = inject(MatchesApiService);
   private readonly betsApi = inject(BetsApiService);
   private readonly notifications = inject(NotificationService);
+  private readonly auth = inject(AuthService);
   private readonly betsStore = inject(BetsStore);
   private readonly walletApi = inject(WalletApiService);
 
@@ -278,6 +280,7 @@ export class MatchesComponent implements OnInit {
           this.notifications.success('Pari cree avec succes.');
           this.betsStore.refresh();
           this.loadWalletBalance();
+          this.auth.fetchProfile().subscribe();
         },
         error: (err) => {
           const message = err?.error?.message ?? 'Impossible de creer le pari.';

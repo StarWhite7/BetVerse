@@ -5,4 +5,6 @@ export interface User {
   email: string;
   role: UserRole;
   username?: string | null;
+  xp?: number | null;
+  level?: number | null;
 }

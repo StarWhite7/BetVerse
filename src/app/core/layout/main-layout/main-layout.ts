@@ -34,6 +34,7 @@ export class MainLayout implements OnInit {
   claimAvailable = computed(() => this.nextClaimTime() === null);
   usernamePromptVisible = signal(false);
   usernamePromptSubmitting = signal(false);
+  adminXpLoading = signal(false);
   usernamePromptForm = this.fb.nonNullable.group({
     username: [
       '',
@@ -60,6 +61,22 @@ export class MainLayout implements OnInit {
       return 'Profil';
     }
     return current.username ?? current.email ?? 'Profil';
+  });
+  xpTotal = computed(() => this.user()?.xp ?? 0);
+  xpLevel = computed(() => this.user()?.level ?? 1);
+  xpCurrent = computed(() => {
+    const level = this.xpLevel();
+    const current = this.xpTotal() - this.xpForLevel(level);
+    return Math.max(0, current);
+  });
+  xpNeeded = computed(() => {
+    const level = this.xpLevel();
+    return Math.max(1, this.xpForLevel(level + 1) - this.xpForLevel(level));
+  });
+  xpProgressPercent = computed(() => {
+    const needed = this.xpNeeded();
+    if (needed <= 0) return 0;
+    return Math.min(100, Math.max(0, (this.xpCurrent() / needed) * 100));
   });
   hasWalletAccess = computed(() => this.user()?.role === 'ADMIN');
   hasAdminAccess = computed(() => this.user()?.role === 'ADMIN');
@@ -178,12 +195,25 @@ export class MainLayout implements OnInit {
           if (!hasServerData) {
             this.scheduleNextClaim();
           }
+          this.auth.fetchProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
           this.claimLoading.set(false);
         },
         error: () => {
           this.claimLoading.set(false);
         },
       });
+  }
+
+  addAdminXp() {
+    this.adjustAdminXp('add');
+  }
+
+  removeAdminXp() {
+    this.adjustAdminXp('remove');
+  }
+
+  resetAdminXp() {
+    this.adjustAdminXp('reset');
   }
 
   private loadWallet() {
@@ -200,6 +230,31 @@ export class MainLayout implements OnInit {
           this.walletLoading.set(false);
         },
       });
+  }
+
+  private adjustAdminXp(action: 'add' | 'remove' | 'reset') {
+    if (this.adminXpLoading()) {
+      return;
+    }
+
+    this.adminXpLoading.set(true);
+    const request =
+      action === 'add'
+        ? this.usersApi.addXp()
+        : action === 'remove'
+          ? this.usersApi.removeXp()
+          : this.usersApi.resetXp();
+
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (user) => {
+        this.auth.syncUser(user);
+        this.adminXpLoading.set(false);
+      },
+      error: () => {
+        this.notifications.error("Impossible d'ajuster l'XP.");
+        this.adminXpLoading.set(false);
+      },
+    });
   }
 
   private syncClaimWindowFromWallet(wallet: WalletEntity | null): boolean {
@@ -230,6 +285,14 @@ export class MainLayout implements OnInit {
   private setNextClaimTime(timestamp: number) {
     this.nextClaimTime.set(timestamp);
     this.persistNextClaimTime(timestamp);
+  }
+
+  private xpForLevel(level: number) {
+    const base = 500;
+    const growth = 250;
+    const safeLevel = Math.max(1, Math.floor(level));
+    const steps = safeLevel - 1;
+    return Math.max(0, Math.floor(steps * base + (steps * (steps - 1) * growth) / 2));
   }
 
   private formatDuration(ms: number) {

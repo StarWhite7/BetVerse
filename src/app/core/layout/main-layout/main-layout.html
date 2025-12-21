@@ -29,6 +29,17 @@
         <ng-template #guest>Bienvenue</ng-template>
       </div>
       <div class="shell__cta">
+        <div class="admin-xp" *ngIf="hasAdminAccess()">
+          <button type="button" class="ghost" (click)="addAdminXp()" [disabled]="adminXpLoading()">
+            +100 XP
+          </button>
+          <button type="button" class="ghost" (click)="removeAdminXp()" [disabled]="adminXpLoading()">
+            -100 XP
+          </button>
+          <button type="button" class="ghost" (click)="resetAdminXp()" [disabled]="adminXpLoading()">
+            Reset XP
+          </button>
+        </div>
         <button
           type="button"
           (click)="claimDailyVerses()"
@@ -62,6 +73,18 @@
         <button type="button" class="ghost" (click)="logout()">Déconnecter</button>
       </div>
     </header>
+
+    <section class="shell__xp" *ngIf="user() as current">
+      <div class="xp-rail">
+        <div class="xp-rail__track">
+          <div class="xp-rail__fill" [style.width.%]="xpProgressPercent()"></div>
+        </div>
+        <div class="xp-rail__level">NIV {{ current.level ?? 1 }}</div>
+      </div>
+      <div class="xp-rail__meta">
+        {{ xpCurrent() | number: '1.0-0' }} / {{ xpNeeded() | number: '1.0-0' }} XP
+      </div>
+    </section>
 
     <main class="shell__main">
       <router-outlet></router-outlet>
