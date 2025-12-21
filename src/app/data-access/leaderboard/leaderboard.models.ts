@@ -8,6 +8,10 @@ export interface LeaderboardPlayer {
   accent: string;
   level: number;
   xp: number;
+  versePossessedTotal: number;
+  verseWallet: number;
+  versePending: number;
+  verseInvested: number;
   verseEarned: number;
   betsWon: number;
   betsPlayed: number;

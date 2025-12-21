@@ -4,7 +4,7 @@
       <p class="eyebrow">Classement</p>
       <h1>Les strateges qui dominent BetVerse</h1>
       <p class="subtitle">
-        Choisis une vue pour afficher le classement par Verse gagnes, paris gagnes ou niveau general. Les donnees
+        Choisis une vue pour afficher le classement par Verse possedes, paris gagnes ou niveau general. Les donnees
         evoluent en direct selon les performances de la communaute.
       </p>
     </div>
@@ -29,7 +29,7 @@
     </div>
   </section>
 
-  <section class="leaderboard-highlight" *ngIf="!loading() && !error() && topPlayers().length">
+    <section class="leaderboard-highlight" *ngIf="!loading() && !error() && topPlayers().length">
     <article
       class="highlight-card"
       *ngFor="let player of topPodium(); trackBy: trackByEntry"
@@ -47,7 +47,7 @@
           <span>{{ player.clan || 'Solo queue' }}</span>
         </div>
       </div>
-      <ng-container *ngIf="selectedMetric() === 'LEVEL'; else highlightDefault">
+      <ng-container *ngIf="selectedMetric() === 'LEVEL'; else highlightOther">
         <div class="highlight-level">
           <span>Niveau {{ player.level }}</span>
           <div class="highlight-xp">
@@ -58,18 +58,62 @@
           </div>
         </div>
       </ng-container>
-      <ng-template #highlightDefault>
-        <div class="highlight-value">
-          <p>{{ formatPrimaryValue(player) }}</p>
-          <span>{{ formatSecondaryValue(player) }}</span>
-        </div>
-        <div class="highlight-meta">
-          <span>{{ player.winRate }}% winrate</span>
-          <span>{{ player.currentStreak }} serie en cours</span>
-        </div>
+      <ng-template #highlightOther>
+        <ng-container *ngIf="selectedMetric() === 'VERSE'; else highlightWins">
+          <div class="highlight-value">
+            <p>{{ formatPrimaryValue(player) }}</p>
+            <span>Wallet {{ player.verseWallet | number: '1.0-0' }} | En cours {{ player.versePending | number: '1.0-0' }} | Investis {{ player.verseInvested | number: '1.0-0' }}</span>
+          </div>
+          <div class="highlight-verse">
+            <div class="progress-bar progress-bar--stack">
+              <div class="progress-bar__stack" [style.width.%]="progressValue(player)">
+                <span
+                  class="progress-segment wallet"
+                  [style.width.%]="verseSegment(player, 'wallet')"
+                  [attr.data-tooltip]="'Wallet\n' + (player.verseWallet | number: '1.0-0') + ' Verse'"
+                ></span>
+                <span
+                  class="progress-segment pending"
+                  [style.width.%]="verseSegment(player, 'pending')"
+                  [attr.data-tooltip]="'En cours\n' + (player.versePending | number: '1.0-0') + ' Verse'"
+                ></span>
+                <span
+                  class="progress-segment invested"
+                  [style.width.%]="verseSegment(player, 'invested')"
+                  [attr.data-tooltip]="'Investis\n' + (player.verseInvested | number: '1.0-0') + ' Verse'"
+                ></span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #highlightWins>
+          <ng-container *ngIf="selectedMetric() === 'WINS'; else highlightDefault">
+            <div class="highlight-value">
+              <p>{{ player.winRate }}% winrate</p>
+              <span>{{ player.betsWon }} paris gagnes</span>
+            </div>
+            <div class="highlight-winrate">
+              <div class="progress-bar">
+                <div class="progress-bar__value" [style.width.%]="player.winRate"></div>
+              </div>
+              <span>{{ player.winRate }}%</span>
+            </div>
+          </ng-container>
+        </ng-template>
+        <ng-template #highlightDefault>
+          <div class="highlight-value">
+            <p>{{ formatPrimaryValue(player) }}</p>
+            <span>{{ formatSecondaryValue(player) }}</span>
+          </div>
+          <div class="highlight-meta">
+            <span>{{ player.winRate }}% winrate</span>
+            <span>{{ player.currentStreak }} serie en cours</span>
+          </div>
+        </ng-template>
       </ng-template>
     </article>
   </section>
+
 
   <section class="leaderboard-list" *ngIf="!loading() && !error()">
     <header class="leaderboard-list__header" *ngIf="players().length">
@@ -80,7 +124,7 @@
       <span>{{ players().length }} joueurs</span>
     </header>
 
-    <article class="leaderboard-row" *ngFor="let player of otherPlayers(); trackBy: trackByEntry">
+        <article class="leaderboard-row" *ngFor="let player of otherPlayers(); trackBy: trackByEntry">
       <div class="leaderboard-row__rank">#{{ player.rank }}</div>
       <div class="leaderboard-row__identity">
         <span class="avatar" [style.--avatar-accent]="player.accent">{{ player.initials }}</span>
@@ -89,7 +133,7 @@
           <span>{{ player.clan || 'Solo queue' }}</span>
         </div>
       </div>
-      <ng-container *ngIf="selectedMetric() === 'LEVEL'; else rowDefault">
+      <ng-container *ngIf="selectedMetric() === 'LEVEL'; else rowOther">
         <div class="leaderboard-row__level">Niveau {{ player.level }}</div>
         <div class="leaderboard-row__xp">
           <div class="progress-bar">
@@ -98,23 +142,74 @@
           <span>{{ xpCurrent(player) | number: '1.0-0' }} / {{ xpNeeded(player) | number: '1.0-0' }} XP</span>
         </div>
       </ng-container>
-      <ng-template #rowDefault>
-        <div class="leaderboard-row__stat">
-          <p>{{ formatPrimaryValue(player) }}</p>
-          <span>{{ formatSecondaryValue(player) }}</span>
-        </div>
-        <div class="leaderboard-row__meta">
-          <span>{{ player.winRate }}% winrate</span>
-          <span>{{ player.betsPlayed }} paris joues</span>
-        </div>
-        <div class="leaderboard-row__progress">
-          <div class="progress-bar">
-            <div class="progress-bar__value" [style.width.%]="progressValue(player)"></div>
+      <ng-template #rowOther>
+        <ng-container *ngIf="selectedMetric() === 'VERSE'; else rowWins">
+          <div class="leaderboard-row__stat">
+            <p>{{ formatPrimaryValue(player) }}</p>
+            <span>Wallet {{ player.verseWallet | number: '1.0-0' }} | En cours {{ player.versePending | number: '1.0-0' }} | Investis {{ player.verseInvested | number: '1.0-0' }}</span>
           </div>
-          <span>{{ progressValue(player) }}%</span>
-        </div>
+          <div class="leaderboard-row__meta">
+            <span>{{ player.betsPlayed }} paris joues</span>
+          </div>
+          <div class="leaderboard-row__progress">
+            <div class="progress-bar progress-bar--stack">
+              <div class="progress-bar__stack" [style.width.%]="progressValue(player)">
+                <span
+                  class="progress-segment wallet"
+                  [style.width.%]="verseSegment(player, 'wallet')"
+                  [attr.data-tooltip]="'Wallet\n' + (player.verseWallet | number: '1.0-0') + ' Verse'"
+                ></span>
+                <span
+                  class="progress-segment pending"
+                  [style.width.%]="verseSegment(player, 'pending')"
+                  [attr.data-tooltip]="'En cours\n' + (player.versePending | number: '1.0-0') + ' Verse'"
+                ></span>
+                <span
+                  class="progress-segment invested"
+                  [style.width.%]="verseSegment(player, 'invested')"
+                  [attr.data-tooltip]="'Investis\n' + (player.verseInvested | number: '1.0-0') + ' Verse'"
+                ></span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #rowWins>
+          <ng-container *ngIf="selectedMetric() === 'WINS'; else rowDefault">
+            <div class="leaderboard-row__stat">
+              <p>{{ player.winRate }}% winrate</p>
+              <span>{{ player.betsWon }} paris gagnes</span>
+            </div>
+            <div class="leaderboard-row__meta">
+              <span>{{ player.betsPlayed }} paris joues</span>
+              <span>{{ player.currentStreak }} serie en cours</span>
+            </div>
+            <div class="leaderboard-row__progress">
+              <div class="progress-bar">
+                <div class="progress-bar__value" [style.width.%]="player.winRate"></div>
+              </div>
+              <span>{{ player.winRate }}%</span>
+            </div>
+          </ng-container>
+        </ng-template>
+        <ng-template #rowDefault>
+          <div class="leaderboard-row__stat">
+            <p>{{ formatPrimaryValue(player) }}</p>
+            <span>{{ formatSecondaryValue(player) }}</span>
+          </div>
+          <div class="leaderboard-row__meta">
+            <span>{{ player.winRate }}% winrate</span>
+            <span>{{ player.betsPlayed }} paris joues</span>
+          </div>
+          <div class="leaderboard-row__progress">
+            <div class="progress-bar">
+              <div class="progress-bar__value" [style.width.%]="progressValue(player)"></div>
+            </div>
+            <span>{{ progressValue(player) }}%</span>
+          </div>
+        </ng-template>
       </ng-template>
     </article>
+
 
     <p class="leaderboard-empty" *ngIf="!otherPlayers().length && !topPlayers().length">
       Aucun joueur n'est disponible pour cette vue.

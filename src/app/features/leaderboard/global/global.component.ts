@@ -14,7 +14,7 @@ import {
   LeaderboardMetricOption,
 } from '../../../data-access/leaderboard/leaderboard.models';
 
-type MetricField = 'verseEarned' | 'betsWon' | 'level';
+type MetricField = 'verseEarned' | 'betsWon' | 'level' | 'winRate' | 'versePossessedTotal';
 
 @Component({
   selector: 'leaderboard-global',
@@ -26,8 +26,8 @@ type MetricField = 'verseEarned' | 'betsWon' | 'level';
 export class GlobalComponent implements OnInit {
   private readonly leaderboardApi = inject(LeaderboardApiService);
   private readonly metricField: Record<LeaderboardMetric, MetricField> = {
-   VERSE: 'verseEarned',
-    WINS: 'betsWon',
+    VERSE: 'versePossessedTotal',
+    WINS: 'winRate',
     LEVEL: 'level',
   };
   private readonly numberFormat = new Intl.NumberFormat('fr-FR', {
@@ -37,8 +37,8 @@ export class GlobalComponent implements OnInit {
   readonly metricOptions: LeaderboardMetricOption[] = [
     {
       id: 'VERSE',
-      label: 'Plus de Verse gagnes',
-      description: 'Gains cumules toutes competitions',
+      label: 'Plus de Verse possede',
+      description: 'Wallet + en cours + investissements',
     },
     {
       id: 'WINS',
@@ -96,6 +96,9 @@ export class GlobalComponent implements OnInit {
   }
 
   progressValue(entry: LeaderboardEntry) {
+    if (this.selectedMetric() === 'VERSE') {
+      return 100;
+    }
     const field = this.metricField[this.selectedMetric()];
     const topValue = this.topMetricValue();
     if (!topValue) {
@@ -132,7 +135,7 @@ export class GlobalComponent implements OnInit {
   formatPrimaryValue(entry: LeaderboardEntry) {
     switch (this.selectedMetric()) {
       case 'VERSE':
-        return `${this.numberFormat.format(entry.verseEarned)} Verse`;
+        return `${this.numberFormat.format(entry.versePossessedTotal)} Verse possedes`;
       case 'WINS':
         return `${entry.betsWon} paris gagnes`;
       case 'LEVEL':
@@ -143,12 +146,26 @@ export class GlobalComponent implements OnInit {
   formatSecondaryValue(entry: LeaderboardEntry) {
     switch (this.selectedMetric()) {
       case 'VERSE':
-        return `${entry.betsWon} paris gagnes`;
+        return `${this.numberFormat.format(entry.verseWallet)} wallet`;
       case 'WINS':
         return `${this.numberFormat.format(entry.verseEarned)} Verse cumules`;
       case 'LEVEL':
         return `${entry.betsWon} paris gagnes`;
     }
+  }
+
+  verseSegment(entry: LeaderboardEntry, kind: 'wallet' | 'pending' | 'invested') {
+    const total = entry.versePossessedTotal ?? 0;
+    if (!total) {
+      return 0;
+    }
+    if (kind === 'wallet') {
+      return (entry.verseWallet / total) * 100;
+    }
+    if (kind === 'pending') {
+      return (entry.versePending / total) * 100;
+    }
+    return (entry.verseInvested / total) * 100;
   }
 
   trackByMetric(_index: number, option: LeaderboardMetricOption) {
