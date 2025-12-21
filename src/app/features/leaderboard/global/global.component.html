@@ -38,7 +38,7 @@
       [class.highlight-card--third]="player.rank === 3"
     >
       <div class="highlight-rank">#{{ player.rank }}</div>
-      <div class="highlight-identity">
+      <a class="player-link" [routerLink]="['/users', player.id]">
         <span class="avatar" [style.--avatar-accent]="player.accent">
           {{ player.initials }}
         </span>
@@ -46,7 +46,7 @@
           <p>{{ player.username }}</p>
           <span>{{ player.clan || 'Solo queue' }}</span>
         </div>
-      </div>
+      </a>
       <ng-container *ngIf="selectedMetric() === 'LEVEL'; else highlightOther">
         <div class="highlight-level">
           <span>Niveau {{ player.level }}</span>
@@ -127,11 +127,13 @@
         <article class="leaderboard-row" *ngFor="let player of otherPlayers(); trackBy: trackByEntry">
       <div class="leaderboard-row__rank">#{{ player.rank }}</div>
       <div class="leaderboard-row__identity">
-        <span class="avatar" [style.--avatar-accent]="player.accent">{{ player.initials }}</span>
-        <div>
-          <p>{{ player.username }}</p>
-          <span>{{ player.clan || 'Solo queue' }}</span>
-        </div>
+        <a class="player-link" [routerLink]="['/users', player.id]">
+          <span class="avatar" [style.--avatar-accent]="player.accent">{{ player.initials }}</span>
+          <div>
+            <p>{{ player.username }}</p>
+            <span>{{ player.clan || 'Solo queue' }}</span>
+          </div>
+        </a>
       </div>
       <ng-container *ngIf="selectedMetric() === 'LEVEL'; else rowOther">
         <div class="leaderboard-row__level">Niveau {{ player.level }}</div>

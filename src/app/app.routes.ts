@@ -38,6 +38,11 @@ export const routes: Routes = [
           import('./features/leaderboard/leaderboard.routes').then((m) => m.default),
       },
       {
+        path: 'users/:id',
+        loadComponent: () =>
+          import('./features/users/public-profile/public-profile').then((m) => m.PublicProfileComponent),
+      },
+      {
         path: 'admin-usage',
         loadChildren: () =>
           import('./features/admin-usage/admin-usage.routes').then((m) => m.default),

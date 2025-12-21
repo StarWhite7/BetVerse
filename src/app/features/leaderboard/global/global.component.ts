@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import {
   Component,
   OnInit,
@@ -19,7 +20,7 @@ type MetricField = 'verseEarned' | 'betsWon' | 'level' | 'winRate' | 'versePosse
 @Component({
   selector: 'leaderboard-global',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './global.component.html',
   styleUrl: './global.component.css',
 })

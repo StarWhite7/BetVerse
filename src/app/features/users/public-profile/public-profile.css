@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600&display=swap');
+
+:host {
+  display: block;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  color: #e2e8f0;
+}
+
+.user-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.user-profile__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 1.2rem;
+  border: 1px solid rgba(226, 232, 240, 0.1);
+  background: linear-gradient(130deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.65));
+}
+
+.user-profile__meta {
+  margin: 0.4rem 0 0;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.user-profile__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(120deg, #8b5cf6, #ec4899);
+  color: #0b0f1c;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.user-profile__status {
+  padding: 1rem 1.2rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.user-profile__status.error {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.user-profile__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.user-card {
+  padding: 1.25rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(5, 10, 20, 0.75);
+}
+
+.user-card h3 {
+  margin: 0 0 0.8rem;
+}
+
+.user-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.user-card li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.user-card span {
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.user-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.user-bets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.user-bets li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.user-bets span {
+  display: block;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.85rem;
+}
+
+@media (min-width: 900px) {
+  .user-profile__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .user-profile__bets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}

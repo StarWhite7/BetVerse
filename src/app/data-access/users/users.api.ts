@@ -19,6 +19,38 @@ export interface UserSearchResult {
   email: string;
 }
 
+export interface PublicBet {
+  id: string;
+  match: string;
+  betType: string;
+  amount: number;
+  odds: number;
+  status: 'PENDING' | 'WON' | 'LOST';
+  createdAt: string;
+  matchId?: string | null;
+}
+
+export interface PublicProfile {
+  user: {
+    id: string;
+    username?: string | null;
+    initials: string;
+    level: number;
+    xp: number;
+  };
+  stats: {
+    winRate: number;
+    betsWon: number;
+    betsPlayed: number;
+    currentStreak: number;
+    verseWallet: number;
+    versePending: number;
+    versePossessedTotal: number;
+  };
+  pendingBets: PublicBet[];
+  historyBets: PublicBet[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsersApiService {
   private readonly baseUrl = `${environment.apiUrl}/users`;
@@ -36,6 +68,10 @@ export class UsersApiService {
   searchUsernames(query: string) {
     const params = new HttpParams().set('q', query);
     return this.http.get<UserSearchResult[]>(`${this.baseUrl}/search`, { params });
+  }
+
+  getPublicProfile(userId: string) {
+    return this.http.get<PublicProfile>(`${this.baseUrl}/${userId}/public`);
   }
 
   addXp() {

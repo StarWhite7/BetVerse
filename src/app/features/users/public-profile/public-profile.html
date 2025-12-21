@@ -1,0 +1,112 @@
+<section class="user-profile">
+  <header class="user-profile__header" *ngIf="!loading() && profile() as data; else loadingState">
+    <div>
+      <p class="eyebrow">Profil joueur</p>
+      <h1>{{ data.user.username || 'Joueur' }}</h1>
+      <p class="user-profile__meta">
+        Niveau {{ data.user.level }} · {{ data.stats.winRate }}% winrate
+      </p>
+    </div>
+    <div class="user-profile__avatar">
+      {{ data.user.initials }}
+    </div>
+  </header>
+
+  <ng-template #loadingState>
+    <div class="user-profile__status" *ngIf="loading()">Chargement du profil...</div>
+  </ng-template>
+
+  <p class="user-profile__status error" *ngIf="error()">
+    {{ error() }}
+  </p>
+
+  <section class="user-profile__grid" *ngIf="profile() as data">
+    <article class="user-card">
+      <h3>Statistiques</h3>
+      <ul>
+        <li>
+          <span>Niveau</span>
+          <strong>{{ data.user.level }}</strong>
+        </li>
+        <li>
+          <span>XP</span>
+          <strong>{{ data.user.xp | number: '1.0-0' }}</strong>
+        </li>
+        <li>
+          <span>Winrate</span>
+          <strong>{{ data.stats.winRate }}%</strong>
+        </li>
+        <li>
+          <span>Paris gagnes</span>
+          <strong>{{ data.stats.betsWon }}</strong>
+        </li>
+        <li>
+          <span>Paris joues</span>
+          <strong>{{ data.stats.betsPlayed }}</strong>
+        </li>
+        <li>
+          <span>Serie en cours</span>
+          <strong>{{ data.stats.currentStreak }}</strong>
+        </li>
+      </ul>
+    </article>
+
+    <article class="user-card">
+      <h3>Verse possedes</h3>
+      <ul>
+        <li>
+          <span>Total</span>
+          <strong>{{ data.stats.versePossessedTotal | number: '1.0-0' }}</strong>
+        </li>
+        <li>
+          <span>Wallet</span>
+          <strong>{{ data.stats.verseWallet | number: '1.0-0' }}</strong>
+        </li>
+        <li>
+          <span>En cours</span>
+          <strong>{{ data.stats.versePending | number: '1.0-0' }}</strong>
+        </li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="user-profile__bets" *ngIf="profile() as data">
+    <article class="user-card">
+      <header class="user-card__header">
+        <h3>Paris en cours</h3>
+        <span>{{ data.pendingBets.length }}</span>
+      </header>
+      <ul class="user-bets">
+        <li *ngFor="let bet of data.pendingBets">
+          <div>
+            <strong>{{ bet.match }}</strong>
+            <span>{{ bet.betType }} · {{ bet.amount }} V · cote {{ bet.odds }}</span>
+          </div>
+          <small>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</small>
+        </li>
+        <li *ngIf="!data.pendingBets.length">
+          Aucun pari en cours.
+        </li>
+      </ul>
+    </article>
+
+    <article class="user-card">
+      <header class="user-card__header">
+        <h3>Historique</h3>
+        <span>{{ data.historyBets.length }}</span>
+      </header>
+      <ul class="user-bets">
+        <li *ngFor="let bet of data.historyBets">
+          <div>
+            <strong>{{ bet.match }}</strong>
+            <span>{{ bet.status }} · {{ bet.amount }} V · cote {{ bet.odds }}</span>
+          </div>
+          <small>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</small>
+        </li>
+        <li *ngIf="!data.historyBets.length">
+          Aucun historique disponible.
+        </li>
+      </ul>
+    </article>
+  </section>
+</section>
