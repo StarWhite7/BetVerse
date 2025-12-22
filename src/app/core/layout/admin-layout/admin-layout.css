@@ -26,10 +26,12 @@
 }
 
 .admin-shell__logo {
+  display: inline-block;
   font-size: 1.1rem;
   letter-spacing: 0.25em;
   font-weight: 600;
   color: #67e8f9;
+  text-decoration: none;
 }
 
 .admin-shell__nav {
