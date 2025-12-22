@@ -35,6 +35,7 @@ export class MainLayout implements OnInit {
   usernamePromptVisible = signal(false);
   usernamePromptSubmitting = signal(false);
   adminXpLoading = signal(false);
+  adminMenuOpen = signal(false);
   usernamePromptForm = this.fb.nonNullable.group({
     username: [
       '',
@@ -154,6 +155,10 @@ export class MainLayout implements OnInit {
   logout() {
     this.walletApi.clearCachedWallet();
     this.auth.logout();
+  }
+
+  toggleAdminMenu() {
+    this.adminMenuOpen.update((open) => !open);
   }
 
   submitUsernamePrompt() {

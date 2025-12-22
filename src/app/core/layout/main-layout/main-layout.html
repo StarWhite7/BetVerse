@@ -8,15 +8,29 @@
       <a routerLink="/bets" routerLinkActive="active">
         <span>Mes paris</span>
       </a>
-      <a *ngIf="hasWalletAccess()" routerLink="/wallet" routerLinkActive="active">
-        <span>Wallet</span>
-      </a>
       <a routerLink="/leaderboard" routerLinkActive="active">
         <span>Classement</span>
       </a>
-      <a *ngIf="hasAdminAccess()" routerLink="/admin-usage" routerLinkActive="active">
+      <button
+        *ngIf="hasAdminAccess()"
+        type="button"
+        class="shell__nav-toggle"
+        (click)="toggleAdminMenu()"
+        [attr.aria-expanded]="adminMenuOpen()"
+      >
         <span>Admin</span>
-      </a>
+      </button>
+      <div *ngIf="hasAdminAccess() && adminMenuOpen()" class="shell__nav-submenu">
+        <a routerLink="/wallet" routerLinkActive="active">
+          <span>Wallet</span>
+        </a>
+        <a routerLink="/admin-usage" routerLinkActive="active">
+          <span>Requ&#234;te</span>
+        </a>
+        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          <span>Panel</span>
+        </a>
+      </div>
     </nav>
   </aside>
 
