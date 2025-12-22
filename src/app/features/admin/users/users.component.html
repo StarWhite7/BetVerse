@@ -1,1 +1,61 @@
-<!-- users -->
+<section class="admin-users">
+  <header class="admin-users__header">
+    <div>
+      <p>Gestion</p>
+      <h1>Utilisateurs</h1>
+    </div>
+    <div class="admin-users__filters">
+      <label>
+        Recherche
+        <input
+          type="text"
+          placeholder="Email, pseudo ou ID"
+          [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)"
+        />
+      </label>
+      <button type="button" (click)="loadUsers()" [disabled]="loading()">
+        {{ loading() ? 'Chargement...' : 'Actualiser' }}
+      </button>
+    </div>
+  </header>
+
+  <p class="admin-users__error" *ngIf="error()">
+    {{ error() }}
+  </p>
+
+  <section class="users-table">
+    <header>
+      <div>
+        <h3>Liste des utilisateurs</h3>
+        <span>{{ filteredUsers().length }} compte(s)</span>
+      </div>
+    </header>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Pseudo</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Cree le</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="loading()">
+          <td colspan="5">Chargement...</td>
+        </tr>
+        <tr *ngFor="let user of filteredUsers(); trackBy: trackByUser">
+          <td>{{ user.id }}</td>
+          <td>{{ user.username || '—' }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
+        </tr>
+        <tr *ngIf="!filteredUsers().length && !loading()">
+          <td colspan="5">Aucun utilisateur trouve.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</section>

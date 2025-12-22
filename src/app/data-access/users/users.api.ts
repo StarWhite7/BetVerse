@@ -51,6 +51,14 @@ export interface PublicProfile {
   historyBets: PublicBet[];
 }
 
+export interface AdminUserSummary {
+  id: string;
+  username: string | null;
+  email: string;
+  role: 'USER' | 'ADMIN';
+  createdAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsersApiService {
   private readonly baseUrl = `${environment.apiUrl}/users`;
@@ -72,6 +80,11 @@ export class UsersApiService {
 
   getPublicProfile(userId: string) {
     return this.http.get<PublicProfile>(`${this.baseUrl}/${userId}/public`);
+  }
+
+  getAdminUsers(query?: string) {
+    const params = query ? new HttpParams().set('q', query) : undefined;
+    return this.http.get<AdminUserSummary[]>(this.baseUrl, { params });
   }
 
   addXp() {

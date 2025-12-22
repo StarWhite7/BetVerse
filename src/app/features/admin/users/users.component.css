@@ -1,0 +1,126 @@
+.admin-users {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-users__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-users__header p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.admin-users__header h1 {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+  color: #f8fafc;
+}
+
+.admin-users__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.admin-users__filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.admin-users__filters input {
+  min-width: 220px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.7);
+  color: #f8fafc;
+}
+
+.admin-users__filters input:focus {
+  outline: none;
+  border-color: rgba(236, 72, 153, 0.7);
+  box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.5);
+}
+
+.admin-users__filters button {
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: transparent;
+  color: #e2e8f0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-users__filters button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-users__error {
+  color: #f87171;
+  margin: 0;
+}
+
+.users-table {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 1rem;
+}
+
+.users-table header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.users-table h3 {
+  margin: 0;
+  color: #f8fafc;
+}
+
+.users-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.users-table th,
+.users-table td {
+  text-align: left;
+  padding: 0.75rem 0.6rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.users-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+@media (max-width: 900px) {
+  .users-table table {
+    font-size: 0.85rem;
+  }
+
+  .admin-users__filters input {
+    min-width: 180px;
+  }
+}
