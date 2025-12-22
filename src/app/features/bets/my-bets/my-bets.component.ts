@@ -1,6 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BetsStore, BetsFilter } from '../../../data-access/bets/bets.store';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'bets-my-bets',
@@ -11,6 +12,7 @@ import { BetsStore, BetsFilter } from '../../../data-access/bets/bets.store';
 })
 export class MyBetsComponent implements OnInit {
   private readonly betsStore = inject(BetsStore);
+  private readonly auth = inject(AuthService);
 
   filters: { label: string; value: BetsFilter }[] = [
     { label: 'Tous', value: 'ALL' },
@@ -23,6 +25,8 @@ export class MyBetsComponent implements OnInit {
   loading = this.betsStore.loading;
   error = this.betsStore.error;
   activeFilter = this.betsStore.filter;
+  isAdmin = computed(() => this.auth.currentUser()?.role === 'ADMIN');
+  columnCount = computed(() => (this.isAdmin() ? 7 : 6));
 
   ngOnInit() {
     this.betsStore.load();

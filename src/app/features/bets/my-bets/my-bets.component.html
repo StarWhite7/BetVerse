@@ -23,7 +23,7 @@
   <table>
     <thead>
       <tr>
-        <th>ID</th>
+        <th *ngIf="isAdmin()">ID</th>
         <th>Match</th>
         <th>Type</th>
         <th>Mise</th>
@@ -34,10 +34,10 @@
     </thead>
     <tbody>
       <tr *ngIf="loading()">
-        <td colspan="7">Chargement des paris...</td>
+        <td [attr.colspan]="columnCount()">Chargement des paris...</td>
       </tr>
       <tr *ngFor="let bet of bets(); trackBy: trackByBet">
-        <td>{{ bet.id }}</td>
+        <td *ngIf="isAdmin()">{{ bet.id }}</td>
         <td>{{ bet.match }}</td>
         <td>{{ bet.betType }}</td>
         <td>{{ bet.amount | number: '1.0-0' }} V</td>
@@ -55,7 +55,7 @@
         <td>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
       </tr>
       <tr *ngIf="!bets().length && !loading()">
-        <td colspan="7">Aucun pari pour le moment.</td>
+        <td [attr.colspan]="columnCount()">Aucun pari pour le moment.</td>
       </tr>
     </tbody>
   </table>
