@@ -5,6 +5,12 @@ import { environment } from '../../core/config/environment';
 export interface AgencyEntity {
   id: string;
   name: string;
+  logoId: string;
+  primaryColor: string;
+  secondaryColor: string;
+  trophiesCount: number;
+  rank: number;
+  _count?: { members: number };
   createdAt: string;
   updatedAt: string;
 }
@@ -25,7 +31,12 @@ export class AgenceApiService {
     );
   }
 
-  createAgency(name: string) {
-    return this.http.post<AgencyEntity>(this.baseUrl, { name });
+  createAgency(payload: {
+    name: string;
+    logoId?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+  }) {
+    return this.http.post<AgencyEntity>(this.baseUrl, payload);
   }
 }

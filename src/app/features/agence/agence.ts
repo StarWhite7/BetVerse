@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WalletApiService, WalletEntity } from '../../data-access/wallet/wallet.api';
 import { AuthService } from '../../core/services/auth.service';
-import { AgenceApiService } from '../../data-access/agence/agence.api';
+import { AgenceApiService, AgencyEntity } from '../../data-access/agence/agence.api';
 
 const AGENCY_CREATE_COST = 100;
 
@@ -28,7 +28,9 @@ export class AgenceComponent implements OnInit {
   selectedLogo = signal('logo-1');
   primaryColor = signal('#22d3ee');
   secondaryColor = signal('#a855f7');
-  hasAgency = computed(() => !!this.auth.currentUser()?.agencyId);
+  agency = signal<AgencyEntity | null>(null);
+  agencyLoading = signal(false);
+  hasAgency = computed(() => !!this.auth.currentUser()?.agencyId || !!this.agency());
 
   ngOnInit() {
     this.walletApi
@@ -38,6 +40,26 @@ export class AgenceComponent implements OnInit {
         this.wallet.set(wallet);
       });
     this.walletApi.getWallet().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+    this.loadAgency();
+  }
+
+  private loadAgency() {
+    if (!this.hasAgency()) {
+      return;
+    }
+    this.agencyLoading.set(true);
+    this.agenceApi
+      .getMyAgency()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (agency) => {
+          this.agency.set(agency);
+          this.agencyLoading.set(false);
+        },
+        error: () => {
+          this.agencyLoading.set(false);
+        },
+      });
   }
 
   openCreateModal() {
@@ -80,10 +102,16 @@ export class AgenceComponent implements OnInit {
 
     this.creating.set(true);
     this.agenceApi
-      .createAgency(name)
+      .createAgency({
+        name,
+        logoId: this.selectedLogo(),
+        primaryColor: this.primaryColor(),
+        secondaryColor: this.secondaryColor(),
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: (agency) => {
+          this.agency.set(agency);
           this.walletApi.getWallet().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
           this.auth.fetchProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
           this.creating.set(false);
@@ -115,5 +143,17 @@ export class AgenceComponent implements OnInit {
       { id: 'logo-3', label: 'Orbit' },
       { id: 'logo-4', label: 'Echo' },
     ];
+  }
+
+  agencyMembers() {
+    return this.agency()?._count?.members ?? 0;
+  }
+
+  agencyBannerStyle() {
+    const agency = this.agency();
+    if (!agency) {
+      return null;
+    }
+    return `linear-gradient(120deg, ${agency.primaryColor}, ${agency.secondaryColor})`;
   }
 }

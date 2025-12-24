@@ -1,12 +1,76 @@
 <section class="agency" *ngIf="hasAgency(); else noAgency">
-  <header class="agency__hero">
-    <p class="agency__eyebrow">Quartier general</p>
-    <h1>Mon agence</h1>
-    <p class="agency__lead">
-      Le coeur strategique de BetVerse. Ici, vous pilotez vos talents, vos
-      contrats et les grandes decisions qui font monter votre equipe.
-    </p>
-  </header>
+  <div class="agency-summary" *ngIf="agency() as agency; else agencyLoading">
+    <div class="agency-summary__banner" [style.background]="agencyBannerStyle()">
+      <div class="agency-summary__logo">
+        <ng-container [ngSwitch]="agency.logoId">
+          <svg
+            *ngSwitchCase="'logo-1'"
+            viewBox="0 0 64 64"
+            aria-hidden="true"
+            [style.fill]="agency.primaryColor"
+            [style.stroke]="agency.secondaryColor"
+          >
+            <path d="M32 6l20 10v18c0 12-9 20-20 24-11-4-20-12-20-24V16Z" />
+          </svg>
+          <svg
+            *ngSwitchCase="'logo-2'"
+            viewBox="0 0 64 64"
+            aria-hidden="true"
+            [style.fill]="agency.primaryColor"
+            [style.stroke]="agency.secondaryColor"
+          >
+            <circle cx="32" cy="32" r="18" />
+            <circle cx="32" cy="32" r="8" />
+          </svg>
+          <svg
+            *ngSwitchCase="'logo-3'"
+            viewBox="0 0 64 64"
+            aria-hidden="true"
+            [style.fill]="agency.primaryColor"
+            [style.stroke]="agency.secondaryColor"
+          >
+            <path d="M10 20l22-12 22 12-22 12Z" />
+            <path d="M12 28l20 10 20-10v16L32 56 12 44Z" />
+          </svg>
+          <svg
+            *ngSwitchDefault
+            viewBox="0 0 64 64"
+            aria-hidden="true"
+            [style.fill]="agency.primaryColor"
+            [style.stroke]="agency.secondaryColor"
+          >
+            <path d="M12 10h40v18H12z" />
+            <path d="M18 28h28l-6 24H24Z" />
+          </svg>
+        </ng-container>
+      </div>
+    </div>
+    <div class="agency-summary__body">
+      <h1>{{ agency.name }}</h1>
+      <div class="agency-summary__stats">
+        <div>
+          <strong>{{ agencyMembers() }}</strong>
+          <span>Membres</span>
+        </div>
+        <div>
+          <strong>{{ agency.trophiesCount }}</strong>
+          <span>Trophees</span>
+        </div>
+        <div>
+          <strong>{{ agency.rank }}</strong>
+          <span>Rang</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template #agencyLoading>
+    <div class="agency-summary agency-summary--loading">
+      <div class="agency-summary__banner"></div>
+      <div class="agency-summary__body">
+        <div class="agency-summary__title">Chargement...</div>
+      </div>
+    </div>
+  </ng-template>
 
   <div class="agency__grid">
     <a class="agency-card agency-card--archive agency-card--link" routerLink="/agence/archives">
