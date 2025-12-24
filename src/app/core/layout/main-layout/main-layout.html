@@ -80,6 +80,17 @@
             <div class="wallet-balance__value wallet-balance__value--loading">...</div>
           </ng-template>
         </div>
+        <div class="wallet-balance wallet-balance--shards" aria-live="polite">
+          <div class="wallet-balance__label">Shards</div>
+          <ng-container *ngIf="!walletLoading(); else shardsLoading">
+            <div class="wallet-balance__value">
+              {{ wallet()?.shards ?? 0 | number: '1.0-0' }}
+            </div>
+          </ng-container>
+          <ng-template #shardsLoading>
+            <div class="wallet-balance__value wallet-balance__value--loading">...</div>
+          </ng-template>
+        </div>
         <a class="profile-chip" routerLink="/profile">
           <span class="profile-chip__avatar">{{ profileInitials() }}</span>
           <div class="profile-chip__body">

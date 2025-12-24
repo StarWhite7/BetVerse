@@ -6,6 +6,7 @@ import { environment } from '../../core/config/environment';
 export interface WalletEntity {
   id: string;
   balance: number;
+  shards: number;
   userId: string;
   createdAt: string;
   updatedAt: string;

@@ -265,6 +265,15 @@
   color: rgba(226, 232, 240, 0.7);
 }
 
+.wallet-balance--shards {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: rgba(88, 28, 135, 0.15);
+}
+
+.wallet-balance--shards .wallet-balance__value {
+  color: #c4b5fd;
+}
+
 .profile-chip {
   display: inline-flex;
   align-items: center;
