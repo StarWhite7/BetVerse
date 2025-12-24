@@ -60,6 +60,12 @@ export const routes: Routes = [
           import('./features/bets/bets.routes').then((m) => m.default),
         canActivate: [authGuard, roleGuard(['USER', 'ADMIN'])],
       },
+            {
+        path: 'agence',
+        loadChildren: () =>
+          import('./features/agence/agence.routes').then((m) => m.default),
+      },
+
       {
         path: 'classement',
         pathMatch: 'full',
@@ -85,3 +91,5 @@ export const routes: Routes = [
     redirectTo: '',
   }
 ];
+
+

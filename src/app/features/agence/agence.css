@@ -1,0 +1,290 @@
+:host {
+  display: block;
+}
+
+.agency {
+  position: relative;
+  padding: 2.5rem;
+  border-radius: 1.6rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(99, 102, 241, 0.2), transparent 45%),
+    radial-gradient(circle at 90% 10%, rgba(236, 72, 153, 0.22), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(34, 211, 238, 0.18), transparent 50%),
+    rgba(5, 10, 20, 0.65);
+  box-shadow: 0 30px 60px rgba(5, 10, 20, 0.55);
+  overflow: hidden;
+}
+
+.agency::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(15, 23, 42, 0.15), transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.08) 0px,
+      rgba(148, 163, 184, 0.08) 1px,
+      transparent 1px,
+      transparent 12px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(148, 163, 184, 0.06) 0px,
+      rgba(148, 163, 184, 0.06) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  opacity: 0.35;
+  pointer-events: none;
+  animation: gridDrift 22s linear infinite;
+}
+
+.agency__hero {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin-bottom: 2.5rem;
+}
+
+.agency__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 0.7rem;
+  color: rgba(226, 232, 240, 0.65);
+  margin: 0 0 0.6rem;
+}
+
+.agency__hero h1 {
+  margin: 0 0 0.8rem;
+  font-size: clamp(2rem, 3vw, 3rem);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #f8fafc;
+}
+
+.agency__lead {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.75);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.agency__grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'coordination core prestige'
+    'workshop core archive';
+}
+
+.agency-card {
+  position: relative;
+  padding: 1.6rem 1.8rem;
+  border-radius: 1.3rem;
+  background: rgba(8, 13, 24, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow:
+    0 20px 40px rgba(5, 10, 20, 0.35),
+    0 0 20px rgba(var(--glow), 0.25),
+    0 0 45px rgba(var(--glow), 0.2);
+  overflow: hidden;
+  transform: translateY(20px);
+  opacity: 0;
+  animation: cardIn 0.6s ease forwards, glowPulse 4.5s ease-in-out infinite;
+}
+
+.agency-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 25px rgba(var(--glow), 0.35), 0 0 45px rgba(var(--glow), 0.25);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.agency-card::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(var(--glow), 0.15), transparent 50%);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.agency-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  border-color: rgba(var(--glow), 0.6);
+  box-shadow:
+    0 25px 55px rgba(5, 10, 20, 0.45),
+    0 0 35px rgba(var(--glow), 0.45),
+    0 0 80px rgba(var(--glow), 0.35);
+}
+
+.agency-card:hover::after {
+  opacity: 0.95;
+  background: linear-gradient(120deg, rgba(var(--glow), 0.3), transparent 55%);
+}
+
+.agency-card h3 {
+  margin: 1.2rem 0 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 1rem;
+  color: rgba(var(--glow), 0.95);
+}
+
+.agency-card p {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.7);
+  line-height: 1.5;
+}
+
+.agency-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--glow), 0.15);
+  border: 1px solid rgba(var(--glow), 0.45);
+  box-shadow: 0 0 20px rgba(var(--glow), 0.4);
+}
+
+.agency-card__icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: rgb(var(--glow));
+  stroke-width: 1.6px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.agency-card--archive {
+  grid-area: archive;
+  --glow: 168, 85, 247;
+  animation-delay: 0.05s, 0.2s;
+}
+
+.agency-card--prestige {
+  grid-area: prestige;
+  --glow: 234, 179, 8;
+  animation-delay: 0.15s, 0.4s;
+}
+
+.agency-card--workshop {
+  grid-area: workshop;
+  --glow: 34, 197, 94;
+  animation-delay: 0.2s, 0.6s;
+}
+
+.agency-card--coordination {
+  grid-area: coordination;
+  --glow: 236, 72, 153;
+  animation-delay: 0.3s, 0.8s;
+}
+
+.agency-card--core {
+  grid-area: core;
+  --glow: 34, 211, 238;
+  padding: 2.2rem 2.4rem;
+  transform: translateY(10px);
+  animation: cardIn 0.6s ease forwards, corePulse 3s ease-in-out infinite;
+  animation-delay: 0.1s, 0.7s;
+}
+
+.agency-card--core h3 {
+  font-size: 1.1rem;
+}
+
+.agency__hint {
+  position: relative;
+  z-index: 1;
+  margin-top: 2rem;
+  text-align: center;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes corePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 35px rgba(34, 211, 238, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 55px rgba(34, 211, 238, 0.6);
+  }
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 20px 40px rgba(5, 10, 20, 0.35),
+      0 0 18px rgba(var(--glow), 0.25),
+      0 0 36px rgba(var(--glow), 0.2);
+  }
+  50% {
+    box-shadow:
+      0 24px 50px rgba(5, 10, 20, 0.4),
+      0 0 28px rgba(var(--glow), 0.45),
+      0 0 55px rgba(var(--glow), 0.35);
+  }
+}
+
+@keyframes gridDrift {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 120px 60px, 140px 0, 0 120px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .agency__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'core core'
+      'coordination prestige'
+      'workshop archive';
+  }
+}
+
+@media (max-width: 720px) {
+  .agency {
+    padding: 1.8rem;
+  }
+
+  .agency__grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'core'
+      'archive'
+      'prestige'
+      'workshop'
+      'coordination';
+  }
+}
