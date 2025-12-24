@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { WalletApiService, WalletEntity } from '../../data-access/wallet/wallet.api';
+import { AuthService } from '../../core/services/auth.service';
+import { AgenceApiService } from '../../data-access/agence/agence.api';
 
-const AGENCY_STORAGE_KEY = 'betverse-has-agence';
 const AGENCY_CREATE_COST = 100;
 
 @Component({
@@ -13,29 +16,104 @@ const AGENCY_CREATE_COST = 100;
   styleUrl: './agence.css',
 })
 export class AgenceComponent implements OnInit {
-  hasAgency = signal(false);
-  shards = signal(140);
+  private readonly walletApi = inject(WalletApiService);
+  private readonly auth = inject(AuthService);
+  private readonly agenceApi = inject(AgenceApiService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  wallet = signal<WalletEntity | null>(null);
+  creating = signal(false);
+  modalOpen = signal(false);
+  agencyName = signal('');
+  selectedLogo = signal('logo-1');
+  primaryColor = signal('#22d3ee');
+  secondaryColor = signal('#a855f7');
+  hasAgency = computed(() => !!this.auth.currentUser()?.agencyId);
 
   ngOnInit() {
-    if (typeof localStorage === 'undefined') {
-      return;
-    }
-    const stored = localStorage.getItem(AGENCY_STORAGE_KEY);
-    if (stored === 'true') {
-      this.hasAgency.set(true);
+    this.walletApi
+      .walletChanges()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((wallet) => {
+        this.wallet.set(wallet);
+      });
+    this.walletApi.getWallet().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+  }
+
+  openCreateModal() {
+    this.modalOpen.set(true);
+    if (!this.agencyName()) {
+      const username = this.auth.currentUser()?.username ?? 'agence';
+      this.agencyName.set(`${username}-team`);
     }
   }
 
+  closeCreateModal() {
+    this.modalOpen.set(false);
+  }
+
+  selectLogo(logoId: string) {
+    this.selectedLogo.set(logoId);
+  }
+
+  updateAgencyName(value: string) {
+    this.agencyName.set(value);
+  }
+
+  updatePrimaryColor(value: string) {
+    this.primaryColor.set(value);
+  }
+
+  updateSecondaryColor(value: string) {
+    this.secondaryColor.set(value);
+  }
+
   createAgency() {
-    if (this.shards() < AGENCY_CREATE_COST) {
+    if (this.creating() || !this.canCreate()) {
       return;
     }
-    this.shards.update((value) => value - AGENCY_CREATE_COST);
-    this.hasAgency.set(true);
-    localStorage.setItem(AGENCY_STORAGE_KEY, 'true');
+
+    const name = this.agencyName().trim();
+    if (!name) {
+      return;
+    }
+
+    this.creating.set(true);
+    this.agenceApi
+      .createAgency(name)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.walletApi.getWallet().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+          this.auth.fetchProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+          this.creating.set(false);
+          this.modalOpen.set(false);
+        },
+        error: () => {
+          this.creating.set(false);
+        },
+      });
   }
 
   agencyCost() {
     return AGENCY_CREATE_COST;
+  }
+
+  canCreate() {
+    const isAdmin = this.auth.currentUser()?.role === 'ADMIN';
+    return (isAdmin || (this.wallet()?.shards ?? 0) >= AGENCY_CREATE_COST) && !this.hasAgency();
+  }
+
+  shardBalance() {
+    return this.wallet()?.shards ?? 0;
+  }
+
+  availableLogos() {
+    return [
+      { id: 'logo-1', label: 'Nova' },
+      { id: 'logo-2', label: 'Pulse' },
+      { id: 'logo-3', label: 'Orbit' },
+      { id: 'logo-4', label: 'Echo' },
+    ];
   }
 }

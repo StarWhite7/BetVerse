@@ -7,4 +7,5 @@ export interface User {
   username?: string | null;
   xp?: number | null;
   level?: number | null;
+  agencyId?: string | null;
 }

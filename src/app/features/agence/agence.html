@@ -102,15 +102,15 @@
         </p>
         <div class="agency-empty__meta">
           <span>Shards disponibles</span>
-          <strong>{{ shards() }}</strong>
+          <strong>{{ shardBalance() }}</strong>
         </div>
         <button
           type="button"
           class="agency-empty__button"
-          (click)="createAgency()"
-          [disabled]="shards() < agencyCost()"
+          (click)="openCreateModal()"
+          [disabled]="!canCreate() || creating()"
         >
-          Creer une equipe
+          {{ creating() ? 'Creation...' : 'Creer une agence' }}
         </button>
       </article>
 
@@ -130,3 +130,134 @@
     </div>
   </section>
 </ng-template>
+
+<section class="agency-modal" *ngIf="modalOpen()">
+  <div class="agency-modal__backdrop" (click)="closeCreateModal()"></div>
+  <div class="agency-modal__panel" role="dialog" aria-modal="true">
+    <header class="agency-modal__header">
+      <h2>Creer une agence</h2>
+      <button type="button" class="agency-modal__close" (click)="closeCreateModal()">×</button>
+    </header>
+
+    <div class="agency-modal__body">
+      <label class="agency-modal__label" for="agency-name">Nom de l'agence</label>
+      <input
+        id="agency-name"
+        type="text"
+        class="agency-modal__input"
+        [value]="agencyName()"
+        (input)="updateAgencyName($any($event.target).value)"
+        placeholder="Nova Syndicate"
+      />
+
+      <div class="agency-modal__section">
+        <p class="agency-modal__label">Logo prefere</p>
+        <div class="agency-modal__preview">
+          <div [ngSwitch]="selectedLogo()" class="agency-modal__preview-box">
+            <svg
+              *ngSwitchCase="'logo-1'"
+              viewBox="0 0 64 64"
+              aria-hidden="true"
+              [style.fill]="primaryColor()"
+              [style.stroke]="secondaryColor()"
+            >
+              <path d="M32 6l20 10v18c0 12-9 20-20 24-11-4-20-12-20-24V16Z" />
+            </svg>
+            <svg
+              *ngSwitchCase="'logo-2'"
+              viewBox="0 0 64 64"
+              aria-hidden="true"
+              [style.fill]="primaryColor()"
+              [style.stroke]="secondaryColor()"
+            >
+              <circle cx="32" cy="32" r="18" />
+              <circle cx="32" cy="32" r="8" />
+            </svg>
+            <svg
+              *ngSwitchCase="'logo-3'"
+              viewBox="0 0 64 64"
+              aria-hidden="true"
+              [style.fill]="primaryColor()"
+              [style.stroke]="secondaryColor()"
+            >
+              <path d="M10 20l22-12 22 12-22 12Z" />
+              <path d="M12 28l20 10 20-10v16L32 56 12 44Z" />
+            </svg>
+            <svg
+              *ngSwitchDefault
+              viewBox="0 0 64 64"
+              aria-hidden="true"
+              [style.fill]="primaryColor()"
+              [style.stroke]="secondaryColor()"
+            >
+              <path d="M12 10h40v18H12z" />
+              <path d="M18 28h28l-6 24H24Z" />
+            </svg>
+          </div>
+        </div>
+        <div class="agency-modal__logos">
+          <button
+            type="button"
+            class="agency-modal__logo"
+            *ngFor="let logo of availableLogos()"
+            [class.active]="selectedLogo() === logo.id"
+            (click)="selectLogo(logo.id)"
+          >
+            <span>{{ logo.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="agency-modal__colors">
+        <div>
+          <label class="agency-modal__label">Couleur principale</label>
+          <div class="agency-modal__color">
+            <input
+              type="color"
+              [value]="primaryColor()"
+              (input)="updatePrimaryColor($any($event.target).value)"
+              aria-label="Couleur principale"
+            />
+            <input
+              type="text"
+              class="agency-modal__input"
+              [value]="primaryColor()"
+              (input)="updatePrimaryColor($any($event.target).value)"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="agency-modal__label">Couleur secondaire</label>
+          <div class="agency-modal__color">
+            <input
+              type="color"
+              [value]="secondaryColor()"
+              (input)="updateSecondaryColor($any($event.target).value)"
+              aria-label="Couleur secondaire"
+            />
+            <input
+              type="text"
+              class="agency-modal__input"
+              [value]="secondaryColor()"
+              (input)="updateSecondaryColor($any($event.target).value)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="agency-modal__footer">
+      <button type="button" class="agency-empty__button agency-empty__button--ghost" (click)="closeCreateModal()">
+        Annuler
+      </button>
+      <button
+        type="button"
+        class="agency-empty__button"
+        (click)="createAgency()"
+        [disabled]="creating() || !agencyName().trim() || !canCreate()"
+      >
+        {{ creating() ? 'Creation...' : 'Creer une agence' }}
+      </button>
+    </footer>
+  </div>
+</section>
