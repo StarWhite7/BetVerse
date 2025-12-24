@@ -1,4 +1,4 @@
-<section class="agency">
+<section class="agency" *ngIf="hasAgency(); else noAgency">
   <header class="agency__hero">
     <p class="agency__eyebrow">Quartier general</p>
     <h1>Mon agence</h1>
@@ -9,7 +9,7 @@
   </header>
 
   <div class="agency__grid">
-    <article class="agency-card agency-card--archive">
+    <a class="agency-card agency-card--archive agency-card--link" routerLink="/agence/archives">
       <div class="agency-card__icon">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M6 4h12a2 2 0 0 1 2 2v3H4V6a2 2 0 0 1 2-2Z" />
@@ -19,9 +19,9 @@
       </div>
       <h3>Salle des archives</h3>
       <p>Permet de voir les statistiques du clan.</p>
-    </article>
+    </a>
 
-    <article class="agency-card agency-card--core">
+    <a class="agency-card agency-card--core agency-card--link" routerLink="/agence/bureau">
       <div class="agency-card__icon">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M5 7h14v10H5z" />
@@ -33,9 +33,9 @@
       <p>
         Permet de voir les membres du clan et de la gestion des membres du clan.
       </p>
-    </article>
+    </a>
 
-    <article class="agency-card agency-card--prestige">
+    <a class="agency-card agency-card--prestige agency-card--link" routerLink="/agence/trophees">
       <div class="agency-card__icon">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 21h8" />
@@ -46,9 +46,9 @@
       </div>
       <h3>Salle des trophees</h3>
       <p>Permet de voir les badges du clan.</p>
-    </article>
+    </a>
 
-    <article class="agency-card agency-card--workshop">
+    <a class="agency-card agency-card--workshop agency-card--link" routerLink="/agence/atelier">
       <div class="agency-card__icon">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M3 9h4l2 3-2 3H3z" />
@@ -58,9 +58,9 @@
       </div>
       <h3>Atelier de personnalisation</h3>
       <p>Personnaliser le logo, les couleurs de l'agence, la banniere d'agence.</p>
-    </article>
+    </a>
 
-    <article class="agency-card agency-card--coordination">
+    <a class="agency-card agency-card--coordination agency-card--link" routerLink="/agence/coordination">
       <div class="agency-card__icon">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
@@ -71,8 +71,62 @@
       </div>
       <h3>Salle de coordination</h3>
       <p>Selection des missions de clan.</p>
-    </article>
+    </a>
   </div>
 
   <p class="agency__hint">Selectionnez un espace pour demarrer.</p>
 </section>
+
+<ng-template #noAgency>
+  <section class="agency agency--empty">
+    <header class="agency__hero">
+      <p class="agency__eyebrow">Nouveau depart</p>
+      <h1>Mon agence</h1>
+      <p class="agency__lead">
+        Vous n'avez pas encore d'agence. Creez la votre avec des Shards ou explorez
+        les agences deja actives.
+      </p>
+    </header>
+
+    <div class="agency-empty__grid">
+      <article class="agency-empty__card">
+        <div class="agency-empty__icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 4h16v16H4z" />
+            <path d="M8 9h8M8 13h6" />
+          </svg>
+        </div>
+        <h3>Creer une equipe</h3>
+        <p>
+          Lancez votre propre agence. Cout unique: {{ agencyCost() }} Shards.
+        </p>
+        <div class="agency-empty__meta">
+          <span>Shards disponibles</span>
+          <strong>{{ shards() }}</strong>
+        </div>
+        <button
+          type="button"
+          class="agency-empty__button"
+          (click)="createAgency()"
+          [disabled]="shards() < agencyCost()"
+        >
+          Creer une equipe
+        </button>
+      </article>
+
+      <article class="agency-empty__card agency-empty__card--secondary">
+        <div class="agency-empty__icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 5h18v14H3z" />
+            <path d="M7 9h10M7 13h6" />
+          </svg>
+        </div>
+        <h3>Liste des agences</h3>
+        <p>Consultez les agences deja creees par les autres joueurs.</p>
+        <a class="agency-empty__button agency-empty__button--ghost" routerLink="/agence/liste">
+          Liste des agences
+        </a>
+      </article>
+    </div>
+  </section>
+</ng-template>

@@ -1,0 +1,165 @@
+<section class="atelier">
+  <a class="atelier__back" routerLink="/agence">
+    <span class="atelier__back-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M15 6l-6 6 6 6" />
+      </svg>
+    </span>
+    Retour a l'agence
+  </a>
+
+  <header class="atelier__hero">
+
+    <div class="atelier__badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M14.7 6.3a4 4 0 0 0-5.6 5.6l7.4 7.4 5.6-5.6-7.4-7.4Z" />
+        <path d="M8.5 8.5l-5 5L8 18l5-5" />
+      </svg>
+    </div>
+
+    <p class="atelier__eyebrow">Atelier creatif</p>
+    <h1>Atelier de personnalisation</h1>
+    <p class="atelier__lead">
+      Definissez l'identite de votre clan. Modifiez le logo, les couleurs et la
+      banniere pour vous demarquer.
+    </p>
+    <div class="atelier__divider" aria-hidden="true"></div>
+  </header>
+
+  <div class="atelier__grid">
+    <section class="panel panel--logo">
+      <header class="panel__header">
+        <h2>Logo du clan</h2>
+        <p>Importez une image ou deposez-la ici.</p>
+      </header>
+      <div class="upload">
+        <div class="upload__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="5" width="18" height="14" rx="3" />
+            <path d="M8 13l3-3 3 3" />
+            <path d="M12 10v6" />
+          </svg>
+        </div>
+        <p>Glissez votre logo ou cliquez pour importer</p>
+        <span>PNG, JPG, jusqu'a 2MB (512x512 recommande)</span>
+      </div>
+    </section>
+
+    <section class="panel panel--preview">
+      <header class="panel__header">
+        <h2>Live preview</h2>
+        <p>Un apercu du rendu final.</p>
+      </header>
+      <div class="preview">
+        <div class="preview__banner">
+          <div class="preview__logo">CL</div>
+        </div>
+        <div class="preview__info">
+          <h3>Nom du clan</h3>
+          <p>Elite Sports Organization</p>
+          <div class="preview__stats">
+            <span><strong>24</strong> Membres</span>
+            <span><strong>12</strong> Trophees</span>
+            <span><strong>8</strong> Rang</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="preview__save">Sauvegarder</button>
+    </section>
+
+    <section class="panel panel--colors">
+      <header class="panel__header">
+        <h2>Palette de couleurs</h2>
+        <p>Choisissez une signature visuelle.</p>
+      </header>
+      <div class="palette">
+        <div class="palette__row">
+          <div>
+            <label class="palette__label">Couleur principale</label>
+            <div class="palette__input">
+              <span class="palette__swatch" style="background: #00ff88"></span>
+              <input type="text" value="#00ff88" aria-label="Couleur principale" />
+            </div>
+          </div>
+          <div>
+            <label class="palette__label">Couleur accent</label>
+            <div class="palette__input">
+              <span class="palette__swatch" style="background: #ff00ff"></span>
+              <input type="text" value="#ff00ff" aria-label="Couleur accent" />
+            </div>
+          </div>
+        </div>
+
+        <div class="palette__presets">
+          <button type="button" class="preset">
+            <span class="preset__dots">
+              <i style="background: #00ff88"></i>
+              <i style="background: #00d9ff"></i>
+            </span>
+            Neon Green
+          </button>
+          <button type="button" class="preset">
+            <span class="preset__dots">
+              <i style="background: #7c3aed"></i>
+              <i style="background: #ec4899"></i>
+            </span>
+            Electric Purple
+          </button>
+          <button type="button" class="preset">
+            <span class="preset__dots">
+              <i style="background: #f97316"></i>
+              <i style="background: #facc15"></i>
+            </span>
+            Cyber Orange
+          </button>
+          <button type="button" class="preset">
+            <span class="preset__dots">
+              <i style="background: #38bdf8"></i>
+              <i style="background: #1d4ed8"></i>
+            </span>
+            Ice Blue
+          </button>
+          <button type="button" class="preset">
+            <span class="preset__dots">
+              <i style="background: #ec4899"></i>
+              <i style="background: #f97316"></i>
+            </span>
+            Hot Pink
+          </button>
+          <button type="button" class="preset">
+            <span class="preset__dots">
+              <i style="background: #facc15"></i>
+              <i style="background: #f59e0b"></i>
+            </span>
+            Solar Gold
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel--banners">
+      <header class="panel__header">
+        <h2>Style de banniere</h2>
+        <p>Choisissez une ambiance pour votre entete.</p>
+      </header>
+      <div class="banner-grid">
+        <button type="button" class="banner">
+          <span class="banner__preview banner__preview--grid"></span>
+          Cyber Grid
+        </button>
+        <button type="button" class="banner">
+          <span class="banner__preview banner__preview--waves"></span>
+          Neon Waves
+        </button>
+        <button type="button" class="banner">
+          <span class="banner__preview banner__preview--rain"></span>
+          Digital Rain
+        </button>
+        <button type="button" class="banner">
+          <span class="banner__preview banner__preview--circuit"></span>
+          Circuit Board
+        </button>
+      </div>
+    </section>
+  </div>
+</section>

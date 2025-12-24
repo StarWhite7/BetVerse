@@ -1,0 +1,162 @@
+<section class="coordination">
+  <a class="coordination__back" routerLink="/agence">
+    <span class="coordination__back-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M15 6l-6 6 6 6" />
+      </svg>
+    </span>
+    Retour a l'agence
+  </a>
+
+  <header class="coordination__hero">
+
+    <div class="coordination__badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M8 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
+        <path d="M17 12a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
+        <path d="M2 22a6 6 0 0 1 12 0" />
+        <path d="M12 22a5 5 0 0 1 10 0" />
+      </svg>
+    </div>
+
+    <p class="coordination__eyebrow">Mission control</p>
+    <h1>Salle de coordination</h1>
+    <p class="coordination__lead">
+      Selectionnez, suivez et coordonnez les missions de clan. Travaillez
+      ensemble pour atteindre les objectifs et obtenir des recompenses.
+    </p>
+    <div class="coordination__divider" aria-hidden="true"></div>
+  </header>
+
+  <div class="coordination__stats">
+    <article class="stat-card stat-card--active">
+      <span class="stat-card__label">Missions actives</span>
+      <span class="stat-card__value">4</span>
+      <span class="stat-card__trend">En cours</span>
+    </article>
+
+    <article class="stat-card stat-card--done">
+      <span class="stat-card__label">Completes</span>
+      <span class="stat-card__value">12</span>
+      <span class="stat-card__trend">Saison actuelle</span>
+    </article>
+
+    <article class="stat-card stat-card--xp">
+      <span class="stat-card__label">XP total</span>
+      <span class="stat-card__value">8 500</span>
+      <span class="stat-card__trend">Bonus cumules</span>
+    </article>
+
+    <article class="stat-card stat-card--streak">
+      <span class="stat-card__label">Serie active</span>
+      <span class="stat-card__value">3</span>
+      <span class="stat-card__trend">Jours consecutifs</span>
+    </article>
+  </div>
+
+  <section class="missions">
+    <header class="missions__header">
+      <h2>Missions disponibles</h2>
+      <p>Choisissez les objectifs prioritaires pour le clan.</p>
+    </header>
+
+    <article class="mission-card">
+      <div class="mission-card__head">
+        <div>
+          <h3>Weekly Training Challenge</h3>
+          <span class="mission-card__tag mission-card__tag--easy">Easy</span>
+        </div>
+        <div class="mission-card__reward">
+          <span>Recompense</span>
+          <strong>500 XP</strong>
+        </div>
+      </div>
+      <p>Completer 10 sessions d'entrainement cette semaine.</p>
+      <div class="mission-card__progress">
+        <span style="width: 70%"></span>
+      </div>
+      <div class="mission-card__meta">
+        <span>7/10 completes</span>
+        <div class="mission-card__actions">
+          <span class="mission-card__timer">3 jours</span>
+          <button type="button" class="mission-card__button">Voir details</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="mission-card">
+      <div class="mission-card__head">
+        <div>
+          <h3>Tournament Domination</h3>
+          <span class="mission-card__tag mission-card__tag--hard">Hard</span>
+        </div>
+        <div class="mission-card__reward">
+          <span>Recompense</span>
+          <strong>2000 XP + Trophee</strong>
+        </div>
+      </div>
+      <p>Gagner 5 matchs consecutifs en tournois classes.</p>
+      <div class="mission-card__progress">
+        <span style="width: 40%"></span>
+      </div>
+      <div class="mission-card__meta">
+        <span>2/5 completes</span>
+        <div class="mission-card__actions">
+          <span class="mission-card__timer">5 jours</span>
+          <button type="button" class="mission-card__button">Voir details</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="mission-card">
+      <div class="mission-card__head">
+        <div>
+          <h3>Recruitment Drive</h3>
+          <span class="mission-card__tag mission-card__tag--medium">Medium</span>
+        </div>
+        <div class="mission-card__reward">
+          <span>Recompense</span>
+          <strong>1000 XP</strong>
+        </div>
+      </div>
+      <p>Inviter 3 nouveaux membres a rejoindre le clan.</p>
+      <div class="mission-card__progress">
+        <span style="width: 33%"></span>
+      </div>
+      <div class="mission-card__meta">
+        <span>1/3 completes</span>
+        <div class="mission-card__actions">
+          <span class="mission-card__timer">1 semaine</span>
+          <button type="button" class="mission-card__button">Voir details</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="mission-card mission-card--locked">
+      <div class="mission-card__head">
+        <div>
+          <h3>Perfect Coordination</h3>
+          <span class="mission-card__tag mission-card__tag--legendary">Legendary</span>
+          <span class="mission-card__tag mission-card__tag--locked">Locked</span>
+        </div>
+        <div class="mission-card__reward">
+          <span>Recompense</span>
+          <strong>5000 XP + Badge</strong>
+        </div>
+      </div>
+      <p>Completer une mission avec tous les membres du clan actifs.</p>
+      <div class="mission-card__progress">
+        <span style="width: 0%"></span>
+      </div>
+      <div class="mission-card__meta">
+        <span>0/1 completes</span>
+        <div class="mission-card__actions">
+          <span class="mission-card__timer">2 semaines</span>
+          <button type="button" class="mission-card__button" disabled>
+            Verrouille
+          </button>
+        </div>
+      </div>
+    </article>
+  </section>
+</section>

@@ -1,0 +1,414 @@
+:host {
+  display: block;
+}
+
+.bureau {
+  position: relative;
+  padding: 2.8rem;
+  border-radius: 1.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.22), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.18), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(99, 102, 241, 0.16), transparent 55%),
+    rgba(5, 10, 20, 0.7);
+  box-shadow: 0 32px 60px rgba(5, 10, 20, 0.55);
+  overflow: hidden;
+  color: #e2e8f0;
+}
+
+.bureau::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(15, 23, 42, 0.25), transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.08) 0px,
+      rgba(148, 163, 184, 0.08) 1px,
+      transparent 1px,
+      transparent 12px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(148, 163, 184, 0.06) 0px,
+      rgba(148, 163, 184, 0.06) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  opacity: 0.35;
+  pointer-events: none;
+  animation: bureauGrid 22s linear infinite;
+}
+
+.bureau__back {
+  position: absolute;
+  left: 1.5rem;
+  top: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 211, 238, 0.45);
+  color: rgba(226, 232, 240, 0.85);
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(12, 18, 32, 0.75);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+  z-index: 2;
+}
+
+.bureau__back-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(34, 211, 238, 0.55);
+  background: rgba(34, 211, 238, 0.2);
+}
+
+.bureau__back svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #67e8f9;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bureau__back:focus-visible {
+  outline: 2px solid rgba(34, 211, 238, 0.85);
+  outline-offset: 3px;
+}
+
+.bureau__hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 2.6rem;
+}
+
+.bureau__badge {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 1.2rem;
+  border-radius: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 211, 238, 0.2);
+  border: 1px solid rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.4);
+}
+
+.bureau__badge svg {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: #67e8f9;
+  stroke-width: 1.6px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bureau__eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  font-size: 0.7rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.bureau__hero h1 {
+  margin: 0 0 0.8rem;
+  font-size: clamp(2rem, 3vw, 3.1rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #f8fafc;
+}
+
+.bureau__lead {
+  margin: 0 auto;
+  color: rgba(226, 232, 240, 0.75);
+  line-height: 1.6;
+}
+
+.bureau__divider {
+  width: 140px;
+  height: 2px;
+  margin: 1.4rem auto 0;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.85), transparent);
+}
+
+.bureau__stats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 1.6rem;
+}
+
+.stat-card {
+  position: relative;
+  padding: 1.2rem 1.4rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(8, 14, 24, 0.8);
+  box-shadow: 0 18px 35px rgba(5, 10, 20, 0.35);
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(var(--stat-glow), 0.2), transparent 65%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.stat-card__label {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.65rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.stat-card__value {
+  display: block;
+  font-size: 1.6rem;
+  margin-top: 0.5rem;
+  color: #f8fafc;
+}
+
+.stat-card__trend {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.stat-card--members {
+  --stat-glow: 34, 211, 238;
+}
+
+.stat-card--online {
+  --stat-glow: 56, 189, 248;
+}
+
+.stat-card--capacity {
+  --stat-glow: 99, 102, 241;
+}
+
+.stat-card--xp {
+  --stat-glow: 20, 184, 166;
+}
+
+.bureau__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1.8rem;
+}
+
+.bureau__button {
+  border-radius: 0.9rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  cursor: pointer;
+  border: 1px solid rgba(34, 211, 238, 0.5);
+}
+
+.bureau__button--primary {
+  background: rgba(34, 211, 238, 0.2);
+  color: #67e8f9;
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.35);
+}
+
+.bureau__button--ghost {
+  background: transparent;
+  color: rgba(226, 232, 240, 0.8);
+  border-color: rgba(226, 232, 240, 0.35);
+}
+
+.roster {
+  position: relative;
+  z-index: 1;
+  padding: 1.6rem;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  background: rgba(10, 16, 28, 0.85);
+  box-shadow: 0 22px 45px rgba(5, 10, 20, 0.4);
+}
+
+.roster__header h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #f8fafc;
+}
+
+.roster__header p {
+  margin: 0 0 1.2rem;
+  color: rgba(226, 232, 240, 0.65);
+  font-size: 0.9rem;
+}
+
+.roster__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.roster__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(8, 14, 24, 0.75);
+}
+
+.roster__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.roster__avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 211, 238, 0.2);
+  border: 1px solid rgba(34, 211, 238, 0.6);
+  color: #67e8f9;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.roster__name {
+  margin: 0 0 0.3rem;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.roster__role {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-right: 0.4rem;
+  border: 1px solid rgba(var(--role-glow), 0.6);
+  color: rgba(var(--role-glow), 0.95);
+}
+
+.roster__role--leader {
+  --role-glow: 250, 204, 21;
+}
+
+.roster__role--coleader {
+  --role-glow: 56, 189, 248;
+}
+
+.roster__role--elder {
+  --role-glow: 168, 85, 247;
+}
+
+.roster__role--member {
+  --role-glow: 34, 211, 238;
+}
+
+.roster__role--recruit {
+  --role-glow: 148, 163, 184;
+}
+
+.roster__meta {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.roster__stats {
+  text-align: right;
+}
+
+.roster__xp {
+  display: block;
+  font-weight: 600;
+  color: #67e8f9;
+}
+
+.roster__label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+@keyframes bureauGrid {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 120px 60px, 140px 0, 0 120px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .bureau__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .bureau {
+    padding: 1.8rem;
+  }
+
+  .bureau__hero {
+    text-align: left;
+  }
+
+  .bureau__stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bureau__actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .roster__item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .roster__stats {
+    text-align: left;
+  }
+}
