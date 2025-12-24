@@ -1,0 +1,277 @@
+:host {
+  display: block;
+}
+
+.shards {
+  position: relative;
+  padding: 2.8rem;
+  border-radius: 1.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(168, 85, 247, 0.22), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(236, 72, 153, 0.18), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(34, 211, 238, 0.16), transparent 55%),
+    rgba(5, 10, 20, 0.7);
+  box-shadow: 0 32px 60px rgba(5, 10, 20, 0.55);
+  overflow: hidden;
+  color: #e2e8f0;
+}
+
+.shards::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(15, 23, 42, 0.25), transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.08) 0px,
+      rgba(148, 163, 184, 0.08) 1px,
+      transparent 1px,
+      transparent 12px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(148, 163, 184, 0.06) 0px,
+      rgba(148, 163, 184, 0.06) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  opacity: 0.35;
+  pointer-events: none;
+  animation: shardsGrid 22s linear infinite;
+}
+
+.shards__back {
+  position: absolute;
+  left: 1.5rem;
+  top: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  color: rgba(226, 232, 240, 0.85);
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(12, 18, 32, 0.75);
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.35);
+  z-index: 2;
+}
+
+.shards__back-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(168, 85, 247, 0.55);
+  background: rgba(168, 85, 247, 0.2);
+}
+
+.shards__back svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: #c4b5fd;
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shards__back:focus-visible {
+  outline: 2px solid rgba(168, 85, 247, 0.85);
+  outline-offset: 3px;
+}
+
+.shards__hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 2.6rem;
+}
+
+.shards__badge {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 1.2rem;
+  border-radius: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+}
+
+.shards__badge svg {
+  width: 32px;
+  height: 32px;
+  fill: none;
+  stroke: #c4b5fd;
+  stroke-width: 1.6px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shards__eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  font-size: 0.7rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.shards__hero h1 {
+  margin: 0 0 0.8rem;
+  font-size: clamp(2rem, 3vw, 3.1rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #f8fafc;
+}
+
+.shards__lead {
+  margin: 0 auto;
+  color: rgba(226, 232, 240, 0.75);
+  line-height: 1.6;
+}
+
+.shards__divider {
+  width: 140px;
+  height: 2px;
+  margin: 1.4rem auto 0;
+  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.85), transparent);
+}
+
+.shards__grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.4rem;
+  margin-bottom: 2rem;
+}
+
+.panel {
+  padding: 1.6rem;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  background: rgba(10, 16, 28, 0.85);
+  box-shadow:
+    0 22px 45px rgba(5, 10, 20, 0.4),
+    0 0 24px rgba(168, 85, 247, 0.2);
+}
+
+.panel__header h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #f8fafc;
+}
+
+.panel__header p {
+  margin: 0 0 1rem;
+  color: rgba(226, 232, 240, 0.65);
+  font-size: 0.9rem;
+}
+
+.panel__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel__metric span {
+  display: block;
+  font-size: 0.8rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.panel__metric strong {
+  font-size: 1.1rem;
+  color: #c4b5fd;
+}
+
+.panel__button {
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  background: rgba(168, 85, 247, 0.2);
+  color: #c4b5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.panel__button--accent {
+  border-color: rgba(34, 211, 238, 0.6);
+  color: #67e8f9;
+  background: rgba(34, 211, 238, 0.2);
+}
+
+.shards__info {
+  position: relative;
+  z-index: 1;
+  padding: 1.6rem;
+  border-radius: 1.3rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(8, 14, 24, 0.75);
+}
+
+.shards__info h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #f8fafc;
+}
+
+.shards__info p {
+  margin: 0 0 1rem;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.shards__info ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: rgba(226, 232, 240, 0.7);
+  line-height: 1.6;
+}
+
+@keyframes shardsGrid {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 120px 60px, 140px 0, 0 120px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .shards__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel__content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .shards {
+    padding: 1.8rem;
+  }
+
+  .shards__hero {
+    text-align: left;
+  }
+}

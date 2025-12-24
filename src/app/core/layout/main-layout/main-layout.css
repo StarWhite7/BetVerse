@@ -245,6 +245,7 @@
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.2);
   min-width: 120px;
+  position: relative;
 }
 
 .wallet-balance__label {
@@ -268,10 +269,35 @@
 .wallet-balance--shards {
   border-color: rgba(168, 85, 247, 0.4);
   background: rgba(88, 28, 135, 0.15);
+  padding-right: 2.2rem;
 }
 
 .wallet-balance--shards .wallet-balance__value {
   color: #c4b5fd;
+}
+
+.wallet-balance__action {
+  position: absolute;
+  right: 0.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 700;
+  color: #c4b5fd;
+  border: 1px solid rgba(168, 85, 247, 0.6);
+  background: rgba(88, 28, 135, 0.3);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+}
+
+.wallet-balance__action:hover {
+  border-color: rgba(168, 85, 247, 0.85);
+  color: #f5d0fe;
 }
 
 .profile-chip {

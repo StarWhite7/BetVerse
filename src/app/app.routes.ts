@@ -60,6 +60,13 @@ export const routes: Routes = [
           import('./features/bets/bets.routes').then((m) => m.default),
         canActivate: [authGuard, roleGuard(['USER', 'ADMIN'])],
       },
+      {
+        path: 'shards',
+        loadComponent: () =>
+          import('./features/shards/shards.component').then(
+            (m) => m.ShardsComponent
+          ),
+      },
             {
         path: 'agence',
         loadChildren: () =>
