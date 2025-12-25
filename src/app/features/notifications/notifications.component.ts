@@ -20,6 +20,8 @@ export class NotificationsComponent implements OnInit {
   notifications = signal<UserNotification[]>([]);
   invites = signal<AgencyInvite[]>([]);
   loading = signal(false);
+  expandedInviteId = signal<string | null>(null);
+  deletingRead = signal(false);
 
   ngOnInit() {
     this.loadAll();
@@ -51,6 +53,35 @@ export class NotificationsComponent implements OnInit {
     });
   }
 
+  onNotificationClick(note: UserNotification) {
+    if (this.isInviteNotification(note)) {
+      this.toggleInviteDetails(note);
+      return;
+    }
+    this.markRead(note.id);
+  }
+
+  isInviteNotification(note: UserNotification) {
+    return note.type === 'AGENCY_INVITE' && !!note.inviteId;
+  }
+
+  isInviteResolved(note: UserNotification) {
+    return (
+      note.type === 'AGENCY_INVITE_ACCEPTED' || note.type === 'AGENCY_INVITE_DECLINED'
+    );
+  }
+
+  isInviteExpanded(note: UserNotification) {
+    return this.expandedInviteId() === note.id;
+  }
+
+  toggleInviteDetails(note: UserNotification) {
+    if (!this.isInviteNotification(note)) {
+      return;
+    }
+    this.expandedInviteId.set(this.isInviteExpanded(note) ? null : note.id);
+  }
+
   acceptInvite(inviteId: string) {
     this.agenceApi.acceptInvite(inviteId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
@@ -63,6 +94,22 @@ export class NotificationsComponent implements OnInit {
     this.agenceApi.declineInvite(inviteId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.loadAll();
+      },
+    });
+  }
+
+  deleteReadNotifications() {
+    if (this.deletingRead()) {
+      return;
+    }
+    this.deletingRead.set(true);
+    this.notificationsApi.deleteRead().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.deletingRead.set(false);
+        this.loadAll();
+      },
+      error: () => {
+        this.deletingRead.set(false);
       },
     });
   }

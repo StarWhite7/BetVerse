@@ -439,6 +439,14 @@
   cursor: pointer;
 }
 
+.bureau-modal__button--pending {
+  border-color: rgba(248, 113, 113, 0.6);
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+  cursor: default;
+  animation: invitePulse 0.7s ease;
+}
+
 .bureau-modal__empty {
   text-align: center;
   color: rgba(226, 232, 240, 0.6);
@@ -492,6 +500,18 @@
   }
   100% {
     background-position: 120px 60px, 140px 0, 0 120px;
+  }
+}
+
+@keyframes invitePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 

@@ -49,13 +49,36 @@
   </div>
 
   <div class="bureau__actions">
-    <button type="button" class="bureau__button bureau__button--primary" (click)="openInvite()">
+    <button
+      type="button"
+      class="bureau__button bureau__button--primary"
+      (click)="openInvite()"
+      *ngIf="canManageAgency()"
+    >
       Inviter un membre
     </button>
-    <button type="button" class="bureau__button bureau__button--ghost" disabled>
+    <button
+      type="button"
+      class="bureau__button bureau__button--ghost"
+      disabled
+      *ngIf="canManageAgency()"
+    >
       Gerer les roles
     </button>
-    <button type="button" class="bureau__button bureau__button--danger" (click)="openDelete()">
+    <button
+      type="button"
+      class="bureau__button bureau__button--danger"
+      (click)="openLeave()"
+      *ngIf="canLeave()"
+    >
+      Quitter l'agence
+    </button>
+    <button
+      type="button"
+      class="bureau__button bureau__button--danger"
+      (click)="openDelete()"
+      *ngIf="isDirector()"
+    >
       Supprimer l'agence
     </button>
   </div>
@@ -113,10 +136,41 @@
         </div>
         <div class="bureau-modal__row" *ngFor="let user of candidates()">
           <span>{{ user.username }}</span>
-          <button type="button" (click)="invite(user.username)" [disabled]="inviting()">
-            Inviter
+          <button
+            type="button"
+            [class.bureau-modal__button--pending]="isPending(user.username, user.pendingInvite)"
+            (click)="invite(user.username)"
+            [disabled]="inviting() || isPending(user.username, user.pendingInvite)"
+          >
+            {{ isPending(user.username, user.pendingInvite) ? 'En attente' : 'Inviter' }}
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bureau-modal bureau-modal--danger" *ngIf="leaveOpen()">
+  <div class="bureau-modal__backdrop" (click)="closeLeave()"></div>
+  <div class="bureau-modal__panel" role="dialog" aria-modal="true">
+    <header class="bureau-modal__header">
+      <h2>Quitter l'agence</h2>
+      <button type="button" class="bureau-modal__close" (click)="closeLeave()">Į-</button>
+    </header>
+    <div class="bureau-modal__body">
+      <p class="bureau-delete__warning-text">Voulez vous vraiment quitter l'agence ?</p>
+      <div class="bureau-delete__actions">
+        <button type="button" class="bureau__button bureau__button--ghost" (click)="closeLeave()">
+          Non
+        </button>
+        <button
+          type="button"
+          class="bureau__button bureau__button--danger"
+          (click)="confirmLeave()"
+          [disabled]="leaving()"
+        >
+          Oui
+        </button>
       </div>
     </div>
   </div>

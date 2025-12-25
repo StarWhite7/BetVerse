@@ -34,4 +34,8 @@ export class NotificationsApiService {
   markAllRead() {
     return this.http.post<{ success: true }>(`${this.baseUrl}/read-all`, {});
   }
+
+  deleteRead() {
+    return this.http.delete<{ success: true }>(`${this.baseUrl}/read`);
+  }
 }

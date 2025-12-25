@@ -61,7 +61,7 @@ export class AgenceApiService {
   }
 
   listCandidates(query: string) {
-    return this.http.get<Array<{ id: string; username: string | null }>>(
+    return this.http.get<Array<{ id: string; username: string | null; pendingInvite?: boolean }>>(
       `${this.baseUrl}/candidates`,
       {
         params: { q: query },
@@ -93,6 +93,10 @@ export class AgenceApiService {
 
   deleteAgency() {
     return this.http.delete<{ success: true }>(this.baseUrl);
+  }
+
+  leaveAgency() {
+    return this.http.post<{ success: true }>(`${this.baseUrl}/leave`, {});
   }
 
   createAgency(payload: {

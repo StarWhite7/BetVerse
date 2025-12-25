@@ -111,11 +111,38 @@
               <div
                 class="notifications__item"
                 *ngFor="let note of notifications()"
-                (click)="markNotificationRead(note.id)"
+                (click)="onNotificationClick(note)"
                 [class.unread]="!note.readAt"
+                [class.notifications__item--expanded]="isInviteExpanded(note)"
               >
                 <div class="notifications__title">{{ note.title }}</div>
-                <div class="notifications__message">{{ note.message }}</div>
+                <div class="notifications__message" *ngIf="!isInviteNotification(note)">
+                  {{ note.message }}
+                </div>
+                <div
+                  class="notifications__details"
+                  *ngIf="isInviteNotification(note)"
+                  [class.notifications__details--open]="isInviteExpanded(note)"
+                >
+                  <div class="notifications__message">
+                    {{ note.message }}
+                  </div>
+                  <div class="notifications__actions">
+                    <button type="button" (click)="acceptInviteFromDropdown(note, $event)">
+                      Accepter
+                    </button>
+                    <button
+                      type="button"
+                      class="notifications__actions-ghost"
+                      (click)="declineInviteFromDropdown(note, $event)"
+                    >
+                      Refuser
+                    </button>
+                  </div>
+                </div>
+                <div class="notifications__status" *ngIf="isInviteResolved(note)">
+                  {{ note.message }}
+                </div>
               </div>
               <div class="notifications__empty" *ngIf="notifications().length === 0">
                 Aucune notification.

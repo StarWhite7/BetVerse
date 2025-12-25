@@ -35,18 +35,64 @@
   </section>
 
   <section class="notifications-page__section">
-    <h2>Dernieres notifications</h2>
+    <div class="notifications-page__header">
+      <h2>Dernieres notifications</h2>
+      <button
+        type="button"
+        class="notifications-page__clear"
+        (click)="deleteReadNotifications()"
+        [disabled]="deletingRead()"
+      >
+        Effacer les notifications
+      </button>
+    </div>
     <div class="notifications-page__empty" *ngIf="notifications().length === 0">
       Aucune notification.
     </div>
     <div
       class="notification-card"
       *ngFor="let note of notifications()"
-      (click)="markRead(note.id)"
       [class.unread]="!note.readAt"
+      [class.notification-card--expanded]="isInviteExpanded(note)"
     >
-      <div class="notification-card__title">{{ note.title }}</div>
-      <div class="notification-card__message">{{ note.message }}</div>
+      <button
+        type="button"
+        class="notification-card__title"
+        (click)="onNotificationClick(note)"
+      >
+        {{ note.title }}
+      </button>
+      <div class="notification-card__message" *ngIf="!isInviteNotification(note)">
+        {{ note.message }}
+      </div>
+      <div
+        class="notification-card__details"
+        *ngIf="isInviteNotification(note)"
+        [class.notification-card__details--open]="isInviteExpanded(note)"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="notification-card__divider" aria-hidden="true"></div>
+        <div class="notification-card__message">{{ note.message }}</div>
+        <div class="invite-card__actions">
+          <button
+            type="button"
+            class="invite-card__button"
+            (click)="acceptInvite(note.inviteId!)"
+          >
+            Accepter
+          </button>
+          <button
+            type="button"
+            class="invite-card__button invite-card__button--ghost"
+            (click)="declineInvite(note.inviteId!)"
+          >
+            Refuser
+          </button>
+        </div>
+      </div>
+      <div class="notification-card__status" *ngIf="isInviteResolved(note)">
+        {{ note.message }}
+      </div>
     </div>
   </section>
 </section>

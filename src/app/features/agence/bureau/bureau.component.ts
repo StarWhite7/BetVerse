@@ -22,12 +22,15 @@ export class AgenceBureauComponent implements OnInit {
   loading = signal(false);
   inviteOpen = signal(false);
   query = signal('');
-  candidates = signal<Array<{ id: string; username: string | null }>>([]);
+  candidates = signal<Array<{ id: string; username: string | null; pendingInvite?: boolean }>>([]);
   inviting = signal(false);
+  pendingInvites = signal(new Set<string>());
   deleteOpen = signal(false);
   deleteInput = signal('');
   deleteError = signal(false);
   deleting = signal(false);
+  leaveOpen = signal(false);
+  leaving = signal(false);
   capacity = 10;
 
   ngOnInit() {
@@ -66,6 +69,41 @@ export class AgenceBureauComponent implements OnInit {
     this.deleteOpen.set(false);
     this.deleteInput.set('');
     this.deleteError.set(false);
+  }
+
+  openLeave() {
+    this.leaveOpen.set(true);
+  }
+
+  closeLeave() {
+    this.leaveOpen.set(false);
+  }
+
+  confirmLeave() {
+    if (this.leaving()) {
+      return;
+    }
+    this.leaving.set(true);
+    this.agenceApi
+      .leaveAgency()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.leaving.set(false);
+          this.closeLeave();
+          this.roster.set(null);
+          this.auth
+            .fetchProfile()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => this.router.navigate(['/agence']),
+              error: () => this.router.navigate(['/agence']),
+            });
+        },
+        error: () => {
+          this.leaving.set(false);
+        },
+      });
   }
 
   updateDeleteInput(value: string) {
@@ -127,11 +165,23 @@ export class AgenceBureauComponent implements OnInit {
       });
   }
 
+  isPending(username: string | null, pendingInvite?: boolean) {
+    if (pendingInvite) {
+      return true;
+    }
+    const key = this.pendingKey(username);
+    if (!key) {
+      return false;
+    }
+    return this.pendingInvites().has(key);
+  }
+
   invite(username: string | null) {
-    if (!username || this.inviting()) {
+    if (!username || this.inviting() || this.isPending(username)) {
       return;
     }
     this.inviting.set(true);
+    this.addPending(username);
     this.agenceApi.invite(username).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.inviting.set(false);
@@ -139,12 +189,14 @@ export class AgenceBureauComponent implements OnInit {
       },
       error: () => {
         this.inviting.set(false);
+        this.removePending(username);
       },
     });
   }
 
   members(): AgencyMember[] {
-    return this.roster()?.members ?? [];
+    const members = this.roster()?.members ?? [];
+    return [...members].sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0));
   }
 
   membersCount() {
@@ -175,5 +227,56 @@ export class AgenceBureauComponent implements OnInit {
       default:
         return 'Stagiaire';
     }
+  }
+
+  isDirector() {
+    const currentId = this.auth.currentUser()?.id;
+    if (!currentId) {
+      return false;
+    }
+    return (this.roster()?.members ?? []).some(
+      (member) => member.id === currentId && member.agencyRole === 'DIRECTEUR',
+    );
+  }
+
+  canManageAgency() {
+    const currentId = this.auth.currentUser()?.id;
+    if (!currentId) {
+      return false;
+    }
+    return (this.roster()?.members ?? []).some(
+      (member) =>
+        member.id === currentId &&
+        member.agencyRole !== 'STAGIAIRE' &&
+        member.agencyRole !== null,
+    );
+  }
+
+  canLeave() {
+    return !!this.auth.currentUser()?.agencyId && !this.isDirector();
+  }
+
+  private addPending(username: string | null) {
+    const key = this.pendingKey(username);
+    if (!key) {
+      return;
+    }
+    const next = new Set(this.pendingInvites());
+    next.add(key);
+    this.pendingInvites.set(next);
+  }
+
+  private removePending(username: string | null) {
+    const key = this.pendingKey(username);
+    if (!key) {
+      return;
+    }
+    const next = new Set(this.pendingInvites());
+    next.delete(key);
+    this.pendingInvites.set(next);
+  }
+
+  private pendingKey(username: string | null) {
+    return username?.trim().toLowerCase() ?? '';
   }
 }

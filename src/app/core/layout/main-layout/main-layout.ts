@@ -19,6 +19,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UsersApiService } from '../../../data-access/users/users.api';
 import { NotificationService } from '../../services/notification.service';
 import { NotificationsApiService, UserNotification } from '../../../data-access/notifications/notifications.api';
+import { AgenceApiService } from '../../../data-access/agence/agence.api';
 
 @Component({
   selector: 'app-main-layout',
@@ -33,6 +34,7 @@ export class MainLayout implements OnInit {
   private readonly usersApi = inject(UsersApiService);
   private readonly toastNotifications = inject(NotificationService);
   private readonly notificationsApi = inject(NotificationsApiService);
+  private readonly agenceApi = inject(AgenceApiService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly claimCooldownMs = 24 * 60 * 60 * 1000;
@@ -53,6 +55,7 @@ export class MainLayout implements OnInit {
   notifications = signal<UserNotification[]>([]);
   notificationsLoading = signal(false);
   unreadNotifications = signal(0);
+  expandedInviteId = signal<string | null>(null);
   @ViewChild('notificationsWrap') notificationsWrap?: ElementRef<HTMLDivElement>;
   usernamePromptForm = this.fb.nonNullable.group({
     username: [
@@ -331,6 +334,59 @@ export class MainLayout implements OnInit {
     this.notificationsApi.markRead(notificationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.refreshNotifications();
+      },
+    });
+  }
+
+  onNotificationClick(note: UserNotification) {
+    if (this.isInviteNotification(note)) {
+      this.toggleInviteDetails(note);
+      return;
+    }
+    this.markNotificationRead(note.id);
+  }
+
+  isInviteNotification(note: UserNotification) {
+    return note.type === 'AGENCY_INVITE' && !!note.inviteId;
+  }
+
+  isInviteResolved(note: UserNotification) {
+    return (
+      note.type === 'AGENCY_INVITE_ACCEPTED' || note.type === 'AGENCY_INVITE_DECLINED'
+    );
+  }
+
+  isInviteExpanded(note: UserNotification) {
+    return this.expandedInviteId() === note.id;
+  }
+
+  toggleInviteDetails(note: UserNotification) {
+    if (!this.isInviteNotification(note)) {
+      return;
+    }
+    this.expandedInviteId.set(this.isInviteExpanded(note) ? null : note.id);
+  }
+
+  acceptInviteFromDropdown(note: UserNotification, event: MouseEvent) {
+    event.stopPropagation();
+    if (!note.inviteId) {
+      return;
+    }
+    this.agenceApi.acceptInvite(note.inviteId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.markNotificationRead(note.id);
+      },
+    });
+  }
+
+  declineInviteFromDropdown(note: UserNotification, event: MouseEvent) {
+    event.stopPropagation();
+    if (!note.inviteId) {
+      return;
+    }
+    this.agenceApi.declineInvite(note.inviteId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.markNotificationRead(note.id);
       },
     });
   }
