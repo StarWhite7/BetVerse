@@ -100,6 +100,9 @@
 }
 
 .shell__header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -107,6 +110,7 @@
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
   background: rgba(5, 10, 20, 0.6);
   backdrop-filter: blur(16px);
+  overflow: visible;
 }
 
 .shell__breadcrumbs span {
@@ -120,6 +124,8 @@
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  position: relative;
+  z-index: 5;
 }
 
 .shell__cta button {
@@ -298,6 +304,125 @@
 .wallet-balance__action:hover {
   border-color: rgba(168, 85, 247, 0.85);
   color: #f5d0fe;
+}
+
+.notifications {
+  position: relative;
+}
+
+.notifications__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.notifications__icon {
+  font-size: 1rem;
+}
+
+.notifications__label {
+  display: none;
+}
+
+.notifications__badge {
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #f43f5e;
+  color: #fff;
+  font-size: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.notifications__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.6rem);
+  width: min(320px, 90vw);
+  background: rgba(10, 14, 28, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 1rem;
+  box-shadow: 0 20px 45px rgba(5, 10, 20, 0.6);
+  z-index: 3000;
+  overflow: hidden;
+}
+
+.notifications__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.notifications__header button {
+  border: none;
+  background: transparent;
+  color: rgba(226, 232, 240, 0.7);
+  cursor: pointer;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.notifications__list {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.notifications__item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  cursor: pointer;
+}
+
+.notifications__item.unread {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.notifications__title {
+  font-size: 0.85rem;
+  color: #f8fafc;
+}
+
+.notifications__message {
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.65);
+  margin-top: 0.2rem;
+}
+
+.notifications__loading,
+.notifications__empty {
+  padding: 1rem;
+  text-align: center;
+  color: rgba(226, 232, 240, 0.6);
+  font-size: 0.8rem;
+}
+
+.notifications__footer {
+  display: block;
+  padding: 0.8rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  color: #67e8f9;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.7rem;
 }
 
 .profile-chip {

@@ -94,6 +94,41 @@
             +
           </a>
         </div>
+        <div class="notifications" #notificationsWrap (click)="$event.stopPropagation()">
+          <button type="button" class="notifications__toggle" (click)="toggleNotifications()">
+            <span class="notifications__icon" aria-hidden="true">✉</span>
+            <span class="notifications__label">Notifications</span>
+            <span class="notifications__badge" *ngIf="unreadNotifications() > 0">
+              {{ unreadNotifications() }}
+            </span>
+          </button>
+          <div class="notifications__panel" *ngIf="notificationsOpen()">
+            <div class="notifications__header">
+              <span>Dernieres notifications</span>
+              <button type="button" (click)="refreshNotifications()">Rafraichir</button>
+            </div>
+            <div class="notifications__list" *ngIf="!notificationsLoading(); else notifLoading">
+              <div
+                class="notifications__item"
+                *ngFor="let note of notifications()"
+                (click)="markNotificationRead(note.id)"
+                [class.unread]="!note.readAt"
+              >
+                <div class="notifications__title">{{ note.title }}</div>
+                <div class="notifications__message">{{ note.message }}</div>
+              </div>
+              <div class="notifications__empty" *ngIf="notifications().length === 0">
+                Aucune notification.
+              </div>
+            </div>
+            <ng-template #notifLoading>
+              <div class="notifications__loading">Chargement...</div>
+            </ng-template>
+            <a class="notifications__footer" routerLink="/notification" (click)="closeNotifications()">
+              Voir notification
+            </a>
+          </div>
+        </div>
         <a class="profile-chip" routerLink="/profile">
           <span class="profile-chip__avatar">{{ profileInitials() }}</span>
           <div class="profile-chip__body">

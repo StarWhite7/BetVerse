@@ -1,4 +1,15 @@
-import { Component, DestroyRef, OnInit, computed, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  HostListener,
+  OnInit,
+  ViewChild,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
@@ -7,6 +18,7 @@ import { WalletApiService, WalletEntity } from '../../../data-access/wallet/wall
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UsersApiService } from '../../../data-access/users/users.api';
 import { NotificationService } from '../../services/notification.service';
+import { NotificationsApiService, UserNotification } from '../../../data-access/notifications/notifications.api';
 
 @Component({
   selector: 'app-main-layout',
@@ -19,7 +31,8 @@ export class MainLayout implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly walletApi = inject(WalletApiService);
   private readonly usersApi = inject(UsersApiService);
-  private readonly notifications = inject(NotificationService);
+  private readonly toastNotifications = inject(NotificationService);
+  private readonly notificationsApi = inject(NotificationsApiService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly claimCooldownMs = 24 * 60 * 60 * 1000;
@@ -36,6 +49,11 @@ export class MainLayout implements OnInit {
   usernamePromptSubmitting = signal(false);
   adminXpLoading = signal(false);
   adminMenuOpen = signal(false);
+  notificationsOpen = signal(false);
+  notifications = signal<UserNotification[]>([]);
+  notificationsLoading = signal(false);
+  unreadNotifications = signal(0);
+  @ViewChild('notificationsWrap') notificationsWrap?: ElementRef<HTMLDivElement>;
   usernamePromptForm = this.fb.nonNullable.group({
     username: [
       '',
@@ -150,6 +168,7 @@ export class MainLayout implements OnInit {
         this.syncClaimWindowFromWallet(wallet);
       });
     this.loadWallet();
+    this.refreshUnreadCount();
   }
 
   logout() {
@@ -176,11 +195,11 @@ export class MainLayout implements OnInit {
         next: (user) => {
           this.usernamePromptSubmitting.set(false);
           this.auth.syncUser(user);
-          this.notifications.success('Pseudo mis a jour.');
+          this.toastNotifications.success('Pseudo mis a jour.');
         },
         error: () => {
           this.usernamePromptSubmitting.set(false);
-          this.notifications.error("Impossible d'enregistrer le pseudo.");
+          this.toastNotifications.error("Impossible d'enregistrer le pseudo.");
         },
       });
   }
@@ -256,8 +275,62 @@ export class MainLayout implements OnInit {
         this.adminXpLoading.set(false);
       },
       error: () => {
-        this.notifications.error("Impossible d'ajuster l'XP.");
+        this.toastNotifications.error("Impossible d'ajuster l'XP.");
         this.adminXpLoading.set(false);
+      },
+    });
+  }
+
+  toggleNotifications() {
+    this.notificationsOpen.update((open) => !open);
+    if (!this.notificationsOpen()) {
+      return;
+    }
+    this.refreshNotifications();
+  }
+
+  closeNotifications() {
+    this.notificationsOpen.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.notificationsOpen()) {
+      return;
+    }
+    const target = event.target as Node | null;
+    const container = this.notificationsWrap?.nativeElement;
+    if (container && target && !container.contains(target)) {
+      this.closeNotifications();
+    }
+  }
+
+  refreshNotifications() {
+    this.notificationsLoading.set(true);
+    this.notificationsApi.list().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (items) => {
+        this.notifications.set(items);
+        this.notificationsLoading.set(false);
+        this.refreshUnreadCount();
+      },
+      error: () => {
+        this.notificationsLoading.set(false);
+      },
+    });
+  }
+
+  refreshUnreadCount() {
+    this.notificationsApi.unreadCount().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (count) => {
+        this.unreadNotifications.set(count);
+      },
+    });
+  }
+
+  markNotificationRead(notificationId: string) {
+    this.notificationsApi.markRead(notificationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.refreshNotifications();
       },
     });
   }

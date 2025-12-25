@@ -1,0 +1,52 @@
+<section class="notifications-page">
+  <a class="notifications-page__back" routerLink="/dashboard">
+    <span class="notifications-page__back-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M15 6l-6 6 6 6" />
+      </svg>
+    </span>
+    Retour
+  </a>
+
+  <header class="notifications-page__hero">
+    <h1>Notifications</h1>
+    <p>Consultez vos invitations et mises a jour recentes.</p>
+  </header>
+
+  <section class="notifications-page__section">
+    <h2>Invitations d'agence</h2>
+    <div class="notifications-page__empty" *ngIf="invites().length === 0">
+      Aucune invitation en attente.
+    </div>
+    <div class="invite-card" *ngFor="let invite of invites()">
+      <div>
+        <h3>{{ invite.agency.name }}</h3>
+        <p>Invite par {{ invite.inviter.username ?? 'inconnu' }}</p>
+      </div>
+      <div class="invite-card__actions">
+        <button type="button" class="invite-card__button" (click)="acceptInvite(invite.id)">
+          Accepter
+        </button>
+        <button type="button" class="invite-card__button invite-card__button--ghost" (click)="declineInvite(invite.id)">
+          Refuser
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="notifications-page__section">
+    <h2>Dernieres notifications</h2>
+    <div class="notifications-page__empty" *ngIf="notifications().length === 0">
+      Aucune notification.
+    </div>
+    <div
+      class="notification-card"
+      *ngFor="let note of notifications()"
+      (click)="markRead(note.id)"
+      [class.unread]="!note.readAt"
+    >
+      <div class="notification-card__title">{{ note.title }}</div>
+      <div class="notification-card__message">{{ note.message }}</div>
+    </div>
+  </section>
+</section>

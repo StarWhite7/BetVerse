@@ -67,6 +67,13 @@ export const routes: Routes = [
             (m) => m.ShardsComponent
           ),
       },
+      {
+        path: 'notification',
+        loadComponent: () =>
+          import('./features/notifications/notifications.component').then(
+            (m) => m.NotificationsComponent
+          ),
+      },
             {
         path: 'agence',
         loadChildren: () =>
