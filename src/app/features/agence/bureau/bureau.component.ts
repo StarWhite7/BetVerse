@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AgenceApiService, AgencyMember, AgencyRoster } from '../../../data-access/agence/agence.api';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-agence-bureau',
@@ -13,6 +14,8 @@ import { AgenceApiService, AgencyMember, AgencyRoster } from '../../../data-acce
 })
 export class AgenceBureauComponent implements OnInit {
   private readonly agenceApi = inject(AgenceApiService);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
   roster = signal<AgencyRoster | null>(null);
@@ -21,6 +24,10 @@ export class AgenceBureauComponent implements OnInit {
   query = signal('');
   candidates = signal<Array<{ id: string; username: string | null }>>([]);
   inviting = signal(false);
+  deleteOpen = signal(false);
+  deleteInput = signal('');
+  deleteError = signal(false);
+  deleting = signal(false);
   capacity = 10;
 
   ngOnInit() {
@@ -47,6 +54,61 @@ export class AgenceBureauComponent implements OnInit {
 
   closeInvite() {
     this.inviteOpen.set(false);
+  }
+
+  openDelete() {
+    this.deleteInput.set('');
+    this.deleteError.set(false);
+    this.deleteOpen.set(true);
+  }
+
+  closeDelete() {
+    this.deleteOpen.set(false);
+    this.deleteInput.set('');
+    this.deleteError.set(false);
+  }
+
+  updateDeleteInput(value: string) {
+    this.deleteInput.set(value);
+  }
+
+  confirmDelete() {
+    if (this.deleting()) {
+      return;
+    }
+
+    if (this.deleteInput().trim() !== 'DELETE') {
+      this.flashDeleteWarning();
+      return;
+    }
+
+    this.deleting.set(true);
+    this.agenceApi
+      .deleteAgency()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.deleting.set(false);
+          this.closeDelete();
+          this.roster.set(null);
+          this.auth
+            .fetchProfile()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => this.router.navigate(['/agence']),
+              error: () => this.router.navigate(['/agence']),
+            });
+        },
+        error: () => {
+          this.deleting.set(false);
+        },
+      });
+  }
+
+  private flashDeleteWarning() {
+    this.deleteError.set(false);
+    setTimeout(() => this.deleteError.set(true), 0);
+    setTimeout(() => this.deleteError.set(false), 800);
   }
 
   updateQuery(value: string) {

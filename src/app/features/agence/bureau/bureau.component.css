@@ -244,6 +244,13 @@
   border-color: rgba(226, 232, 240, 0.35);
 }
 
+.bureau__button--danger {
+  background: rgba(248, 113, 113, 0.12);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.6);
+  box-shadow: 0 0 16px rgba(248, 113, 113, 0.25);
+}
+
 .roster {
   position: relative;
   z-index: 1;
@@ -437,6 +444,34 @@
   color: rgba(226, 232, 240, 0.6);
 }
 
+.bureau-delete__warning-text {
+  margin: 0 0 1rem;
+  color: rgba(248, 113, 113, 0.9);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.bureau-delete__warning {
+  margin: 0.7rem 0 0;
+  color: rgba(248, 113, 113, 0.9);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+.bureau-delete__warning--flash {
+  opacity: 1;
+  animation: deleteFlash 0.6s ease;
+}
+
+.bureau-delete__actions {
+  margin-top: 1.2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
 .roster__xp {
   display: block;
   font-weight: 600;
@@ -457,6 +492,18 @@
   }
   100% {
     background-position: 120px 60px, 140px 0, 0 120px;
+  }
+}
+
+@keyframes deleteFlash {
+  0% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
   }
 }
 

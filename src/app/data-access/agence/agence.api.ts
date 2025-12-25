@@ -91,6 +91,10 @@ export class AgenceApiService {
     });
   }
 
+  deleteAgency() {
+    return this.http.delete<{ success: true }>(this.baseUrl);
+  }
+
   createAgency(payload: {
     name: string;
     logoId?: string;

@@ -55,6 +55,9 @@
     <button type="button" class="bureau__button bureau__button--ghost" disabled>
       Gerer les roles
     </button>
+    <button type="button" class="bureau__button bureau__button--danger" (click)="openDelete()">
+      Supprimer l'agence
+    </button>
   </div>
 
   <section class="roster">
@@ -114,6 +117,48 @@
             Inviter
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bureau-modal bureau-modal--danger" *ngIf="deleteOpen()">
+  <div class="bureau-modal__backdrop" (click)="closeDelete()"></div>
+  <div class="bureau-modal__panel" role="dialog" aria-modal="true">
+    <header class="bureau-modal__header">
+      <h2>Supprimer l'agence</h2>
+      <button type="button" class="bureau-modal__close" (click)="closeDelete()">Į-</button>
+    </header>
+    <div class="bureau-modal__body">
+      <p class="bureau-delete__warning-text">
+        Cette action va supprimer l'agence definitivement. Cette operation est
+        irreversible.
+      </p>
+      <input
+        type="text"
+        class="bureau-modal__input"
+        placeholder='Ecrire "DELETE" pour confirmer'
+        [value]="deleteInput()"
+        (input)="updateDeleteInput($any($event.target).value)"
+      />
+      <div
+        class="bureau-delete__warning"
+        [class.bureau-delete__warning--flash]="deleteError()"
+      >
+        Ecrire "DELETE" pour supprimer definitivement l'agence.
+      </div>
+      <div class="bureau-delete__actions">
+        <button type="button" class="bureau__button bureau__button--ghost" (click)="closeDelete()">
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="bureau__button bureau__button--danger"
+          (click)="confirmDelete()"
+          [disabled]="deleting()"
+        >
+          Supprimer
+        </button>
       </div>
     </div>
   </div>
