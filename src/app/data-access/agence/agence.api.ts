@@ -56,6 +56,10 @@ export class AgenceApiService {
     );
   }
 
+  getAgency(id: string) {
+    return this.http.get<AgencyRoster>(`${this.baseUrl}/${id}`);
+  }
+
   listCandidates(query: string) {
     return this.http.get<Array<{ id: string; username: string | null }>>(
       `${this.baseUrl}/candidates`,

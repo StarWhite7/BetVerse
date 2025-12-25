@@ -24,50 +24,55 @@
     <div class="agency-list__divider" aria-hidden="true"></div>
   </header>
 
-  <div class="agency-list__grid">
-    <article class="agency-list__card">
+  <div class="agency-list__grid" *ngIf="!loading(); else listLoading">
+    <article class="agency-list__card" *ngFor="let agency of agencies()">
       <div class="agency-list__header">
         <div>
-          <h3>Neon Vanguard</h3>
-          <span class="agency-list__tag">Competitif</span>
+          <h3>{{ agency.name }}</h3>
+          <span class="agency-list__tag">Agence</span>
         </div>
-        <span class="agency-list__members">18/30</span>
+        <span class="agency-list__members">{{ agency._count?.members ?? 0 }}/10</span>
       </div>
-      <p>Equipe axee sur les tournois et les missions rapides.</p>
+      <p>Rejoignez cette agence et progressez ensemble.</p>
       <div class="agency-list__meta">
-        <span>XP moyen: 8 420</span>
-        <button type="button">Voir</button>
+        <span>Rang: {{ agency.rank }}</span>
+        <button type="button" (click)="viewAgency(agency.id)">Voir</button>
       </div>
     </article>
-
-    <article class="agency-list__card">
-      <div class="agency-list__header">
-        <div>
-          <h3>Solar Echo</h3>
-          <span class="agency-list__tag agency-list__tag--casual">Casual</span>
-        </div>
-        <span class="agency-list__members">9/20</span>
-      </div>
-      <p>Ambiance chill, focus sur progression et entraide.</p>
-      <div class="agency-list__meta">
-        <span>XP moyen: 5 200</span>
-        <button type="button">Voir</button>
-      </div>
-    </article>
-
-    <article class="agency-list__card">
-      <div class="agency-list__header">
-        <div>
-          <h3>Quantum Syndicate</h3>
-          <span class="agency-list__tag agency-list__tag--elite">Elite</span>
-        </div>
-        <span class="agency-list__members">22/25</span>
-      </div>
-      <p>Roster experimentes, missions longues et coordination.</p>
-      <div class="agency-list__meta">
-        <span>XP moyen: 12 900</span>
-        <button type="button">Voir</button>
-      </div>
-    </article>
+    <div class="agency-list__empty" *ngIf="agencies().length === 0">
+      Aucune agence disponible pour le moment.
+    </div>
   </div>
+  <ng-template #listLoading>
+    <div class="agency-list__empty">Chargement...</div>
+  </ng-template>
+
+  <section class="agency-list__modal" *ngIf="selectedAgency() as agency">
+    <div class="agency-list__backdrop" (click)="closeAgency()"></div>
+    <div class="agency-list__panel" role="dialog" aria-modal="true">
+      <header class="agency-list__panel-header">
+        <div>
+          <h2>{{ agency.name }}</h2>
+          <span>{{ agency._count?.members ?? 0 }}/10 membres</span>
+        </div>
+        <button type="button" (click)="closeAgency()">×</button>
+      </header>
+      <div class="agency-list__panel-body" *ngIf="!detailLoading(); else detailLoadingTpl">
+        <div class="agency-list__member" *ngFor="let member of agency.members ?? []">
+          <span class="agency-list__member-name">
+            {{ member.username ?? member.email }}
+          </span>
+          <span class="agency-list__member-role">
+            {{ roleLabel(member.agencyRole ?? null) }}
+          </span>
+        </div>
+        <div class="agency-list__empty" *ngIf="(agency.members ?? []).length === 0">
+          Aucun membre pour le moment.
+        </div>
+      </div>
+      <ng-template #detailLoadingTpl>
+        <div class="agency-list__empty">Chargement...</div>
+      </ng-template>
+    </div>
+  </section>
 </section>
