@@ -60,11 +60,12 @@ export class AgenceListeComponent implements OnInit {
     this.selectedAgency.set(null);
   }
 
-  roleLabel(role?: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'STAGIAIRE' | null) {
+  roleLabel(role?: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE' | null) {
     const value = role as
       | 'DIRECTEUR'
       | 'ASSOCIE'
       | 'RESPONSABLE'
+      | 'MEMBRE'
       | 'STAGIAIRE'
       | null
       | undefined;
@@ -75,6 +76,8 @@ export class AgenceListeComponent implements OnInit {
         return 'Associe';
       case 'RESPONSABLE':
         return 'Responsable';
+      case 'MEMBRE':
+        return 'Membre';
       default:
         return 'Stagiaire';
     }

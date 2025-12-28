@@ -60,7 +60,7 @@
     <button
       type="button"
       class="bureau__button bureau__button--ghost"
-      disabled
+      (click)="openRoles()"
       *ngIf="canManageAgency()"
     >
       Gerer les roles
@@ -99,7 +99,9 @@
           </span>
           <div>
             <p class="roster__name">{{ member.username ?? member.email }}</p>
-            <span class="roster__role">{{ roleLabel(member.agencyRole) }}</span>
+            <span class="roster__role" [ngClass]="roleClass(member.agencyRole)">
+              {{ roleLabel(member.agencyRole) }}
+            </span>
             <span class="roster__meta">
               Rejoint {{ member.createdAt | date: 'MMM yyyy' }}
             </span>
@@ -147,6 +149,81 @@
             {{ isPending(user.username, user.pendingInvite) ? 'En attente' : 'Inviter' }}
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bureau-modal" *ngIf="rolesOpen()">
+  <div class="bureau-modal__backdrop" (click)="closeRoles()"></div>
+  <div class="bureau-modal__panel bureau-modal__panel--wide" role="dialog" aria-modal="true">
+    <header class="bureau-modal__header">
+      <h2>Gerer les roles</h2>
+      <button type="button" class="bureau-modal__close" (click)="closeRoles()">×</button>
+    </header>
+    <div class="bureau-modal__body">
+      <div class="role-manager">
+        <div class="role-manager__list">
+          <h3>Joueurs</h3>
+          <div class="role-manager__list-scroll">
+            <div
+              class="role-manager__item"
+              *ngFor="let member of members()"
+              draggable="true"
+              (dragstart)="onDragStart($event, member)"
+              (dragend)="onDragEnd()"
+            >
+              <span class="role-manager__name">{{ member.username ?? member.email }}</span>
+              <span class="role-manager__badge" [ngClass]="roleClass(member.agencyRole)">
+                {{ roleLabel(member.agencyRole) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="role-manager__roles">
+          <div class="role-card" [ngClass]="role.layoutClass" *ngFor="let role of roleOptions()">
+            <header class="role-card__header">
+              <h3>{{ role.label }}</h3>
+              <span *ngIf="role.hint">{{ role.hint }}</span>
+            </header>
+            <div
+              class="role-card__drop"
+              [class.role-card__drop--active]="dragOverRole() === role.key"
+              (dragover)="allowDrop($event)"
+              (dragenter)="onDragEnter(role.key)"
+              (dragleave)="onDragLeave(role.key)"
+              (drop)="onDrop($event, role.key)"
+            >
+              <div
+                class="role-card__member"
+                *ngFor="let member of membersByRole(role.key)"
+                draggable="true"
+                (dragstart)="onDragStart($event, member)"
+                (dragend)="onDragEnd()"
+              >
+                <span>{{ member.username ?? member.email }}</span>
+              </div>
+              <p class="role-card__empty" *ngIf="membersByRole(role.key).length === 0">
+                Glisser un joueur ici
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="role-manager__error" *ngIf="roleError()">{{ roleError() }}</p>
+      <div class="role-manager__actions">
+        <button type="button" class="bureau__button bureau__button--ghost" (click)="resetRoles()">
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="bureau__button bureau__button--primary"
+          (click)="validateRoles()"
+          [disabled]="savingRoles()"
+        >
+          Valider
+        </button>
       </div>
     </div>
   </div>

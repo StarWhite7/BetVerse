@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
 import { AgenceApiService, AgencyMember, AgencyRoster } from '../../../data-access/agence/agence.api';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -21,10 +22,16 @@ export class AgenceBureauComponent implements OnInit {
   roster = signal<AgencyRoster | null>(null);
   loading = signal(false);
   inviteOpen = signal(false);
+  rolesOpen = signal(false);
   query = signal('');
   candidates = signal<Array<{ id: string; username: string | null; pendingInvite?: boolean }>>([]);
   inviting = signal(false);
   pendingInvites = signal(new Set<string>());
+  draggingMemberId = signal<string | null>(null);
+  dragOverRole = signal<RoleKey | null>(null);
+  roleError = signal<string | null>(null);
+  pendingRoles = signal<Record<string, RoleKey>>({});
+  savingRoles = signal(false);
   deleteOpen = signal(false);
   deleteInput = signal('');
   deleteError = signal(false);
@@ -32,6 +39,13 @@ export class AgenceBureauComponent implements OnInit {
   leaveOpen = signal(false);
   leaving = signal(false);
   capacity = 10;
+  private readonly roleOptionsList: RoleOption[] = [
+    { key: 'DIRECTEUR', label: 'Directeur', hint: '1 seul', layoutClass: 'role-card--directeur' },
+    { key: 'RESPONSABLE', label: 'Responsable', layoutClass: 'role-card--responsable' },
+    { key: 'ASSOCIE', label: 'Associe', layoutClass: 'role-card--associe' },
+    { key: 'MEMBRE', label: 'Membre', layoutClass: 'role-card--membre' },
+    { key: 'STAGIAIRE', label: 'Stagiaire', layoutClass: 'role-card--stagiaire' },
+  ];
 
   ngOnInit() {
     this.loadRoster();
@@ -57,6 +71,27 @@ export class AgenceBureauComponent implements OnInit {
 
   closeInvite() {
     this.inviteOpen.set(false);
+  }
+
+  openRoles() {
+    this.roleError.set(null);
+    this.pendingRoles.set({});
+    this.savingRoles.set(false);
+    this.rolesOpen.set(true);
+  }
+
+  closeRoles() {
+    this.rolesOpen.set(false);
+    this.draggingMemberId.set(null);
+    this.dragOverRole.set(null);
+    this.pendingRoles.set({});
+    this.savingRoles.set(false);
+    this.roleError.set(null);
+  }
+
+  resetRoles() {
+    this.pendingRoles.set({});
+    this.roleError.set(null);
   }
 
   openDelete() {
@@ -224,8 +259,25 @@ export class AgenceBureauComponent implements OnInit {
         return 'Associe';
       case 'RESPONSABLE':
         return 'Responsable';
+      case 'MEMBRE':
+        return 'Membre';
       default:
         return 'Stagiaire';
+    }
+  }
+
+  roleClass(role: AgencyMember['agencyRole']) {
+    switch (role) {
+      case 'DIRECTEUR':
+        return 'role--directeur';
+      case 'ASSOCIE':
+        return 'role--associe';
+      case 'RESPONSABLE':
+        return 'role--responsable';
+      case 'MEMBRE':
+        return 'role--membre';
+      default:
+        return 'role--stagiaire';
     }
   }
 
@@ -244,16 +296,72 @@ export class AgenceBureauComponent implements OnInit {
     if (!currentId) {
       return false;
     }
-    return (this.roster()?.members ?? []).some(
-      (member) =>
-        member.id === currentId &&
+    return (this.roster()?.members ?? []).some((member) => {
+      if (member.id !== currentId) {
+        return false;
+      }
+      return (
         member.agencyRole !== 'STAGIAIRE' &&
-        member.agencyRole !== null,
-    );
+        member.agencyRole !== 'MEMBRE' &&
+        member.agencyRole !== null
+      );
+    });
   }
 
   canLeave() {
     return !!this.auth.currentUser()?.agencyId && !this.isDirector();
+  }
+
+  roleOptions() {
+    return this.roleOptionsList;
+  }
+
+  membersByRole(role: RoleKey) {
+    const members = this.roster()?.members ?? [];
+    return members.filter((member) => this.getRoleFor(member) === role);
+  }
+
+  allowDrop(event: DragEvent) {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onDragStart(event: DragEvent, member: AgencyMember) {
+    event.dataTransfer?.setData('application/agency-member', member.id);
+    event.dataTransfer?.setData('text/plain', member.id);
+    event.dataTransfer?.setDragImage?.(event.target as Element, 10, 10);
+    this.draggingMemberId.set(member.id);
+  }
+
+  onDragEnd() {
+    this.draggingMemberId.set(null);
+    this.dragOverRole.set(null);
+  }
+
+  onDragEnter(role: RoleKey) {
+    this.dragOverRole.set(role);
+  }
+
+  onDragLeave(role: RoleKey) {
+    if (this.dragOverRole() === role) {
+      this.dragOverRole.set(null);
+    }
+  }
+
+  onDrop(event: DragEvent, role: RoleKey) {
+    event.preventDefault();
+    const memberId =
+      event.dataTransfer?.getData('application/agency-member') ||
+      event.dataTransfer?.getData('text/plain') ||
+      this.draggingMemberId();
+    this.dragOverRole.set(null);
+    this.draggingMemberId.set(null);
+    if (!memberId) {
+      return;
+    }
+    this.assignRole(memberId, role);
   }
 
   private addPending(username: string | null) {
@@ -279,4 +387,143 @@ export class AgenceBureauComponent implements OnInit {
   private pendingKey(username: string | null) {
     return username?.trim().toLowerCase() ?? '';
   }
+
+  private assignRole(memberId: string, role: RoleKey) {
+    const roster = this.roster();
+    const members = roster?.members ?? [];
+    const member = members.find((item) => item.id === memberId);
+    if (!member) {
+      return;
+    }
+
+    const currentRole = this.getRoleFor(member);
+    if (currentRole === role) {
+      return;
+    }
+
+    if (!this.canManageDirector() && (currentRole === 'DIRECTEUR' || role === 'DIRECTEUR')) {
+      this.roleError.set('Seul le directeur peut changer le role de directeur.');
+      return;
+    }
+
+    if (role === 'DIRECTEUR') {
+      const currentDirector = members.find((item) => this.getRoleFor(item) === 'DIRECTEUR');
+      if (currentDirector && currentDirector.id !== memberId) {
+        this.setPendingRole(currentDirector.id, 'ASSOCIE');
+      }
+    }
+
+    this.roleError.set(null);
+    this.setPendingRole(memberId, role);
+  }
+
+  validateRoles() {
+    if (this.savingRoles()) {
+      return;
+    }
+
+    if (!this.hasDirectorAfterChanges()) {
+      this.roleError.set('Il faut obligatoire un leader');
+      return;
+    }
+
+    const changes = this.pendingRoleChanges();
+    if (!changes.length) {
+      this.closeRoles();
+      return;
+    }
+
+    this.savingRoles.set(true);
+    forkJoin(changes.map((change) => this.agenceApi.updateRole(change.id, change.role)))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.applyPendingRoles();
+          this.savingRoles.set(false);
+          this.closeRoles();
+        },
+        error: () => {
+          this.savingRoles.set(false);
+          this.roleError.set('Impossible de mettre a jour les roles.');
+        },
+      });
+  }
+
+  private applyPendingRoles() {
+    const roster = this.roster();
+    if (!roster?.members) {
+      return;
+    }
+    const pending = this.pendingRoles();
+    if (!Object.keys(pending).length) {
+      return;
+    }
+    const members = roster.members.map((member) => {
+      const role = pending[member.id];
+      return role ? { ...member, agencyRole: role } : member;
+    });
+    this.roster.set({ ...roster, members });
+    this.pendingRoles.set({});
+  }
+
+  private pendingRoleChanges() {
+    const members = this.roster()?.members ?? [];
+    const pending = this.pendingRoles();
+    return members
+      .filter((member) => pending[member.id] && pending[member.id] !== this.baseRole(member))
+      .map((member) => ({ id: member.id, role: pending[member.id] }));
+  }
+
+  private getRoleFor(member: AgencyMember): RoleKey {
+    const pending = this.pendingRoles();
+    return pending[member.id] ?? this.baseRole(member);
+  }
+
+  private baseRole(member: AgencyMember): RoleKey {
+    return (member.agencyRole ?? 'STAGIAIRE') as RoleKey;
+  }
+
+  private setPendingRole(memberId: string, role: RoleKey) {
+    const roster = this.roster();
+    if (!roster?.members) {
+      return;
+    }
+    const member = roster.members.find((item) => item.id === memberId);
+    if (!member) {
+      return;
+    }
+    const baseRole = this.baseRole(member);
+    const next = { ...this.pendingRoles() };
+    if (role === baseRole) {
+      delete next[memberId];
+    } else {
+      next[memberId] = role;
+    }
+    this.pendingRoles.set(next);
+  }
+
+  private hasDirectorAfterChanges() {
+    const members = this.roster()?.members ?? [];
+    if (!members.length) {
+      return false;
+    }
+    return members.some((member) => this.getRoleFor(member) === 'DIRECTEUR');
+  }
+
+  private canManageDirector() {
+    return this.isAdmin() || this.isDirector();
+  }
+
+  private isAdmin() {
+    return this.auth.currentUser()?.role === 'ADMIN';
+  }
 }
+
+type RoleKey = 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE';
+
+type RoleOption = {
+  key: RoleKey;
+  label: string;
+  hint?: string;
+  layoutClass: string;
+};

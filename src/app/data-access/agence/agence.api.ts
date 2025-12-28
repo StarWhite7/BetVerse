@@ -19,7 +19,7 @@ export interface AgencyMember {
   id: string;
   username?: string | null;
   email: string;
-  agencyRole?: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'STAGIAIRE' | null;
+  agencyRole?: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE' | null;
   createdAt: string;
   xp?: number | null;
 }
@@ -85,7 +85,10 @@ export class AgenceApiService {
     return this.http.post<{ success: true }>(`${this.baseUrl}/invitations/${id}/decline`, {});
   }
 
-  updateRole(memberId: string, role: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'STAGIAIRE') {
+  updateRole(
+    memberId: string,
+    role: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE',
+  ) {
     return this.http.patch<{ success: true }>(`${this.baseUrl}/members/${memberId}/role`, {
       role,
     });
