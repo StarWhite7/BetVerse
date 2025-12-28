@@ -65,22 +65,24 @@
     >
       Gerer les roles
     </button>
-    <button
-      type="button"
-      class="bureau__button bureau__button--danger"
-      (click)="openLeave()"
-      *ngIf="canLeave()"
-    >
-      Quitter l'agence
-    </button>
-    <button
-      type="button"
-      class="bureau__button bureau__button--danger"
-      (click)="openDelete()"
-      *ngIf="isDirector()"
-    >
-      Supprimer l'agence
-    </button>
+    <div class="bureau__actions-danger">
+      <button
+        type="button"
+        class="bureau__button bureau__button--danger"
+        (click)="openLeave()"
+        *ngIf="canLeave()"
+      >
+        Quitter l'agence
+      </button>
+      <button
+        type="button"
+        class="bureau__button bureau__button--danger"
+        (click)="openDelete()"
+        *ngIf="isDirector()"
+      >
+        Supprimer l'agence
+      </button>
+    </div>
   </div>
 
   <section class="roster">

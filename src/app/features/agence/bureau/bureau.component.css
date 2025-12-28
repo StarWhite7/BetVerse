@@ -222,6 +222,12 @@
   margin-bottom: 1.8rem;
 }
 
+.bureau__actions-danger {
+  margin-left: auto;
+  display: flex;
+  gap: 0.8rem;
+}
+
 .bureau__button {
   border-radius: 0.9rem;
   padding: 0.55rem 1.1rem;
@@ -549,6 +555,12 @@
   .bureau__actions {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .bureau__actions-danger {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
   }
 
   .roster__item {
