@@ -31,25 +31,25 @@
   <div class="coordination__stats">
     <article class="stat-card stat-card--active">
       <span class="stat-card__label">Missions actives</span>
-      <span class="stat-card__value">4</span>
+      <span class="stat-card__value">{{ stats()?.activeCount ?? 0 }}</span>
       <span class="stat-card__trend">En cours</span>
     </article>
 
     <article class="stat-card stat-card--done">
       <span class="stat-card__label">Completes</span>
-      <span class="stat-card__value">12</span>
+      <span class="stat-card__value">{{ stats()?.completedCount ?? 0 }}</span>
       <span class="stat-card__trend">Saison actuelle</span>
     </article>
 
     <article class="stat-card stat-card--xp">
       <span class="stat-card__label">XP total</span>
-      <span class="stat-card__value">8 500</span>
+      <span class="stat-card__value">{{ stats()?.totalXp ?? 0 }}</span>
       <span class="stat-card__trend">Bonus cumules</span>
     </article>
 
     <article class="stat-card stat-card--streak">
       <span class="stat-card__label">Serie active</span>
-      <span class="stat-card__value">3</span>
+      <span class="stat-card__value">{{ stats()?.activeStreak ?? 0 }}</span>
       <span class="stat-card__trend">Jours consecutifs</span>
     </article>
   </div>
@@ -60,103 +60,42 @@
       <p>Choisissez les objectifs prioritaires pour le clan.</p>
     </header>
 
-    <article class="mission-card">
+    <article
+      class="mission-card"
+      [class.mission-card--locked]="mission.status === 'LOCKED'"
+      *ngFor="let mission of missions()"
+    >
       <div class="mission-card__head">
         <div>
-          <h3>Weekly Training Challenge</h3>
-          <span class="mission-card__tag mission-card__tag--easy">Easy</span>
+          <h3>{{ mission.mission.title }}</h3>
+          <span class="mission-card__tag" [ngClass]="difficultyClass(mission.mission.difficulty)">
+            {{ difficultyLabel(mission.mission.difficulty) }}
+          </span>
+          <span class="mission-card__tag mission-card__tag--locked" *ngIf="mission.status === 'LOCKED'">
+            Locked
+          </span>
         </div>
         <div class="mission-card__reward">
           <span>Recompense</span>
-          <strong>500 XP</strong>
+          <strong>{{ rewardLabel(mission) }}</strong>
         </div>
       </div>
-      <p>Completer 10 sessions d'entrainement cette semaine.</p>
+      <p>{{ mission.mission.description }}</p>
       <div class="mission-card__progress">
-        <span style="width: 70%"></span>
+        <span [style.width.%]="progressPercent(mission)"></span>
       </div>
       <div class="mission-card__meta">
-        <span>7/10 completes</span>
+        <span>{{ progressLabel(mission) }}</span>
         <div class="mission-card__actions">
-          <span class="mission-card__timer">3 jours</span>
-          <button type="button" class="mission-card__button">Voir details</button>
-        </div>
-      </div>
-    </article>
-
-    <article class="mission-card">
-      <div class="mission-card__head">
-        <div>
-          <h3>Tournament Domination</h3>
-          <span class="mission-card__tag mission-card__tag--hard">Hard</span>
-        </div>
-        <div class="mission-card__reward">
-          <span>Recompense</span>
-          <strong>2000 XP + Trophee</strong>
-        </div>
-      </div>
-      <p>Gagner 5 matchs consecutifs en tournois classes.</p>
-      <div class="mission-card__progress">
-        <span style="width: 40%"></span>
-      </div>
-      <div class="mission-card__meta">
-        <span>2/5 completes</span>
-        <div class="mission-card__actions">
-          <span class="mission-card__timer">5 jours</span>
-          <button type="button" class="mission-card__button">Voir details</button>
-        </div>
-      </div>
-    </article>
-
-    <article class="mission-card">
-      <div class="mission-card__head">
-        <div>
-          <h3>Recruitment Drive</h3>
-          <span class="mission-card__tag mission-card__tag--medium">Medium</span>
-        </div>
-        <div class="mission-card__reward">
-          <span>Recompense</span>
-          <strong>1000 XP</strong>
-        </div>
-      </div>
-      <p>Inviter 3 nouveaux membres a rejoindre le clan.</p>
-      <div class="mission-card__progress">
-        <span style="width: 33%"></span>
-      </div>
-      <div class="mission-card__meta">
-        <span>1/3 completes</span>
-        <div class="mission-card__actions">
-          <span class="mission-card__timer">1 semaine</span>
-          <button type="button" class="mission-card__button">Voir details</button>
-        </div>
-      </div>
-    </article>
-
-    <article class="mission-card mission-card--locked">
-      <div class="mission-card__head">
-        <div>
-          <h3>Perfect Coordination</h3>
-          <span class="mission-card__tag mission-card__tag--legendary">Legendary</span>
-          <span class="mission-card__tag mission-card__tag--locked">Locked</span>
-        </div>
-        <div class="mission-card__reward">
-          <span>Recompense</span>
-          <strong>5000 XP + Badge</strong>
-        </div>
-      </div>
-      <p>Completer une mission avec tous les membres du clan actifs.</p>
-      <div class="mission-card__progress">
-        <span style="width: 0%"></span>
-      </div>
-      <div class="mission-card__meta">
-        <span>0/1 completes</span>
-        <div class="mission-card__actions">
-          <span class="mission-card__timer">2 semaines</span>
-          <button type="button" class="mission-card__button" disabled>
-            Verrouille
+          <span class="mission-card__timer" *ngIf="mission.dueAt">
+            {{ mission.dueAt | date: 'd MMM' }}
+          </span>
+          <button type="button" class="mission-card__button" [disabled]="mission.status === 'LOCKED'">
+            Voir details
           </button>
         </div>
       </div>
     </article>
+    <p class="missions__empty" *ngIf="missions().length === 0 && !loading()">Aucune mission disponible.</p>
   </section>
 </section>

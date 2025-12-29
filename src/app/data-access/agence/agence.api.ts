@@ -29,6 +29,36 @@ export interface AgencyRoster extends AgencyEntity {
   members?: AgencyMember[];
 }
 
+export type MissionDifficulty = 'EASY' | 'MEDIUM' | 'HARD' | 'LEGENDARY';
+export type AgencyMissionStatus = 'ACTIVE' | 'COMPLETED' | 'LOCKED';
+
+export interface AgencyMission {
+  id: string;
+  status: AgencyMissionStatus;
+  progress: number;
+  target: number;
+  dueAt?: string | null;
+  mission: {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    difficulty: MissionDifficulty;
+    rewardXp: number;
+    rewardTrophies: number;
+  };
+}
+
+export interface AgencyCoordination {
+  stats: {
+    activeCount: number;
+    completedCount: number;
+    totalXp: number;
+    activeStreak: number;
+  };
+  missions: AgencyMission[];
+}
+
 export interface AgencyInvite {
   id: string;
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED';
@@ -49,6 +79,10 @@ export class AgenceApiService {
 
   getRoster() {
     return this.http.get<AgencyRoster | null>(`${this.baseUrl}/roster`);
+  }
+
+  getCoordination() {
+    return this.http.get<AgencyCoordination>(`${this.baseUrl}/coordination`);
   }
 
   listAgencies() {
