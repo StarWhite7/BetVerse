@@ -1,6 +1,13 @@
 <section class="agency" *ngIf="hasAgency(); else noAgency">
   <div class="agency-summary" *ngIf="agency() as agency; else agencyLoading">
-    <div class="agency-summary__banner" [style.background]="agencyBannerStyle()">
+    <div
+      class="agency-summary__banner"
+      [class.agency-summary__banner--grid]="agency?.bannerStyle === 'grid'"
+      [class.agency-summary__banner--waves]="agency?.bannerStyle === 'waves'"
+      [class.agency-summary__banner--rain]="agency?.bannerStyle === 'rain'"
+      [class.agency-summary__banner--circuit]="agency?.bannerStyle === 'circuit'"
+      [style.background]="agencyBannerStyle()"
+    >
       <div class="agency-summary__logo">
         <ng-container [ngSwitch]="agency.logoId">
           <svg

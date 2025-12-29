@@ -64,6 +64,57 @@
   display: grid;
   place-items: center;
   border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.agency-summary__banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.agency-summary__logo {
+  position: relative;
+  z-index: 2;
+}
+
+.agency-summary__banner--grid::after {
+  background:
+    linear-gradient(120deg, rgba(8, 14, 24, 0.4), rgba(8, 14, 24, 0.6)),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.18) 0px,
+      rgba(255, 255, 255, 0.18) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+}
+
+.agency-summary__banner--waves::after {
+  background:
+    radial-gradient(circle at 20% 40%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(circle at 80% 60%, rgba(255, 255, 255, 0.25), transparent 60%);
+}
+
+.agency-summary__banner--rain::after {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.28) 0px,
+      rgba(255, 255, 255, 0.28) 2px,
+      transparent 2px,
+      transparent 10px
+    );
+}
+
+.agency-summary__banner--circuit::after {
+  background:
+    linear-gradient(120deg, rgba(8, 14, 24, 0.4), rgba(8, 14, 24, 0.7)),
+    radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.25), transparent 60%);
 }
 
 .agency-summary__logo {

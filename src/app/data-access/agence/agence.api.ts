@@ -8,6 +8,7 @@ export interface AgencyEntity {
   logoId: string;
   primaryColor: string;
   secondaryColor: string;
+  bannerStyle?: 'grid' | 'waves' | 'rain' | 'circuit';
   trophiesCount: number;
   rank: number;
   _count?: { members: number };
@@ -109,5 +110,14 @@ export class AgenceApiService {
     secondaryColor?: string;
   }) {
     return this.http.post<AgencyEntity>(this.baseUrl, payload);
+  }
+
+  updateAgency(payload: {
+    logoId?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    bannerStyle?: 'grid' | 'waves' | 'rain' | 'circuit';
+  }) {
+    return this.http.patch<AgencyEntity>(`${this.baseUrl}/me`, payload);
   }
 }
