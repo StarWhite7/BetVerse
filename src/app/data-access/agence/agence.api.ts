@@ -9,6 +9,8 @@ export interface AgencyEntity {
   primaryColor: string;
   secondaryColor: string;
   bannerStyle?: 'grid' | 'waves' | 'rain' | 'circuit';
+  xp: number;
+  level: number;
   trophiesCount: number;
   rank: number;
   _count?: { members: number };

@@ -80,7 +80,15 @@
           <strong>{{ rewardLabel(mission) }}</strong>
         </div>
       </div>
-      <p>{{ mission.mission.description }}</p>
+      <p>
+        {{ mission.mission.description
+        }}<span
+          class="mission-card__note-inline"
+          *ngIf="mission.mission.slug === 'weekly-bets'"
+        >
+          Chaque match compte une seule fois par joueur.
+        </span>
+      </p>
       <div class="mission-card__progress">
         <span [style.width.%]="progressPercent(mission)"></span>
       </div>

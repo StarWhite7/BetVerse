@@ -149,11 +149,54 @@ export class AgenceComponent implements OnInit {
     return this.agency()?._count?.members ?? 0;
   }
 
+  agencyXpTotal() {
+    return this.agency()?.xp ?? 0;
+  }
+
+  agencyLevel() {
+    return this.agency()?.level ?? 1;
+  }
+
+  agencyXpCurrent() {
+    const level = this.agencyLevel();
+    const current = this.agencyXpTotal() - this.agencyXpForLevel(level);
+    return Math.max(0, current);
+  }
+
+  agencyXpNeeded() {
+    const level = this.agencyLevel();
+    return Math.max(1, this.agencyXpForLevel(level + 1) - this.agencyXpForLevel(level));
+  }
+
+  agencyXpProgressPercent() {
+    const needed = this.agencyXpNeeded();
+    if (needed <= 0) {
+      return 0;
+    }
+    return Math.min(100, Math.max(0, (this.agencyXpCurrent() / needed) * 100));
+  }
+
   agencyBannerStyle() {
     const agency = this.agency();
     if (!agency) {
       return null;
     }
     return `linear-gradient(120deg, ${agency.primaryColor}, ${agency.secondaryColor})`;
+  }
+
+  agencyXpGradient() {
+    const agency = this.agency();
+    if (!agency) {
+      return null;
+    }
+    return `linear-gradient(90deg, ${agency.primaryColor}, ${agency.secondaryColor})`;
+  }
+
+  private agencyXpForLevel(level: number) {
+    const base = 600;
+    const growth = 320;
+    const safeLevel = Math.max(1, Math.floor(level));
+    const steps = safeLevel - 1;
+    return Math.max(0, Math.floor(steps * base + (steps * (steps - 1) * growth) / 2));
   }
 }

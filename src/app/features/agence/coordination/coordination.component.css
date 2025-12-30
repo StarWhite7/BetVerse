@@ -292,6 +292,12 @@
   color: rgba(226, 232, 240, 0.7);
 }
 
+.mission-card__note-inline {
+  font-size: 0.75rem;
+  color: rgba(226, 232, 240, 0.55);
+}
+
+
 .mission-card__tag {
   display: inline-flex;
   align-items: center;
