@@ -845,38 +845,6 @@
   color: rgba(226, 232, 240, 0.6);
 }
 
-@keyframes bureauGrid {
-  0% {
-    background-position: 0 0, 0 0, 0 0;
-  }
-  100% {
-    background-position: 120px 60px, 140px 0, 0 120px;
-  }
-}
-
-@keyframes invitePulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes deleteFlash {
-  0% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.2;
-  }
-}
 
 @media (max-width: 1100px) {
   .bureau__stats {
@@ -925,5 +893,38 @@
 
   .roster__stats {
     text-align: left;
+  }
+}
+
+@keyframes bureauGrid {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 120px 60px, 140px 0, 0 120px;
+  }
+}
+
+@keyframes invitePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes deleteFlash {
+  0% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
   }
 }

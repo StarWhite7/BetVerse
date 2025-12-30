@@ -24,6 +24,20 @@
   </header>
 
   <section class="match-clan__panel">
+    <div class="match-clan__actions match-clan__actions--top">
+      <span class="match-clan__save-message" *ngIf="saveMessage()">
+        {{ saveMessage() }}
+      </span>
+      <button
+        type="button"
+        class="match-clan__save"
+        [class.match-clan__save--pulse]="saving()"
+        [disabled]="saving()"
+        (click)="saveScores()"
+      >
+        Sauvegarder
+      </button>
+    </div>
     <div class="match-clan__meta">
       <h2>Matchs disponibles</h2>
       <div class="match-clan__filter">
@@ -63,6 +77,9 @@
           <span class="match-card__date">
             {{ match.startDate | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}
           </span>
+          <div class="match-card__agency-score">
+            Score agence: {{ agencyScoreLabel(match.id) }}
+          </div>
           <div class="match-card__teams">
             <div class="match-card__team">
               <div class="match-card__team-logo">
@@ -72,36 +89,38 @@
             </div>
             <div class="match-card__score match-card__score--left">
               <div class="match-card__score-controls">
-                <button type="button" (click)="homeScore.stepUp()" aria-label="Augmenter le score domicile">
-                  ▲
+                <button type="button" (click)="adjustScore(match.id, 'home', 1)" aria-label="Augmenter le score domicile">
+                  ^
                 </button>
-                <button type="button" (click)="homeScore.stepDown()" aria-label="Diminuer le score domicile">
-                  ▼
+                <button type="button" (click)="adjustScore(match.id, 'home', -1)" aria-label="Diminuer le score domicile">
+                  v
                 </button>
               </div>
               <input
-                #homeScore
                 type="number"
                 min="0"
                 max="20"
+                [value]="getUserScore(match.id).homeScore"
+                (input)="setScore(match.id, 'home', $any($event.target).value)"
                 aria-label="Score domicile"
               />
             </div>
             <span class="match-card__vs">vs</span>
             <div class="match-card__score match-card__score--right">
               <input
-                #awayScore
                 type="number"
                 min="0"
                 max="20"
+                [value]="getUserScore(match.id).awayScore"
+                (input)="setScore(match.id, 'away', $any($event.target).value)"
                 aria-label="Score exterieur"
               />
               <div class="match-card__score-controls">
-                <button type="button" (click)="awayScore.stepUp()" aria-label="Augmenter le score exterieur">
-                  ▲
+                <button type="button" (click)="adjustScore(match.id, 'away', 1)" aria-label="Augmenter le score exterieur">
+                  ^
                 </button>
-                <button type="button" (click)="awayScore.stepDown()" aria-label="Diminuer le score exterieur">
-                  ▼
+                <button type="button" (click)="adjustScore(match.id, 'away', -1)" aria-label="Diminuer le score exterieur">
+                  v
                 </button>
               </div>
             </div>
@@ -119,5 +138,19 @@
       <div class="match-clan__empty" *ngIf="loading()">Chargement des rencontres...</div>
       <div class="match-clan__empty" *ngIf="!loading()">Aucun match a afficher pour le moment.</div>
     </ng-template>
+    <div class="match-clan__actions match-clan__actions--bottom">
+      <span class="match-clan__save-message" *ngIf="saveMessage()">
+        {{ saveMessage() }}
+      </span>
+      <button
+        type="button"
+        class="match-clan__save"
+        [class.match-clan__save--pulse]="saving()"
+        [disabled]="saving()"
+        (click)="saveScores()"
+      >
+        Sauvegarder
+      </button>
+    </div>
   </section>
 </section>

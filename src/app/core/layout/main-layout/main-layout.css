@@ -527,18 +527,6 @@
   color: rgba(226, 232, 240, 0.65);
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.4;
-  }
-}
-
 .shell__main {
   flex: 1;
   padding: 2rem;
@@ -630,6 +618,18 @@
 .username-modal button[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
 }
 
 @media (max-width: 900px) {

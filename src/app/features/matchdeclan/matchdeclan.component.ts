@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatchesApiService, MatchEntity } from '../../data-access/matches/matches.api';
+import { AgenceApiService, AgencyMatchScore, AgencyMatchVoteSummary } from '../../data-access/agence/agence.api';
 
 const TEAM_LOGO_MAP: Record<string, string> = {
   arsenal: '/club/Premier_League/Arsenal_FC.png',
@@ -80,12 +81,19 @@ const TEAM_LOGO_MAP: Record<string, string> = {
 })
 export class MatchDeClanComponent implements OnInit {
   private readonly matchesApi = inject(MatchesApiService);
+  private readonly agenceApi = inject(AgenceApiService);
 
   matches = signal<MatchEntity[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   selectedWeekIndex = signal(0);
   selectedCompetitionKey = signal('all');
+  saving = signal(false);
+  saveMessage = signal('');
+  private saveTimeout?: number;
+  userScores = signal<Record<string, AgencyMatchScore>>({});
+  agencyScores = signal<Record<string, AgencyMatchScore>>({});
+  totalVotes = signal<Record<string, number>>({});
 
   matchesSorted = computed(() =>
     [...this.matches()].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()),
@@ -148,6 +156,7 @@ export class MatchDeClanComponent implements OnInit {
     this.matchesApi.getMatches('UPCOMING').subscribe({
       next: (matches) => {
         this.matches.set(matches);
+        this.loadVotes(matches.map((match) => match.id));
         this.loading.set(false);
       },
       error: () => {
@@ -166,6 +175,118 @@ export class MatchDeClanComponent implements OnInit {
 
   setCompetition(key: string) {
     this.selectedCompetitionKey.set(key || 'all');
+  }
+
+  saveScores() {
+    if (this.saving()) {
+      return;
+    }
+    const matches = this.matchesFiltered();
+    if (!matches.length) {
+      return;
+    }
+    const scores = this.userScores();
+    const votes = matches.map((match) => {
+      const score = scores[match.id] ?? { homeScore: 0, awayScore: 0 };
+      return {
+        matchId: match.id,
+        homeScore: score.homeScore,
+        awayScore: score.awayScore,
+      };
+    });
+    this.saving.set(true);
+    this.saveMessage.set('Sauvegarde en cours...');
+    this.clearSaveTimeout();
+    this.agenceApi.saveMatchVotes(votes).subscribe({
+      next: (summary) => {
+        this.applyVotes(summary);
+        this.saving.set(false);
+        this.saveMessage.set('Sauvegarde effectuee.');
+        this.saveTimeout = window.setTimeout(() => {
+          this.saveMessage.set('');
+          this.saveTimeout = undefined;
+        }, 2000);
+      },
+      error: () => {
+        this.saving.set(false);
+        this.saveMessage.set("Echec de la sauvegarde.");
+        this.saveTimeout = window.setTimeout(() => {
+          this.saveMessage.set('');
+          this.saveTimeout = undefined;
+        }, 2000);
+      },
+    });
+  }
+
+  loadVotes(matchIds: string[]) {
+    if (!matchIds.length) {
+      return;
+    }
+    this.agenceApi.getMatchVotes({ matchIds }).subscribe({
+      next: (summary) => {
+        this.applyVotes(summary);
+      },
+    });
+  }
+
+  applyVotes(summary: AgencyMatchVoteSummary[]) {
+    const nextUserScores = { ...this.userScores() };
+    const nextAgencyScores = { ...this.agencyScores() };
+    const nextTotalVotes = { ...this.totalVotes() };
+
+    summary.forEach((entry) => {
+      if (entry.userScore) {
+        nextUserScores[entry.matchId] = entry.userScore;
+      } else if (!nextUserScores[entry.matchId]) {
+        nextUserScores[entry.matchId] = { homeScore: 0, awayScore: 0 };
+      }
+      if (entry.agencyScore) {
+        nextAgencyScores[entry.matchId] = entry.agencyScore;
+      } else {
+        delete nextAgencyScores[entry.matchId];
+      }
+      nextTotalVotes[entry.matchId] = entry.totalVotes;
+    });
+
+    this.userScores.set(nextUserScores);
+    this.agencyScores.set(nextAgencyScores);
+    this.totalVotes.set(nextTotalVotes);
+  }
+
+  getUserScore(matchId: string): AgencyMatchScore {
+    return this.userScores()[matchId] ?? { homeScore: 0, awayScore: 0 };
+  }
+
+  agencyScoreLabel(matchId: string): string {
+    const score = this.agencyScores()[matchId];
+    if (!score) {
+      return '--';
+    }
+    return `${score.homeScore} - ${score.awayScore}`;
+  }
+
+  setScore(matchId: string, side: 'home' | 'away', value: string) {
+    const parsed = Math.max(0, Math.min(20, Number(value || 0)));
+    if (!Number.isFinite(parsed)) {
+      return;
+    }
+    const current = this.getUserScore(matchId);
+    const next = {
+      homeScore: side === 'home' ? parsed : current.homeScore,
+      awayScore: side === 'away' ? parsed : current.awayScore,
+    };
+    this.userScores.set({ ...this.userScores(), [matchId]: next });
+  }
+
+  adjustScore(matchId: string, side: 'home' | 'away', delta: number) {
+    const current = this.getUserScore(matchId);
+    const value = side === 'home' ? current.homeScore : current.awayScore;
+    const nextValue = Math.max(0, Math.min(20, value + delta));
+    const next = {
+      homeScore: side === 'home' ? nextValue : current.homeScore,
+      awayScore: side === 'away' ? nextValue : current.awayScore,
+    };
+    this.userScores.set({ ...this.userScores(), [matchId]: next });
   }
 
   teamLogoUrl(team: string): string {
@@ -263,6 +384,13 @@ export class MatchDeClanComponent implements OnInit {
         return '3 semaines apres';
       default:
         return 'Semaine';
+    }
+  }
+
+  private clearSaveTimeout() {
+    if (this.saveTimeout !== undefined) {
+      window.clearTimeout(this.saveTimeout);
+      this.saveTimeout = undefined;
     }
   }
 }

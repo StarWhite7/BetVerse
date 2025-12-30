@@ -126,6 +126,69 @@
   text-align: center;
 }
 
+.match-clan__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.match-clan__actions--bottom {
+  justify-content: center;
+  margin-top: 1.4rem;
+}
+
+.match-clan__save {
+  padding: 0.55rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  background: rgba(12, 18, 32, 0.9);
+  color: #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.match-clan__save:hover {
+  border-color: rgba(34, 211, 238, 0.9);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.6);
+}
+
+.match-clan__save:disabled {
+  cursor: default;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.match-clan__save--pulse {
+  animation: match-clan-save-pulse 0.45s ease;
+}
+
+.match-clan__save-message {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+@keyframes match-clan-save-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 22px rgba(34, 211, 238, 0.6);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
+  }
+}
 .match-clan__meta {
   display: flex;
   justify-content: space-between;
@@ -217,6 +280,15 @@
   position: relative;
   border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   padding: 1.5rem 0 1rem;
+}
+
+.match-card__agency-score {
+  margin: 0.6rem 0 0.8rem;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.7);
 }
 
 .match-card__teams {

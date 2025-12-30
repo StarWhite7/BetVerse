@@ -69,6 +69,18 @@ export interface AgencyInvite {
   inviter: { id: string; username?: string | null };
 }
 
+export interface AgencyMatchScore {
+  homeScore: number;
+  awayScore: number;
+}
+
+export interface AgencyMatchVoteSummary {
+  matchId: string;
+  userScore: AgencyMatchScore | null;
+  agencyScore: AgencyMatchScore | null;
+  totalVotes: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AgenceApiService {
   private readonly baseUrl = `${environment.apiUrl}/agence`;
@@ -155,5 +167,22 @@ export class AgenceApiService {
     bannerStyle?: 'grid' | 'waves' | 'rain' | 'circuit';
   }) {
     return this.http.patch<AgencyEntity>(`${this.baseUrl}/me`, payload);
+  }
+
+  getMatchVotes(params?: { status?: 'UPCOMING' | 'LIVE' | 'FINISHED'; matchIds?: string[] }) {
+    const query: Record<string, string> = {};
+    if (params?.status) {
+      query['status'] = params.status;
+    }
+    if (params?.matchIds?.length) {
+      query['matchIds'] = params.matchIds.join(',');
+    }
+    return this.http.get<AgencyMatchVoteSummary[]>(`${this.baseUrl}/match-votes`, {
+      params: query,
+    });
+  }
+
+  saveMatchVotes(votes: { matchId: string; homeScore: number; awayScore: number }[]) {
+    return this.http.post<AgencyMatchVoteSummary[]>(`${this.baseUrl}/match-votes`, { votes });
   }
 }
