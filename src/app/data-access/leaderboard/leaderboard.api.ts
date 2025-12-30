@@ -8,13 +8,13 @@ import {
   LeaderboardPlayer,
 } from './leaderboard.models';
 
-type MetricField = 'verseEarned' | 'betsWon' | 'level';
+type MetricField = 'verseEarned' | 'betsWon' | 'level' | 'versePossessedTotal';
 
 @Injectable({ providedIn: 'root' })
 export class LeaderboardApiService {
   private readonly baseUrl = `${environment.apiUrl}/leaderboard`;
   private readonly metricField: Record<LeaderboardMetric, MetricField> = {
-   VERSE: 'verseEarned',
+   VERSE: 'versePossessedTotal',
     WINS: 'betsWon',
     LEVEL: 'level',
   };

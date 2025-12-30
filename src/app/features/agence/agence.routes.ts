@@ -28,10 +28,24 @@ const routes: Routes = [
       ),
   },
   {
+    path: 'matchdeclan',
+    loadComponent: () =>
+      import('../matchdeclan/matchdeclan.component').then(
+        (m) => m.MatchDeClanComponent
+      ),
+  },
+  {
     path: 'liste',
     loadComponent: () =>
       import('./liste/liste.component').then(
         (m) => m.AgenceListeComponent
+      ),
+  },
+  {
+    path: 'classementdesagences',
+    loadComponent: () =>
+      import('../classementdesagences/classementdesagences.component').then(
+        (m) => m.ClassementDesAgencesComponent
       ),
   },
 ];
