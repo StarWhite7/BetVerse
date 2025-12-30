@@ -126,6 +126,241 @@
   text-align: center;
 }
 
+.match-clan__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1.2rem;
+  gap: 1rem;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.match-clan__meta h2 {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #f8fafc;
+}
+
+.match-clan__filter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.match-clan__filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.match-clan__filter-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(226, 232, 240, 0.65);
+}
+
+.match-clan__week {
+  min-width: 260px;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  background: rgba(12, 18, 32, 0.85);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.match-clan__week:focus {
+  outline: none;
+  border-color: rgba(34, 197, 94, 0.8);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.match-clan__list {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.match-clan__error {
+  color: #f87171;
+  background: rgba(127, 29, 29, 0.2);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  padding: 0.8rem 1rem;
+  border-radius: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.match-clan__empty {
+  border-radius: 1rem;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  padding: 1rem 1.4rem;
+  text-align: center;
+  color: rgba(226, 232, 240, 0.75);
+}
+
+.match-card {
+  border-radius: 1.2rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(5, 10, 18, 0.85);
+  box-shadow: 0 25px 60px rgba(79, 70, 229, 0.2);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.match-card header {
+  position: relative;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 1.5rem 0 1rem;
+}
+
+.match-card__teams {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto 1fr;
+  align-items: center;
+  justify-items: center;
+  gap: 1.5rem;
+  text-align: center;
+  width: 100%;
+}
+
+.match-card__team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.match-card__team-logo {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  padding: 0.55rem;
+  background: radial-gradient(circle at 35% 25%, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.55);
+}
+
+.match-card__team-logo img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.match-card__team span {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.match-card__vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.match-card__score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  height: 100%;
+  gap: 0.6rem;
+}
+
+
+.match-card__score input {
+  width: 56px;
+  height: 56px;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(8, 14, 24, 0.85);
+  color: #f8fafc;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 56px;
+  padding: 0;
+  appearance: textfield;
+}
+
+.match-card__score input::-webkit-outer-spin-button,
+.match-card__score input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.match-card__score-controls {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.match-card__score-controls button {
+  width: 28px;
+  height: 28px;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  background: rgba(15, 23, 42, 0.85);
+  color: #67e8f9;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.35);
+}
+
+.match-card__score-controls button:hover {
+  border-color: rgba(34, 211, 238, 0.8);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+}
+
+.match-card__date {
+  position: absolute;
+  top: 0.2rem;
+  right: 0;
+  color: rgba(226, 232, 240, 0.75);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .match-clan__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .match-clan__filter {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .match-clan__week {
+    width: 100%;
+  }
+
+  .match-card__teams {
+    grid-template-columns: 1fr auto auto auto 1fr;
+    gap: 1rem;
+  }
+
+  .match-card__vs {
+    margin: 0;
+  }
+}
+
 @media (max-width: 720px) {
   .match-clan {
     padding: 1.8rem;

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AgenceComponent } from './agence';
+import { MatchDeClanComponent } from '../matchdeclan/matchdeclan.component';
 
 const routes: Routes = [
   {
@@ -29,10 +30,7 @@ const routes: Routes = [
   },
   {
     path: 'matchdeclan',
-    loadComponent: () =>
-      import('../matchdeclan/matchdeclan.component').then(
-        (m) => m.MatchDeClanComponent
-      ),
+    component: MatchDeClanComponent,
   },
   {
     path: 'liste',
