@@ -74,6 +74,20 @@ export const routes: Routes = [
             (m) => m.NotificationsComponent
           ),
       },
+      {
+        path: 'matchdeclan',
+        loadComponent: () =>
+          import('./features/matchdeclan/matchdeclan.component').then(
+            (m) => m.MatchDeClanComponent
+          ),
+      },
+      {
+        path: 'classementdesagences',
+        loadComponent: () =>
+          import('./features/classementdesagences/classementdesagences.component').then(
+            (m) => m.ClassementDesAgencesComponent
+          ),
+      },
             {
         path: 'agence',
         loadChildren: () =>

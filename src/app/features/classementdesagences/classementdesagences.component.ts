@@ -3,10 +3,10 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
-  selector: 'app-agence-archives',
+  selector: 'app-classement-des-agences',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  templateUrl: './archives.component.html',
-  styleUrl: './archives.component.css',
+  templateUrl: './classementdesagences.component.html',
+  styleUrl: './classementdesagences.component.css',
 })
-export class AgenceArchivesComponent {}
+export class ClassementDesAgencesComponent {}

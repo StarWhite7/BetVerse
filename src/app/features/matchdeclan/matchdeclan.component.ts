@@ -3,10 +3,10 @@ import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
-  selector: 'app-agence-trophees',
+  selector: 'app-match-de-clan',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  templateUrl: './trophees.component.html',
-  styleUrl: './trophees.component.css',
+  templateUrl: './matchdeclan.component.html',
+  styleUrl: './matchdeclan.component.css',
 })
-export class AgenceTropheesComponent {}
+export class MatchDeClanComponent {}

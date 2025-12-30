@@ -117,6 +117,31 @@
       </li>
     </ul>
   </section>
+
+  <section class="agency-ranking">
+    <header class="agency-ranking__header">
+      <h2>Classement interne</h2>
+      <p>Classement des membres par XP.</p>
+    </header>
+    <ul class="agency-ranking__list">
+      <li class="agency-ranking__row" *ngFor="let member of rankedMembers()">
+        <div class="agency-ranking__left">
+          <span class="agency-ranking__rank">#{{ member.rank }}</span>
+          <div>
+            <p class="agency-ranking__name">{{ member.username ?? member.email }}</p>
+            <span class="agency-ranking__role">{{ roleLabel(member.agencyRole) }}</span>
+          </div>
+        </div>
+        <div class="agency-ranking__xp">
+          <span>{{ member.xp ?? 0 }}</span>
+          <small>XP</small>
+        </div>
+      </li>
+      <li class="agency-ranking__row agency-ranking__row--empty" *ngIf="rankedMembers().length === 0">
+        Aucun membre classe.
+      </li>
+    </ul>
+  </section>
 </section>
 
 <section class="bureau-modal" *ngIf="inviteOpen()">

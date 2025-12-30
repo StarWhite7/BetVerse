@@ -384,6 +384,99 @@
   color: rgba(226, 232, 240, 0.6);
 }
 
+.agency-ranking {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.6rem;
+  padding: 1.6rem;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(10, 16, 28, 0.85);
+  box-shadow: 0 22px 45px rgba(5, 10, 20, 0.4);
+}
+
+.agency-ranking__header h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #f8fafc;
+}
+
+.agency-ranking__header p {
+  margin: 0 0 1.2rem;
+  color: rgba(226, 232, 240, 0.65);
+  font-size: 0.9rem;
+}
+
+.agency-ranking__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.agency-ranking__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(8, 14, 24, 0.75);
+}
+
+.agency-ranking__row--empty {
+  justify-content: center;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.agency-ranking__left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.agency-ranking__rank {
+  font-weight: 700;
+  color: #c4b5fd;
+  letter-spacing: 0.08em;
+}
+
+.agency-ranking__name {
+  margin: 0 0 0.3rem;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.agency-ranking__role {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  color: rgba(56, 189, 248, 0.95);
+}
+
+.agency-ranking__xp {
+  text-align: right;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.agency-ranking__xp small {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(226, 232, 240, 0.6);
+}
+
 .bureau-modal {
   position: fixed;
   inset: 0;

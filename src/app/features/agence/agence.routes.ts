@@ -7,20 +7,6 @@ const routes: Routes = [
     component: AgenceComponent,
   },
   {
-    path: 'archives',
-    loadComponent: () =>
-      import('./archives/archives.component').then(
-        (m) => m.AgenceArchivesComponent
-      ),
-  },
-  {
-    path: 'trophees',
-    loadComponent: () =>
-      import('./trophees/trophees.component').then(
-        (m) => m.AgenceTropheesComponent
-      ),
-  },
-  {
     path: 'coordination',
     loadComponent: () =>
       import('./coordination/coordination.component').then(

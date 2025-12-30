@@ -234,6 +234,13 @@ export class AgenceBureauComponent implements OnInit {
     return [...members].sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0));
   }
 
+  rankedMembers() {
+    return this.members().map((member, index) => ({
+      ...member,
+      rank: index + 1,
+    }));
+  }
+
   membersCount() {
     return this.roster()?._count?.members ?? 0;
   }
