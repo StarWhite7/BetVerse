@@ -101,9 +101,11 @@ export class AgenceApiService {
     return this.http.get<AgencyCoordination>(`${this.baseUrl}/coordination`);
   }
 
-  listAgencies() {
+  listAgencies(period?: 'weekly' | 'monthly' | 'annual') {
+    const params = period ? { period } : undefined;
     return this.http.get<Array<AgencyEntity & { _count?: { members: number } }>>(
       this.baseUrl,
+      { params },
     );
   }
 

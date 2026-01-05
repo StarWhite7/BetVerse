@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AgenceApiService, AgencyEntity } from '../../data-access/agence/agence.api';
 
 @Component({
   selector: 'app-classement-des-agences',
@@ -9,4 +11,47 @@ import { RouterLink } from '@angular/router';
   templateUrl: './classementdesagences.component.html',
   styleUrl: './classementdesagences.component.css',
 })
-export class ClassementDesAgencesComponent {}
+export class ClassementDesAgencesComponent implements OnInit {
+  private readonly agenceApi = inject(AgenceApiService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  agencies = signal<AgencyEntity[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
+  selectedPeriod = signal<'weekly' | 'monthly' | 'annual'>('weekly');
+  readonly periodOptions = [
+    { key: 'weekly', label: 'Hebdo' },
+    { key: 'monthly', label: 'Mensuel' },
+    { key: 'annual', label: 'Annuel' },
+  ] as const;
+
+  ngOnInit() {
+    this.loadAgencies();
+  }
+
+  loadAgencies() {
+    this.loading.set(true);
+    this.error.set(null);
+    this.agenceApi
+      .listAgencies(this.selectedPeriod())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (agencies) => {
+          this.agencies.set(agencies);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('Impossible de charger le classement.');
+          this.loading.set(false);
+        },
+      });
+  }
+
+  setPeriod(period: 'weekly' | 'monthly' | 'annual') {
+    if (this.selectedPeriod() === period) {
+      return;
+    }
+    this.selectedPeriod.set(period);
+    this.loadAgencies();
+  }
+}

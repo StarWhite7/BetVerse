@@ -25,6 +25,41 @@
   </header>
 
   <section class="agency-rankings__panel">
-    <p>Le classement des agences sera affiché ici.</p>
+    <div class="agency-rankings__filters">
+      <span class="agency-rankings__filter-label">Periode</span>
+      <div class="agency-rankings__filter-group">
+        <button
+          type="button"
+          class="agency-rankings__filter"
+          *ngFor="let option of periodOptions"
+          [class.agency-rankings__filter--active]="selectedPeriod() === option.key"
+          (click)="setPeriod(option.key)"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </div>
+    <p class="agency-rankings__status" *ngIf="loading()">Chargement du classement...</p>
+    <p class="agency-rankings__status agency-rankings__status--error" *ngIf="error()">
+      {{ error() }}
+    </p>
+    <ul class="agency-rankings__list" *ngIf="!loading() && !error() && agencies().length">
+      <li class="agency-rankings__row" *ngFor="let agency of agencies(); let index = index">
+        <div class="agency-rankings__left">
+          <span class="agency-rankings__rank">#{{ index + 1 }}</span>
+          <div>
+            <p class="agency-rankings__name">{{ agency.name }}</p>
+            <span class="agency-rankings__meta">{{ agency._count?.members ?? 0 }} membres</span>
+          </div>
+        </div>
+        <div class="agency-rankings__score">
+          <span>{{ agency.clanScore ?? 0 }}</span>
+          <small>PTS</small>
+        </div>
+      </li>
+    </ul>
+    <p class="agency-rankings__status" *ngIf="!loading() && !error() && !agencies().length">
+      Aucune agence a afficher.
+    </p>
   </section>
 </section>
