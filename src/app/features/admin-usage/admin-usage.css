@@ -65,6 +65,12 @@
   gap: 0.2rem;
 }
 
+.admin-usage__grid article.admin-usage__next {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(12, 18, 32, 0.9);
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.25);
+}
+
 .admin-usage__grid span {
   font-size: 0.8rem;
   text-transform: uppercase;

@@ -44,6 +44,7 @@ export interface OddsUsageSnapshot {
   used: number | null;
   total: number | null;
   lastCallAt: string | null;
+  nextSyncAt?: string | null;
 }
 
 export interface SyncMatchesPayload {

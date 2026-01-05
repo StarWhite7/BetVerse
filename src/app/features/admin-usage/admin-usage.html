@@ -45,6 +45,16 @@
       <span>Requetes utilisees lors du dernier appel</span>
       <strong>{{ lastDelta() ?? 'n/a' }}</strong>
     </article>
+    <article class="admin-usage__next">
+      <span>Prochaine requete prevue</span>
+      <strong>
+        {{
+          snapshot.nextSyncAt
+            ? (snapshot.nextSyncAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris')
+            : 'n/a'
+        }}
+      </strong>
+    </article>
   </section>
 
   <p class="admin-usage__hint" *ngIf="!usage() && !loading() && !error()">
