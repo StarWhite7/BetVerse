@@ -13,6 +13,7 @@ export interface AgencyEntity {
   level: number;
   trophiesCount: number;
   rank: number;
+  clanScore?: number | null;
   _count?: { members: number };
   createdAt: string;
   updatedAt: string;
@@ -25,6 +26,7 @@ export interface AgencyMember {
   agencyRole?: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE' | null;
   createdAt: string;
   xp?: number | null;
+  predictionScore?: number | null;
 }
 
 export interface AgencyRoster extends AgencyEntity {

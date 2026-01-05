@@ -236,10 +236,21 @@ export class AgenceBureauComponent implements OnInit {
   }
 
   rankedMembers() {
-    return this.members().map((member, index) => ({
+    return this.membersByPrediction().map((member, index) => ({
       ...member,
       rank: index + 1,
     }));
+  }
+
+  membersByPrediction(): AgencyMember[] {
+    const members = this.roster()?.members ?? [];
+    return [...members].sort((a, b) => {
+      const diff = (b.predictionScore ?? 0) - (a.predictionScore ?? 0);
+      if (diff !== 0) {
+        return diff;
+      }
+      return (b.xp ?? 0) - (a.xp ?? 0);
+    });
   }
 
   toggleRosterView() {

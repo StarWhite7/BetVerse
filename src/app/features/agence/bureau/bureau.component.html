@@ -143,8 +143,8 @@
           </div>
         </div>
         <div class="agency-ranking__xp">
-          <span>{{ member.xp ?? 0 }}</span>
-          <small>XP</small>
+          <span>{{ member.predictionScore ?? 0 }}</span>
+          <small>PTS</small>
         </div>
       </li>
       <li class="agency-ranking__row agency-ranking__row--empty" *ngIf="rankedMembers().length === 0">

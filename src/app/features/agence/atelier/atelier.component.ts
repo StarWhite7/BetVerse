@@ -138,8 +138,8 @@ export class AgenceAtelierComponent implements OnInit {
     return this.agency()?._count?.members ?? 0;
   }
 
-  agencyTrophies() {
-    return this.agency()?.trophiesCount ?? 0;
+  agencyClanScore() {
+    return this.agency()?.clanScore ?? 0;
   }
 
   agencyRank() {
