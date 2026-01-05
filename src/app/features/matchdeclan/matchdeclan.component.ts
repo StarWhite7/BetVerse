@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatchesApiService, MatchEntity } from '../../data-access/matches/matches.api';
 import { AgenceApiService, AgencyMatchScore, AgencyMatchVoteSummary } from '../../data-access/agence/agence.api';
 
@@ -75,7 +76,7 @@ const TEAM_LOGO_MAP: Record<string, string> = {
 @Component({
   selector: 'app-match-de-clan',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './matchdeclan.component.html',
   styleUrl: './matchdeclan.component.css',
 })
@@ -86,7 +87,7 @@ export class MatchDeClanComponent implements OnInit {
   matches = signal<MatchEntity[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
-  selectedWeekIndex = signal(0);
+  selectedWeekIndex = signal(1);
   selectedCompetitionKey = signal('all');
   saving = signal(false);
   saveMessage = signal('');
@@ -101,13 +102,14 @@ export class MatchDeClanComponent implements OnInit {
   weekOptions = computed(() => {
     const now = new Date();
     const startOfWeek = this.startOfWeekMonday(now);
-    return Array.from({ length: 4 }, (_, index) => {
-      const start = this.addDays(startOfWeek, index * 7);
+    const offsets = [-1, 0, 1, 2, 3];
+    return offsets.map((offset) => {
+      const start = this.addDays(startOfWeek, offset * 7);
       const end = this.endOfWeek(start);
       return {
         start,
         end,
-        label: this.weekLabel(index),
+        label: this.weekLabel(offset),
         rangeLabel: this.rangeLabel(start, end),
       };
     });
@@ -147,13 +149,14 @@ export class MatchDeClanComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.setDefaultWeek();
     this.loadMatches();
   }
 
   loadMatches() {
     this.loading.set(true);
     this.error.set(null);
-    this.matchesApi.getMatches('UPCOMING').subscribe({
+    this.matchesApi.getMatches().subscribe({
       next: (matches) => {
         this.matches.set(matches);
         this.loadVotes(matches.map((match) => match.id));
@@ -173,6 +176,17 @@ export class MatchDeClanComponent implements OnInit {
     }
   }
 
+  get selectedWeekIndexValue(): number {
+    return this.selectedWeekIndex();
+  }
+
+  set selectedWeekIndexValue(value: number) {
+    const parsed = Number(value);
+    if (!Number.isNaN(parsed)) {
+      this.selectedWeekIndex.set(parsed);
+    }
+  }
+
   setCompetition(key: string) {
     this.selectedCompetitionKey.set(key || 'all');
   }
@@ -181,7 +195,7 @@ export class MatchDeClanComponent implements OnInit {
     if (this.saving()) {
       return;
     }
-    const matches = this.matchesFiltered();
+    const matches = this.matchesFiltered().filter((match) => this.isMatchEditable(match));
     if (!matches.length) {
       return;
     }
@@ -346,6 +360,28 @@ export class MatchDeClanComponent implements OnInit {
       .replace(/[^a-z0-9]/g, '');
   }
 
+  isMatchEditable(match: MatchEntity): boolean {
+    return match.status === 'UPCOMING';
+  }
+
+  hasEditableMatches(): boolean {
+    return this.matchesFiltered().some((match) => this.isMatchEditable(match));
+  }
+
+  matchResultLabel(match: MatchEntity): string {
+    return this.matchScoreLabel(match) ?? 'Resultat indisponible';
+  }
+
+  private matchScoreLabel(match: MatchEntity): string | null {
+    if (match.homeScore === null || match.homeScore === undefined) {
+      return null;
+    }
+    if (match.awayScore === null || match.awayScore === undefined) {
+      return null;
+    }
+    return `${match.homeScore} - ${match.awayScore}`;
+  }
+
   private startOfWeekMonday(date: Date): Date {
     const start = new Date(date);
     start.setHours(0, 0, 0, 0);
@@ -372,18 +408,31 @@ export class MatchDeClanComponent implements OnInit {
     return `Du ${formatter.format(start)} au ${formatter.format(end)}`;
   }
 
-  private weekLabel(index: number): string {
-    switch (index) {
+  private weekLabel(offset: number): string {
+    switch (offset) {
+      case -2:
+        return 'Il y a 2 semaines';
+      case -1:
+        return 'Semaine derniere';
       case 0:
         return 'Semaine actuelle';
       case 1:
         return 'Semaine suivante';
       case 2:
-        return '2 semaines apres';
+        return 'Dans 2 semaines';
       case 3:
-        return '3 semaines apres';
+        return 'Dans 3 semaines';
       default:
         return 'Semaine';
+    }
+  }
+
+  private setDefaultWeek() {
+    const now = new Date();
+    const options = this.weekOptions();
+    const index = options.findIndex((option) => now >= option.start && now <= option.end);
+    if (index >= 0) {
+      this.selectedWeekIndex.set(index);
     }
   }
 

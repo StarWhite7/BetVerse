@@ -12,6 +12,8 @@ export interface MatchEntity {
   startDate: string;
   status: MatchStatus;
   result?: MatchResult | null;
+  homeScore?: number | null;
+  awayScore?: number | null;
   oddsHome: number;
   oddsAway: number;
   oddsDraw?: number | null;

@@ -291,6 +291,15 @@
   color: rgba(226, 232, 240, 0.7);
 }
 
+.match-card__result {
+  margin: 0 0 0.8rem;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.85);
+}
+
 .match-card__teams {
   display: grid;
   grid-template-columns: 1fr auto auto auto 1fr;
@@ -376,6 +385,11 @@
   margin: 0;
 }
 
+.match-card__score input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .match-card__score-controls {
   display: grid;
   gap: 0.3rem;
@@ -396,6 +410,12 @@
 .match-card__score-controls button:hover {
   border-color: rgba(34, 211, 238, 0.8);
   box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+}
+
+.match-card__score-controls button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .match-card__date {

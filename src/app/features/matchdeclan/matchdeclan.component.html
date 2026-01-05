@@ -32,7 +32,7 @@
         type="button"
         class="match-clan__save"
         [class.match-clan__save--pulse]="saving()"
-        [disabled]="saving()"
+        [disabled]="saving() || !hasEditableMatches()"
         (click)="saveScores()"
       >
         Sauvegarder
@@ -46,8 +46,7 @@
           <select
             id="match-week-select"
             class="match-clan__week"
-            [value]="selectedWeekIndex()"
-            (change)="setWeek($any($event.target).value)"
+            [(ngModel)]="selectedWeekIndexValue"
           >
             <option *ngFor="let week of weekOptions(); let index = index" [value]="index">
               {{ week.label }} ({{ week.rangeLabel }})
@@ -68,7 +67,7 @@
           </select>
         </div>
       </div>
-      <span>{{ matchesFiltered().length }} rencontres a venir</span>
+      <span>{{ matchesFiltered().length }} rencontres</span>
     </div>
     <p class="match-clan__error" *ngIf="error()">{{ error() }}</p>
     <div class="match-clan__list" *ngIf="!loading() && matchesFiltered().length; else matchClanEmpty">
@@ -80,6 +79,9 @@
           <div class="match-card__agency-score">
             Score agence: {{ agencyScoreLabel(match.id) }}
           </div>
+          <div class="match-card__result" *ngIf="match.status === 'FINISHED'">
+            Resultat reel: {{ matchResultLabel(match) }}
+          </div>
           <div class="match-card__teams">
             <div class="match-card__team">
               <div class="match-card__team-logo">
@@ -89,10 +91,20 @@
             </div>
             <div class="match-card__score match-card__score--left">
               <div class="match-card__score-controls">
-                <button type="button" (click)="adjustScore(match.id, 'home', 1)" aria-label="Augmenter le score domicile">
+                <button
+                  type="button"
+                  [disabled]="!isMatchEditable(match)"
+                  (click)="adjustScore(match.id, 'home', 1)"
+                  aria-label="Augmenter le score domicile"
+                >
                   ^
                 </button>
-                <button type="button" (click)="adjustScore(match.id, 'home', -1)" aria-label="Diminuer le score domicile">
+                <button
+                  type="button"
+                  [disabled]="!isMatchEditable(match)"
+                  (click)="adjustScore(match.id, 'home', -1)"
+                  aria-label="Diminuer le score domicile"
+                >
                   v
                 </button>
               </div>
@@ -101,6 +113,7 @@
                 min="0"
                 max="20"
                 [value]="getUserScore(match.id).homeScore"
+                [disabled]="!isMatchEditable(match)"
                 (input)="setScore(match.id, 'home', $any($event.target).value)"
                 aria-label="Score domicile"
               />
@@ -112,14 +125,25 @@
                 min="0"
                 max="20"
                 [value]="getUserScore(match.id).awayScore"
+                [disabled]="!isMatchEditable(match)"
                 (input)="setScore(match.id, 'away', $any($event.target).value)"
                 aria-label="Score exterieur"
               />
               <div class="match-card__score-controls">
-                <button type="button" (click)="adjustScore(match.id, 'away', 1)" aria-label="Augmenter le score exterieur">
+                <button
+                  type="button"
+                  [disabled]="!isMatchEditable(match)"
+                  (click)="adjustScore(match.id, 'away', 1)"
+                  aria-label="Augmenter le score exterieur"
+                >
                   ^
                 </button>
-                <button type="button" (click)="adjustScore(match.id, 'away', -1)" aria-label="Diminuer le score exterieur">
+                <button
+                  type="button"
+                  [disabled]="!isMatchEditable(match)"
+                  (click)="adjustScore(match.id, 'away', -1)"
+                  aria-label="Diminuer le score exterieur"
+                >
                   v
                 </button>
               </div>
@@ -146,7 +170,7 @@
         type="button"
         class="match-clan__save"
         [class.match-clan__save--pulse]="saving()"
-        [disabled]="saving()"
+        [disabled]="saving() || !hasEditableMatches()"
         (click)="saveScores()"
       >
         Sauvegarder
