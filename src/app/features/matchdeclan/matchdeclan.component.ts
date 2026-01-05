@@ -279,6 +279,41 @@ export class MatchDeClanComponent implements OnInit {
     return `${score.homeScore} - ${score.awayScore}`;
   }
 
+  userPoints(match: MatchEntity): number | null {
+    const score = this.getUserScore(match.id);
+    return this.pointsForPrediction(match, score);
+  }
+
+  clanPoints(match: MatchEntity): number | null {
+    const score = this.agencyScores()[match.id];
+    if (!score) {
+      return null;
+    }
+    return this.pointsForPrediction(match, score);
+  }
+
+  pointsLabel(points: number | null): string {
+    if (points === null || points === undefined) {
+      return '--';
+    }
+    return `+${points} pts`;
+  }
+
+  pointsClass(points: number | null): string {
+    switch (points) {
+      case 3:
+        return 'match-card__points-value--exact';
+      case 2:
+        return 'match-card__points-value--winner-score';
+      case 1:
+        return 'match-card__points-value--winner';
+      case 0:
+        return 'match-card__points-value--miss';
+      default:
+        return 'match-card__points-value--pending';
+    }
+  }
+
   setScore(matchId: string, side: 'home' | 'away', value: string) {
     const parsed = Math.max(0, Math.min(20, Number(value || 0)));
     if (!Number.isFinite(parsed)) {
@@ -380,6 +415,47 @@ export class MatchDeClanComponent implements OnInit {
       return null;
     }
     return `${match.homeScore} - ${match.awayScore}`;
+  }
+
+  private pointsForPrediction(match: MatchEntity, predicted: AgencyMatchScore): number | null {
+    const actual = this.matchScoreLabel(match);
+    if (!actual) {
+      return null;
+    }
+    const actualHome = match.homeScore ?? null;
+    const actualAway = match.awayScore ?? null;
+    if (actualHome === null || actualAway === null) {
+      return null;
+    }
+
+    if (predicted.homeScore === actualHome && predicted.awayScore === actualAway) {
+      return 3;
+    }
+
+    const predictedOutcome = this.matchOutcome(predicted.homeScore, predicted.awayScore);
+    const actualOutcome = this.matchOutcome(actualHome, actualAway);
+    if (predictedOutcome !== actualOutcome) {
+      return 0;
+    }
+
+    if (actualOutcome === 'HOME' && predicted.homeScore === actualHome) {
+      return 2;
+    }
+    if (actualOutcome === 'AWAY' && predicted.awayScore === actualAway) {
+      return 2;
+    }
+
+    return 1;
+  }
+
+  private matchOutcome(home: number, away: number) {
+    if (home > away) {
+      return 'HOME';
+    }
+    if (away > home) {
+      return 'AWAY';
+    }
+    return 'DRAW';
   }
 
   private startOfWeekMonday(date: Date): Date {

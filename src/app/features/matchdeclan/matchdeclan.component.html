@@ -82,6 +82,18 @@
           <div class="match-card__result" *ngIf="match.status === 'FINISHED'">
             Resultat reel: {{ matchResultLabel(match) }}
           </div>
+          <div class="match-card__points" *ngIf="match.status === 'FINISHED'">
+            <span class="match-card__points-label">Points joueur:</span>
+            <span class="match-card__points-value" [ngClass]="pointsClass(userPoints(match))">
+              {{ pointsLabel(userPoints(match)) }}
+            </span>
+          </div>
+          <div class="match-card__points" *ngIf="match.status === 'FINISHED'">
+            <span class="match-card__points-label">Points clan:</span>
+            <span class="match-card__points-value" [ngClass]="pointsClass(clanPoints(match))">
+              {{ pointsLabel(clanPoints(match)) }}
+            </span>
+          </div>
           <div class="match-card__teams">
             <div class="match-card__team">
               <div class="match-card__team-logo">
