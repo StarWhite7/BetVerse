@@ -101,11 +101,17 @@ export class AgenceApiService {
     return this.http.get<AgencyCoordination>(`${this.baseUrl}/coordination`);
   }
 
-  listAgencies(period?: 'weekly' | 'monthly' | 'annual') {
-    const params = period ? { period } : undefined;
+  listAgencies(period?: 'weekly' | 'monthly' | 'annual', periodOffset?: number) {
+    const params: Record<string, string> = {};
+    if (period) {
+      params['period'] = period;
+    }
+    if (Number.isFinite(periodOffset ?? NaN)) {
+      params['periodOffset'] = String(periodOffset);
+    }
     return this.http.get<Array<AgencyEntity & { _count?: { members: number } }>>(
       this.baseUrl,
-      { params },
+      { params: Object.keys(params).length ? params : undefined },
     );
   }
 

@@ -24,19 +24,38 @@
     <div class="agency-rankings__divider" aria-hidden="true"></div>
   </header>
 
-  <section class="agency-rankings__panel">
+  <section
+    class="agency-rankings__panel"
+    [class.agency-rankings__panel--previous]="selectedOffset() === -1"
+  >
     <div class="agency-rankings__filters">
-      <span class="agency-rankings__filter-label">Periode</span>
-      <div class="agency-rankings__filter-group">
-        <button
-          type="button"
-          class="agency-rankings__filter"
-          *ngFor="let option of periodOptions"
-          [class.agency-rankings__filter--active]="selectedPeriod() === option.key"
-          (click)="setPeriod(option.key)"
-        >
-          {{ option.label }}
-        </button>
+      <div class="agency-rankings__filter-block">
+        <span class="agency-rankings__filter-label">Periode</span>
+        <div class="agency-rankings__filter-group">
+          <button
+            type="button"
+            class="agency-rankings__filter"
+            *ngFor="let option of periodOptions"
+            [class.agency-rankings__filter--active]="selectedPeriod() === option.key"
+            (click)="setPeriod(option.key)"
+          >
+            {{ option.label }}
+          </button>
+        </div>
+      </div>
+      <div class="agency-rankings__filter-block">
+        <span class="agency-rankings__filter-label">Temps</span>
+        <div class="agency-rankings__filter-group">
+          <button
+            type="button"
+            class="agency-rankings__filter"
+            *ngFor="let option of offsetOptions"
+            [class.agency-rankings__filter--active]="selectedOffset() === option.value"
+            (click)="setOffset(option.value)"
+          >
+            {{ option.label }}
+          </button>
+        </div>
       </div>
     </div>
     <p class="agency-rankings__status" *ngIf="loading()">Chargement du classement...</p>

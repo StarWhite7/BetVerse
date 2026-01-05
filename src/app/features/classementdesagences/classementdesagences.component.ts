@@ -19,10 +19,15 @@ export class ClassementDesAgencesComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
   selectedPeriod = signal<'weekly' | 'monthly' | 'annual'>('weekly');
+  selectedOffset = signal(0);
   readonly periodOptions = [
     { key: 'weekly', label: 'Hebdo' },
     { key: 'monthly', label: 'Mensuel' },
     { key: 'annual', label: 'Annuel' },
+  ] as const;
+  readonly offsetOptions = [
+    { value: 0, label: 'Actuel' },
+    { value: -1, label: 'Precedent' },
   ] as const;
 
   ngOnInit() {
@@ -33,7 +38,7 @@ export class ClassementDesAgencesComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.agenceApi
-      .listAgencies(this.selectedPeriod())
+      .listAgencies(this.selectedPeriod(), this.selectedOffset())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (agencies) => {
@@ -52,6 +57,14 @@ export class ClassementDesAgencesComponent implements OnInit {
       return;
     }
     this.selectedPeriod.set(period);
+    this.loadAgencies();
+  }
+
+  setOffset(offset: number) {
+    if (this.selectedOffset() === offset) {
+      return;
+    }
+    this.selectedOffset.set(offset);
     this.loadAgencies();
   }
 }
