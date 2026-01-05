@@ -20,6 +20,7 @@ export class AgenceBureauComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   roster = signal<AgencyRoster | null>(null);
+  showRoster = signal(true);
   loading = signal(false);
   inviteOpen = signal(false);
   rolesOpen = signal(false);
@@ -239,6 +240,10 @@ export class AgenceBureauComponent implements OnInit {
       ...member,
       rank: index + 1,
     }));
+  }
+
+  toggleRosterView() {
+    this.showRoster.update((current) => !current);
   }
 
   membersCount() {

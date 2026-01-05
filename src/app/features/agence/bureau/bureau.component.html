@@ -85,10 +85,15 @@
     </div>
   </div>
 
-  <section class="roster">
+  <section class="roster" *ngIf="showRoster()">
     <header class="roster__header">
-      <h2>Roster du clan</h2>
-      <p>Vue d'ensemble des membres et de leurs roles.</p>
+      <div class="roster__header-text">
+        <h2>Roster du clan</h2>
+        <p>Vue d'ensemble des membres et de leurs roles.</p>
+      </div>
+      <button type="button" class="bureau__toggle" (click)="toggleRosterView()">
+        Classement
+      </button>
     </header>
 
     <ul class="roster__list">
@@ -118,10 +123,15 @@
     </ul>
   </section>
 
-  <section class="agency-ranking">
+  <section class="agency-ranking" *ngIf="!showRoster()">
     <header class="agency-ranking__header">
-      <h2>Classement interne</h2>
-      <p>Classement des membres par XP.</p>
+      <div class="agency-ranking__header-text">
+        <h2>Classement interne</h2>
+        <p>Classement des membres par XP.</p>
+      </div>
+      <button type="button" class="bureau__toggle" (click)="toggleRosterView()">
+        Roster
+      </button>
     </header>
     <ul class="agency-ranking__list">
       <li class="agency-ranking__row" *ngFor="let member of rankedMembers()">
