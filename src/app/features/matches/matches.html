@@ -1,28 +1,8 @@
-<section class="matches-header">
-  <div>
-    <h1>Matchs disponibles</h1>
-    <span>{{ matches().length }} rencontres a venir</span>
-  </div>
-</section>
-
 <p class="matches-error" *ngIf="error()">
   {{ error() }}
 </p>
 
 <section class="matches-grid" *ngIf="!loading() && matches().length; else matchesPlaceholder">
-  <div class="matches-sport-filter">
-    <h4>Choisir un sport</h4>
-    <div class="matches-sport-filter__buttons">
-      <button
-        type="button"
-        *ngFor="let sport of sportFilters"
-        [class.active]="selectedSport() === sport.key"
-        (click)="selectSport(sport.key)"
-      >
-        {{ sport.label }}
-      </button>
-    </div>
-  </div>
   <div class="matches-competition-filter">
     <h5>Choisir une compétition</h5>
     <ng-container *ngIf="availableCompetitions().length; else noCompetitions">
@@ -50,6 +30,24 @@
             *ngIf="competition === 'Premier League'"
             src="flags/Angleterre.png"
             alt="England flag"
+            class="matches-competition-flag"
+          />
+          <img
+            *ngIf="competition === 'LaLiga'"
+            src="flags/Spain.png"
+            alt="Spain flag"
+            class="matches-competition-flag"
+          />
+          <img
+            *ngIf="competition === 'Serie A'"
+            src="flags/Italy.png"
+            alt="Italy flag"
+            class="matches-competition-flag"
+          />
+          <img
+            *ngIf="competition === 'Bundesliga'"
+            src="flags/Germany.png"
+            alt="Germany flag"
             class="matches-competition-flag"
           />
           {{ competition }}
@@ -107,7 +105,7 @@
 
 <ng-template #matchesPlaceholder>
   <div class="matches-loading" *ngIf="loading()">Chargement des rencontres...</div>
-  <p class="matches-empty" *ngIf="!loading()">Aucun match a afficher pour le moment.</p>
+  <p class="matches-empty" *ngIf="!loading()">Aucun match ? afficher pour le moment.</p>
 </ng-template>
 
 <div class="match-bet-modal" *ngIf="betModalOpen()">
@@ -116,11 +114,11 @@
     <h3>Parier sur {{ selectedMatch()?.homeTeam }} vs {{ selectedMatch()?.awayTeam }}</h3>
     <div class="match-bet-modal__details">
       <div>
-        <span>Selection</span>
+        <span>Sélection</span>
         <strong>{{ selectionLabel() }}</strong>
       </div>
       <div>
-        <span>Cote</span>
+        <span>Côte</span>
         <strong>{{ betOdds() | number: '1.0-2' }}</strong>
       </div>
       <div>

@@ -5,7 +5,7 @@
         <path d="M15 6l-6 6 6 6" />
       </svg>
     </span>
-    Retour a l'agence
+    Retour à l'agence
   </a>
 
   <header class="match-clan__hero">
@@ -54,7 +54,7 @@
           </select>
         </div>
         <div class="match-clan__filter-field">
-          <label class="match-clan__filter-label" for="match-competition-select">Competition</label>
+          <label class="match-clan__filter-label" for="match-competition-select">Compétition</label>
           <select
             id="match-competition-select"
             class="match-clan__week"
@@ -80,7 +80,7 @@
             Score agence: {{ agencyScoreLabel(match.id) }}
           </div>
           <div class="match-card__result" *ngIf="match.status === 'FINISHED'">
-            Resultat reel: {{ matchResultLabel(match) }}
+            Résultat réel: {{ matchResultLabel(match) }}
           </div>
           <div class="match-card__points" *ngIf="match.status === 'FINISHED'">
             <span class="match-card__points-label">Points joueur:</span>
@@ -139,14 +139,14 @@
                 [value]="getUserScore(match.id).awayScore"
                 [disabled]="!isMatchEditable(match)"
                 (input)="setScore(match.id, 'away', $any($event.target).value)"
-                aria-label="Score exterieur"
+                aria-label="Score extérieur"
               />
               <div class="match-card__score-controls">
                 <button
                   type="button"
                   [disabled]="!isMatchEditable(match)"
                   (click)="adjustScore(match.id, 'away', 1)"
-                  aria-label="Augmenter le score exterieur"
+                  aria-label="Augmenter le score extérieur"
                 >
                   ^
                 </button>
@@ -154,7 +154,7 @@
                   type="button"
                   [disabled]="!isMatchEditable(match)"
                   (click)="adjustScore(match.id, 'away', -1)"
-                  aria-label="Diminuer le score exterieur"
+                  aria-label="Diminuer le score extérieur"
                 >
                   v
                 </button>
@@ -172,7 +172,7 @@
     </div>
     <ng-template #matchClanEmpty>
       <div class="match-clan__empty" *ngIf="loading()">Chargement des rencontres...</div>
-      <div class="match-clan__empty" *ngIf="!loading()">Aucun match a afficher pour le moment.</div>
+      <div class="match-clan__empty" *ngIf="!loading()">Aucun match à afficher pour le moment.</div>
     </ng-template>
     <div class="match-clan__actions match-clan__actions--bottom">
       <span class="match-clan__save-message" *ngIf="saveMessage()">

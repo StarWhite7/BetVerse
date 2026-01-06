@@ -160,11 +160,11 @@
         </svg>
       </div>
       <h3>Salle de coordination</h3>
-      <p>Selection des missions de clan.</p>
+      <p>S?lection des missions de clan.</p>
     </a>
   </div>
 
-  <p class="agency__hint">Selectionnez un espace pour demarrer.</p>
+  <p class="agency__hint">S?lectionnez un espace pour demarrer.</p>
 </section>
 
 <ng-template #noAgency>
@@ -173,7 +173,7 @@
       <p class="agency__eyebrow">Nouveau depart</p>
       <h1>Mon agence</h1>
       <p class="agency__lead">
-        Vous n'avez pas encore d'agence. Creez la votre avec des Shards ou explorez
+        Vous n'avez pas encore d'agence. Cr?ez la votre avec des Shards ou explorez
         les agences deja actives.
       </p>
     </header>
@@ -186,7 +186,7 @@
             <path d="M8 9h8M8 13h6" />
           </svg>
         </div>
-        <h3>Creer une equipe</h3>
+        <h3>Cr?er une equipe</h3>
         <p>
           Lancez votre propre agence. Cout unique: {{ agencyCost() }} Shards.
         </p>
@@ -200,7 +200,7 @@
           (click)="openCreateModal()"
           [disabled]="!canCreate() || creating()"
         >
-          {{ creating() ? 'Creation...' : 'Creer une agence' }}
+          {{ creating() ? 'Cr?ation...' : 'Cr?er une agence' }}
         </button>
       </article>
 
@@ -225,7 +225,7 @@
   <div class="agency-modal__backdrop" (click)="closeCreateModal()"></div>
   <div class="agency-modal__panel" role="dialog" aria-modal="true">
     <header class="agency-modal__header">
-      <h2>Creer une agence</h2>
+      <h2>Cr?er une agence</h2>
       <button type="button" class="agency-modal__close" (click)="closeCreateModal()">×</button>
     </header>
 
@@ -346,7 +346,7 @@
         (click)="createAgency()"
         [disabled]="creating() || !agencyName().trim() || !canCreate()"
       >
-        {{ creating() ? 'Creation...' : 'Creer une agence' }}
+        {{ creating() ? 'Cr?ation...' : 'Cr?er une agence' }}
       </button>
     </footer>
   </div>

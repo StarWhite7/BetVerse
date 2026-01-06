@@ -54,6 +54,9 @@ export class MatchesComponent implements OnInit {
   private readonly competitionLabelMap: Record<string, string> = {
     EPL: 'Premier League',
     France: 'Ligue 1',
+    Spain: 'LaLiga',
+    Italy: 'Serie A',
+    Germany: 'Bundesliga',
   };
   private readonly fallbackSportKey =
     this.sportFilters.find((filter) => filter.fallback)?.key ?? this.sportFilters[0].key;
