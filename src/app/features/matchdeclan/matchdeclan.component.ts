@@ -4,74 +4,8 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatchesApiService, MatchEntity } from '../../data-access/matches/matches.api';
 import { AgenceApiService, AgencyMatchScore, AgencyMatchVoteSummary } from '../../data-access/agence/agence.api';
-
-const TEAM_LOGO_MAP: Record<string, string> = {
-  arsenal: '/club/Premier_League/Arsenal_FC.png',
-  astonvilla: '/club/Premier_League/Aston_Villa_FC.png',
-  bournemouth: '/club/Premier_League/Bournemouth_AFC.png',
-  brentford: '/club/Premier_League/Brentford_FC.png',
-  brightonandhovealbion: '/club/Premier_League/Brighton.png',
-  burnley: '/club/Premier_League/Burnley.png',
-  chelsea: '/club/Premier_League/Chelsea.png',
-  crystalpalace: '/club/Premier_League/Crystal_Palace_FC.png',
-  everton: '/club/Premier_League/Everton_FC.png',
-  fulham: '/club/Premier_League/Logo_Fulham.png',
-  leedsunited: '/club/Premier_League/Leeds_United_FC.png',
-  liverpool: '/club/Premier_League/liverpool-fc.png',
-  manchestercity: '/club/Premier_League/Manchester_City_FC.png',
-  manchesterunited: '/club/Premier_League/Manchester_United_FC.png',
-  newcastleunited: '/club/Premier_League/Newcastle_United_FC.png',
-  nottinghamforest: '/club/Premier_League/Nottingham_Forest.png',
-  sunderland: '/club/Premier_League/Sunderland_AFC.png',
-  tottenhamhotspur: '/club/Premier_League/Tottenham_Hotspur.png',
-  westhamunited: '/club/Premier_League/West_Ham_United_FC.png',
-  wolverhamptonwanderers: '/club/Premier_League/Wolverhampton_Wanderer.png',
-  ajauxerre: '/club/Ligue_1/AJ_Auxerre.png',
-  auxerre: '/club/Ligue_1/AJ_Auxerre.png',
-  angers: '/club/Ligue_1/Angers_SCO.png',
-  angerssco: '/club/Ligue_1/Angers_SCO.png',
-  asmonaco: '/club/Ligue_1/AS_Monaco_FC.png',
-  asmonacofc: '/club/Ligue_1/AS_Monaco_FC.png',
-  monaco: '/club/Ligue_1/AS_Monaco_FC.png',
-  fclorient: '/club/Ligue_1/FC_Lorient.png',
-  lorient: '/club/Ligue_1/FC_Lorient.png',
-  fcmetz: '/club/Ligue_1/FC_Metz.png',
-  metz: '/club/Ligue_1/FC_Metz.png',
-  fcnantes: '/club/Ligue_1/FC_Nantes.png',
-  nantes: '/club/Ligue_1/FC_Nantes.png',
-  havreac: '/club/Ligue_1/Havre_AC.png',
-  lehavre: '/club/Ligue_1/Havre_AC.png',
-  lehavreac: '/club/Ligue_1/Havre_AC.png',
-  losclille: '/club/Ligue_1/LOSC_Lille.png',
-  losc: '/club/Ligue_1/LOSC_Lille.png',
-  lille: '/club/Ligue_1/LOSC_Lille.png',
-  ogcnice: '/club/Ligue_1/OGC_Nice.png',
-  nice: '/club/Ligue_1/OGC_Nice.png',
-  olympiquedemarseille: '/club/Ligue_1/Olympique_de_Marseille.png',
-  marseille: '/club/Ligue_1/Olympique_de_Marseille.png',
-  om: '/club/Ligue_1/Olympique_de_Marseille.png',
-  olympiquelyonnais: '/club/Ligue_1/Olympique_Lyonnais.png',
-  lyon: '/club/Ligue_1/Olympique_Lyonnais.png',
-  ol: '/club/Ligue_1/Olympique_Lyonnais.png',
-  parisfc: '/club/Ligue_1/Paris_FC.png',
-  parissaintgermain: '/club/Ligue_1/Paris_Saint-Germain.png',
-  parissg: '/club/Ligue_1/Paris_Saint-Germain.png',
-  parissaintgermains: '/club/Ligue_1/Paris_Saint-Germain.png',
-  psg: '/club/Ligue_1/Paris_Saint-Germain.png',
-  racingclubdestrasbourgalsace: '/club/Ligue_1/Racing_Club_de_Strasbourg_Alsace.png',
-  rcstrasbourg: '/club/Ligue_1/Racing_Club_de_Strasbourg_Alsace.png',
-  strasbourg: '/club/Ligue_1/Racing_Club_de_Strasbourg_Alsace.png',
-  rclens: '/club/Ligue_1/RC_Lens.png',
-  lens: '/club/Ligue_1/RC_Lens.png',
-  stadebrestois: '/club/Ligue_1/Stade_Brestois.png',
-  stadebrestois29: '/club/Ligue_1/Stade_Brestois.png',
-  brest: '/club/Ligue_1/Stade_Brestois.png',
-  staderennais: '/club/Ligue_1/Stade_Rennais_FC.png',
-  staderennaisfc: '/club/Ligue_1/Stade_Rennais_FC.png',
-  rennes: '/club/Ligue_1/Stade_Rennais_FC.png',
-  toulousefc: '/club/Ligue_1/Toulouse_FC.png',
-  toulouse: '/club/Ligue_1/Toulouse_FC.png',
-};
+import { TEAM_LOGO_MAP } from '../../shared/team-logos';
+import { officialTeamName } from '../../shared/team-names';
 
 @Component({
   selector: 'app-match-de-clan',
@@ -339,7 +273,7 @@ export class MatchDeClanComponent implements OnInit {
   }
 
   teamLogoUrl(team: string): string {
-    const normalized = this.normalizeTeamName(team);
+    const normalized = this.normalizeTeamName(this.displayTeamName(team));
     const matched = TEAM_LOGO_MAP[normalized];
     if (matched) {
       return matched;
@@ -364,6 +298,10 @@ export class MatchDeClanComponent implements OnInit {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]/g, '');
+  }
+
+  displayTeamName(team: string): string {
+    return officialTeamName(team, (value) => this.normalizeTeamName(value));
   }
 
   private matchCompetitionLabel(match: MatchEntity): string {
