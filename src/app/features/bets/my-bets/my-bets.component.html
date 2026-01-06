@@ -25,7 +25,7 @@
       <tr>
         <th *ngIf="isAdmin()">ID</th>
         <th>Match</th>
-        <th>Type</th>
+        <th>Pari</th>
         <th>Mise</th>
         <th>Cote</th>
         <th>Statut</th>
@@ -38,8 +38,8 @@
       </tr>
       <tr *ngFor="let bet of bets(); trackBy: trackByBet">
         <td *ngIf="isAdmin()">{{ bet.id }}</td>
-        <td>{{ bet.match }}</td>
-        <td>{{ bet.betType }}</td>
+        <td>{{ matchLabel(bet) }}</td>
+        <td>{{ betLabel(bet) }}</td>
         <td>{{ bet.amount | number: '1.0-0' }} V</td>
         <td>{{ bet.odds | number: '1.0-2' }}</td>
         <td>

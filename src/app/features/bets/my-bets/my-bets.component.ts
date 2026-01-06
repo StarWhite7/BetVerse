@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BetsStore, BetsFilter } from '../../../data-access/bets/bets.store';
 import { AuthService } from '../../../core/services/auth.service';
+import { officialTeamName } from '../../../shared/team-names';
 
 @Component({
   selector: 'bets-my-bets',
@@ -39,5 +40,44 @@ export class MyBetsComponent implements OnInit {
 
   trackByBet(_index: number, bet: { id: string }) {
     return bet.id;
+  }
+
+
+  matchLabel(bet: { match?: string | null }): string {
+    const match = bet.match ?? '';
+    const parts = match.split(/\s+vs\s+/i);
+    if (parts.length >= 2) {
+      const home = this.displayTeamName(parts[0].trim());
+      const away = this.displayTeamName(parts[1].trim());
+      return `${home} vs ${away}`;
+    }
+    return match;
+  }
+
+  betLabel(bet: { betType: string; match?: string | null }): string {
+    if (bet.betType === 'DRAW') {
+      return 'Match nul';
+    }
+    const match = bet.match ?? '';
+    const parts = match.split(/\s+vs\s+/i);
+    if (parts.length >= 2) {
+      const home = this.displayTeamName(parts[0].trim());
+      const away = this.displayTeamName(parts[1].trim());
+      if (bet.betType === 'HOME') return home;
+      if (bet.betType === 'AWAY') return away;
+    }
+    return bet.betType;
+  }
+
+  private normalizeTeamName(team: string): string {
+    return team
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+
+  private displayTeamName(team: string): string {
+    return officialTeamName(team, (value) => this.normalizeTeamName(value));
   }
 }
