@@ -91,24 +91,25 @@ const LALIGA_OFFICIAL_NAMES: Record<string, string> = {
 };
 
 const BUNDESLIGA_OFFICIAL_NAMES: Record<string, string> = {
-  augsburg: 'Augsburg',
-  bayerleverkusen: 'Bayer Leverkusen',
-  bayernmunich: 'Bayern Munich',
-  bochum: 'Bochum',
-  borussiadortmund: 'Borussia Dortmund',
-  borussiamonchengladbach: 'Borussia Monchengladbach',
-  darmstadt98: 'Darmstadt 98',
+  bayernmunich: 'FC Bayern München',
+  bayerleverkusen: 'Bayer 04 Leverkusen',
   eintrachtfrankfurt: 'Eintracht Frankfurt',
-  freiburg: 'Freiburg',
-  heidenheim: 'Heidenheim',
-  hoffenheim: 'Hoffenheim',
-  fckoln: 'FC Koln',
-  mainz05: 'Mainz 05',
+  borussiadortmund: 'Borussia Dortmund',
+  freiburg: 'SC Freiburg',
+  hamburg: 'Hamburger SV',
+  fsvmainz05: '1. FSV Mainz 05',
   rbleipzig: 'RB Leipzig',
-  unionberlin: 'Union Berlin',
-  stuttgart: 'Stuttgart',
-  werderbremen: 'Werder Bremen',
-  wolfsburg: 'Wolfsburg',
+  werderbremen: 'SV Werder Bremen',
+  stuttgart: 'VfB Stuttgart',
+  stpauli: 'FC St. Pauli',
+  borussiamonchengladbach: 'Borussia Mönchengladbach',
+  wolfsburg: 'VfL Wolfsburg',
+  augsburg: 'FC Augsburg',
+  unionberlin: 'FC Union Berlin',
+  hoffenheim: 'TSG Hoffenheim',
+  
+  //'1fcheidenheim': 'FC Heidenheim 1846',
+  //'1fckoln': 'FC Koln'
 };
 
 const OFFICIAL_TEAM_NAMES: Record<string, string> = {

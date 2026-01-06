@@ -43,8 +43,10 @@ export const TEAM_LOGO_MAP: Record<string, string> = {
   staderennaisfc: '/club/Ligue_1/Stade_Rennais_FC.png',
   toulousefc: '/club/Ligue_1/Toulouse_FC.png',
   rcstrasbourgalsace: '/club/Ligue_1/Racing_Club_de_Strasbourg_Alsace.png',
+  
 
-
+  
+  
   //Serie A Teams
   atalantabc: '/club/Serie_A/Atalanta_Bergamo.png',
   fcbologna: '/club/Serie_A/Bologna_FC.png',
@@ -88,4 +90,24 @@ export const TEAM_LOGO_MAP: Record<string, string> = {
   sevillafc: '/club/LaLiga/Seville_FC.png',
   valenciacf: '/club/LaLiga/Valencia_CF.png',
   villarrealcf: '/club/LaLiga/Villarreal_CF.png',
+
+  //Bundesliga Teams
+  fcbayernmunchen: "/club/Bundesliga/FC_Bayern_Munchen.png",
+  bayer04leverkusen: "/club/Bundesliga/Bayer_04_Leverkusen.png",
+  eintrachtfrankfurt: "/club/Bundesliga/Eintracht_Francfort.png",
+  borussiadortmund: "/club/Bundesliga/Borussia_Dortmund.png",
+  scfreiburg: "/club/Bundesliga/SC_Freiburg.png",
+  hamburgersv: "/club/Bundesliga/Hambourg_SV.png",
+  '1fsvmainz05': "/club/Bundesliga/FSV_Mayence_05.png",
+  rbleipzig: "/club/Bundesliga/RB_Leipzig.png",
+  svwerderbremen: "/club/Bundesliga/SV_Werder_Bremen.png",
+  vfbstuttgart: "/club/Bundesliga/VfB_Stuttgart.png",
+  fcstpauli: "/club/Bundesliga/FC_St._Pauli.png",
+  borussiamonchengladbach: "/club/Bundesliga/Borussia_Mönchengladbach.png",
+  vflwolfsburg: "/club/Bundesliga/VfL_Wolfsburg.png",
+  fcaugsburg: "/club/Bundesliga/FC_Augsburg.png",
+  fcunionberlin: "/club/Bundesliga/FC_Union_Berlin.png",
+  tsghoffenheim: "/club/Bundesliga/TSG_1899_Hoffenheim.png",
+  '1fcheidenheim': '/club/Bundesliga/FC_Heidenheim_1846.png',
+  '1fckoln': '/club/Bundesliga/FC_Koln.png',
 };
