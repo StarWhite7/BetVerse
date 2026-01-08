@@ -185,6 +185,80 @@
   </div>
 </div>
 
+<section class="bet-win-popup" *ngIf="betWinVisible()">
+  <div class="bet-win-popup__backdrop"></div>
+  <div class="bet-win-popup__spotlight bet-win-popup__spotlight--left"></div>
+  <div class="bet-win-popup__spotlight bet-win-popup__spotlight--right"></div>
+  <div class="bet-win-popup__card" role="dialog" aria-live="polite" (click)="$event.stopPropagation()">
+    <div class="bet-win-popup__confetti">
+      <span *ngFor="let _ of betWinConfetti(); let i = index" class="bet-win-popup__spark"></span>
+    </div>
+    <h3 class="bet-win-popup__title">{{ betWinCurrent().title }}</h3>
+    <div class="bet-win-ticket">
+      <div class="bet-win-ticket__match">
+        <div class="bet-win-team">
+          <img [src]="teamLogoUrl(betWinMeta().homeTeam)" [alt]="betWinMeta().homeTeam" />
+          <span>{{ betWinMeta().homeTeam }}</span>
+        </div>
+        <div class="bet-win-ticket__vs">VS</div>
+        <div class="bet-win-team">
+          <img [src]="teamLogoUrl(betWinMeta().awayTeam)" [alt]="betWinMeta().awayTeam" />
+          <span>{{ betWinMeta().awayTeam }}</span>
+        </div>
+      </div>
+      <div class="bet-win-ticket__grid">
+        <div class="bet-win-ticket__item">
+          <span>Pari</span>
+          <strong>{{ betWinMeta().betTypeLabel }}</strong>
+        </div>
+        <div class="bet-win-ticket__item">
+          <span>Mise</span>
+          <strong>{{ betWinMeta().amount ?? '--' }} V</strong>
+        </div>
+        <div class="bet-win-ticket__item">
+          <span>Cote</span>
+          <strong>{{ betWinMeta().odds ?? '--' }}</strong>
+        </div>
+        <div class="bet-win-ticket__item bet-win-ticket__gain">
+          <span>Gain</span>
+          <strong>{{ betWinMeta().payout ?? '--' }} V</strong>
+        </div>
+      </div>
+    </div>
+    <div class="bet-win-popup__cta">
+      <button
+        type="button"
+        class="bet-win-popup__primary"
+        (click)="confirmBetWin()"
+        *ngIf="betWinIndex() === betWinNotifications().length - 1"
+      >
+        Encaisser
+      </button>
+    </div>
+    <div class="bet-win-popup__nav" *ngIf="betWinNotifications().length > 1">
+      <button
+        type="button"
+        class="bet-win-popup__arrow"
+        (click)="prevBetWin()"
+        [disabled]="betWinIndex() === 0"
+        [class.is-hidden]="betWinIndex() === 0"
+      >
+        ‹
+      </button>
+      <div class="bet-win-popup__dots">
+        <span
+          class="bet-win-popup__dot"
+          *ngFor="let _ of betWinDots(); let i = index"
+          [class.active]="i === betWinIndex()"
+        ></span>
+      </div>
+      <button type="button" class="bet-win-popup__arrow" (click)="nextBetWin()">
+        ›
+      </button>
+    </div>
+  </div>
+</section>
+
 <section class="username-overlay" *ngIf="usernamePromptVisible()">
   <div class="username-modal">
     <div>

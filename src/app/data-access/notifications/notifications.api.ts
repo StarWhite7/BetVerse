@@ -4,9 +4,16 @@ import { environment } from '../../core/config/environment';
 
 export interface UserNotification {
   id: string;
-  type: 'AGENCY_INVITE' | 'AGENCY_INVITE_ACCEPTED' | 'AGENCY_INVITE_DECLINED';
+  type: 'AGENCY_INVITE' | 'AGENCY_INVITE_ACCEPTED' | 'AGENCY_INVITE_DECLINED' | 'BET_WON';
   title: string;
   message: string;
+  metadata?: {
+    match?: string;
+    betType?: string;
+    amount?: number;
+    odds?: number;
+    payout?: number;
+  } | null;
   readAt: string | null;
   createdAt: string;
   agencyId?: string | null;

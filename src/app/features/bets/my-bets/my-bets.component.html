@@ -13,6 +13,22 @@
       {{ filter.label }}
     </button>
   </div>
+  <button
+    type="button"
+    class="bets-header__test"
+    (click)="triggerBetWinTest()"
+    *ngIf="isAdmin()"
+  >
+    Tester 1 gain
+  </button>
+  <button
+    type="button"
+    class="bets-header__test"
+    (click)="triggerBetWinTestLastThree()"
+    *ngIf="isAdmin()"
+  >
+    Tester 3 gains
+  </button>
 </section>
 
 <p class="bets-error" *ngIf="error()">
