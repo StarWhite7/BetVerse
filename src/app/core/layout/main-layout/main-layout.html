@@ -197,12 +197,16 @@
     <div class="bet-win-ticket">
       <div class="bet-win-ticket__match">
         <div class="bet-win-team">
-          <img [src]="teamLogoUrl(betWinMeta().homeTeam)" [alt]="betWinMeta().homeTeam" />
+          <div class="bet-win-team__logo">
+            <img [src]="teamLogoUrl(betWinMeta().homeTeam)" [alt]="betWinMeta().homeTeam" />
+          </div>
           <span>{{ betWinMeta().homeTeam }}</span>
         </div>
         <div class="bet-win-ticket__vs">VS</div>
         <div class="bet-win-team">
-          <img [src]="teamLogoUrl(betWinMeta().awayTeam)" [alt]="betWinMeta().awayTeam" />
+          <div class="bet-win-team__logo">
+            <img [src]="teamLogoUrl(betWinMeta().awayTeam)" [alt]="betWinMeta().awayTeam" />
+          </div>
           <span>{{ betWinMeta().awayTeam }}</span>
         </div>
       </div>

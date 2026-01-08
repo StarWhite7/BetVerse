@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatchesApiService, MatchEntity } from '../../data-access/matches/matches.api';
 import { BetsApiService } from '../../data-access/bets/bets.api';
@@ -9,6 +9,8 @@ import { BetsStore } from '../../data-access/bets/bets.store';
 import { WalletApiService } from '../../data-access/wallet/wallet.api';
 import { TEAM_LOGO_MAP } from '../../shared/team-logos';
 import { officialTeamName } from '../../shared/team-names';
+import { interval } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type SportFilter = {
   key: string;
@@ -31,11 +33,13 @@ export class MatchesComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly betsStore = inject(BetsStore);
   private readonly walletApi = inject(WalletApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
   matches = signal<MatchEntity[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
   lastApiCallAt = signal<Date | null>(null);
+  currentTime = signal(Date.now());
 
   betModalOpen = signal(false);
   selectedMatch = signal<MatchEntity | null>(null);
@@ -81,10 +85,11 @@ export class MatchesComponent implements OnInit {
     const matchesBySport = this.matchesBySelectedSport();
     const competition = this.selectedCompetition();
     if (competition === this.competitionAllKey) {
-      return matchesBySport;
+      return matchesBySport.filter((match) => this.isMatchUpcoming(match));
     }
     return matchesBySport.filter(
-      (match) => this.resolveCompetitionLabel(match) === competition,
+      (match) =>
+        this.resolveCompetitionLabel(match) === competition && this.isMatchUpcoming(match),
     );
   });
   activeSportLabel = computed(() => {
@@ -115,6 +120,11 @@ export class MatchesComponent implements OnInit {
   ngOnInit() {
     this.loadMatches();
     this.loadWalletBalance();
+    interval(30_000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.currentTime.set(Date.now());
+      });
   }
 
   loadMatches() {
@@ -298,5 +308,13 @@ export class MatchesComponent implements OnInit {
 
   displayTeamName(team: string): string {
     return officialTeamName(team, (value) => this.normalizeTeamName(value));
+  }
+
+  private isMatchUpcoming(match: MatchEntity): boolean {
+    const matchTime = new Date(match.startDate).getTime();
+    if (!Number.isFinite(matchTime)) {
+      return true;
+    }
+    return matchTime > this.currentTime();
   }
 }

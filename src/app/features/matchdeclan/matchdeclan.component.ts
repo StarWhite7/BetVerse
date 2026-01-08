@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatchesApiService, MatchEntity } from '../../data-access/matches/matches.api';
 import { AgenceApiService, AgencyMatchScore, AgencyMatchVoteSummary } from '../../data-access/agence/agence.api';
 import { TEAM_LOGO_MAP } from '../../shared/team-logos';
 import { officialTeamName } from '../../shared/team-names';
+import { interval } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-match-de-clan',
@@ -17,6 +19,7 @@ import { officialTeamName } from '../../shared/team-names';
 export class MatchDeClanComponent implements OnInit {
   private readonly matchesApi = inject(MatchesApiService);
   private readonly agenceApi = inject(AgenceApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
   matches = signal<MatchEntity[]>([]);
   loading = signal(true);
@@ -29,6 +32,7 @@ export class MatchDeClanComponent implements OnInit {
   userScores = signal<Record<string, AgencyMatchScore>>({});
   agencyScores = signal<Record<string, AgencyMatchScore>>({});
   totalVotes = signal<Record<string, number>>({});
+  currentTime = signal(Date.now());
 
   matchesSorted = computed(() =>
     [...this.matches()].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()),
@@ -53,13 +57,16 @@ export class MatchDeClanComponent implements OnInit {
     const selected = options[this.selectedWeekIndex()];
     const sorted = this.matchesSorted();
     if (!selected) {
-      return sorted;
+      return sorted.filter((match) => this.isMatchUpcoming(match));
     }
     const startMs = selected.start.getTime();
     const endMs = selected.end.getTime();
     return sorted.filter((match) => {
       const matchTime = new Date(match.startDate).getTime();
       if (matchTime < startMs || matchTime > endMs) {
+        return false;
+      }
+      if (!this.isMatchUpcoming(match)) {
         return false;
       }
       const selectedCompetition = this.selectedCompetitionKey();
@@ -85,6 +92,11 @@ export class MatchDeClanComponent implements OnInit {
   ngOnInit() {
     this.setDefaultWeek();
     this.loadMatches();
+    interval(30_000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.currentTime.set(Date.now());
+      });
   }
 
   loadMatches() {
@@ -331,6 +343,14 @@ export class MatchDeClanComponent implements OnInit {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]/g, '');
+  }
+
+  private isMatchUpcoming(match: MatchEntity): boolean {
+    const matchTime = new Date(match.startDate).getTime();
+    if (!Number.isFinite(matchTime)) {
+      return true;
+    }
+    return matchTime > this.currentTime();
   }
 
   isMatchEditable(match: MatchEntity): boolean {
