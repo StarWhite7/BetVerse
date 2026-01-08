@@ -5,7 +5,7 @@
         <path d="M15 6l-6 6 6 6" />
       </svg>
     </span>
-    Retour ? l'agence
+    Retour à l'agence
   </a>
 
   <header class="bureau__hero">
@@ -63,7 +63,7 @@
       (click)="openRoles()"
       *ngIf="canManageAgency()"
     >
-      G?rer les roles
+      Gérer les rôles
     </button>
     <div class="bureau__actions-danger">
       <button
@@ -193,7 +193,7 @@
   <div class="bureau-modal__backdrop" (click)="closeRoles()"></div>
   <div class="bureau-modal__panel bureau-modal__panel--wide" role="dialog" aria-modal="true">
     <header class="bureau-modal__header">
-      <h2>G?rer les roles</h2>
+      <h2>Gérer les rôles</h2>
       <button type="button" class="bureau-modal__close" (click)="closeRoles()">×</button>
     </header>
     <div class="bureau-modal__body">
