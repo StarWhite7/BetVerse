@@ -90,9 +90,21 @@
           <ng-template #shardsLoading>
             <div class="wallet-balance__value wallet-balance__value--loading">...</div>
           </ng-template>
-          <a class="wallet-balance__action" routerLink="/shards" aria-label="Acheter des shards">
-            +
-          </a>
+          <ng-container *ngIf="hasAdminAccess(); else shardsLocked">
+            <a class="wallet-balance__action" routerLink="/shards" aria-label="Acheter des shards">
+              +
+            </a>
+          </ng-container>
+          <ng-template #shardsLocked>
+            <span
+              class="wallet-balance__action wallet-balance__action--locked"
+              role="button"
+              aria-label="Prochainement disponible"
+              [attr.data-tooltip]="'Prochainement disponible'"
+            >
+              +
+            </span>
+          </ng-template>
         </div>
         <div class="notifications" #notificationsWrap (click)="$event.stopPropagation()">
           <button type="button" class="notifications__toggle" (click)="toggleNotifications()">
