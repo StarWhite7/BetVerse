@@ -148,7 +148,7 @@
         </div>
       </li>
       <li class="agency-ranking__row agency-ranking__row--empty" *ngIf="rankedMembers().length === 0">
-        Aucun membre class?.
+        Aucun membre classé.
       </li>
     </ul>
   </section>
@@ -305,7 +305,7 @@
       <input
         type="text"
         class="bureau-modal__input"
-        placeholder='?crire "DELETE" pour confirmer'
+        placeholder='Écrire "DELETE" pour confirmer'
         [value]="deleteInput()"
         (input)="updateDeleteInput($any($event.target).value)"
       />
@@ -313,7 +313,7 @@
         class="bureau-delete__warning"
         [class.bureau-delete__warning--flash]="deleteError()"
       >
-        ?crire "DELETE" pour supprimer definitivement l'agence.
+        Écrire "DELETE" pour supprimer definitivement l'agence.
       </div>
       <div class="bureau-delete__actions">
         <button type="button" class="bureau__button bureau__button--ghost" (click)="closeDelete()">

@@ -72,7 +72,7 @@
 
     <section class="matches-form">
       <header>
-        <h3>{{ matchForm.value.id ? 'Modifier' : 'Cr?er' }} un match</h3>
+        <h3>{{ matchForm.value.id ? 'Modifier' : 'Créer' }} un match</h3>
         <button type="button" class="ghost" (click)="resetForm()">Reset</button>
       </header>
       <form [formGroup]="matchForm" (ngSubmit)="submitMatch()">
@@ -81,7 +81,7 @@
           <input type="text" formControlName="homeTeam" placeholder="Team A" />
         </label>
         <label>
-          Equipe a l'ext?rieur
+          Équipe à l'extérieur
           <input type="text" formControlName="awayTeam" placeholder="Team B" />
         </label>
         <label>
@@ -103,7 +103,7 @@
           </label>
         </div>
         <button type="submit" [disabled]="submitting()">
-          {{ submitting() ? 'Enregistrement...' : (matchForm.value.id ? 'Mettre a jour' : 'Cr?er le match') }}
+          {{ submitting() ? 'Enregistrement...' : (matchForm.value.id ? 'Mettre a jour' : 'Créer le match') }}
         </button>
       </form>
     </section>
