@@ -15,7 +15,7 @@ import {
   LeaderboardMetricOption,
 } from '../../../data-access/leaderboard/leaderboard.models';
 
-type MetricField = 'verseEarned' | 'betsWon' | 'level' | 'winRate' | 'versePossessedTotal';
+type MetricField = 'verseEarned' | 'betsWon' | 'level' | 'winRate' | 'versePossessedTotal' | 'xp';
 
 @Component({
   selector: 'leaderboard-global',
@@ -29,7 +29,7 @@ export class GlobalComponent implements OnInit {
   private readonly metricField: Record<LeaderboardMetric, MetricField> = {
     VERSE: 'versePossessedTotal',
     WINS: 'winRate',
-    LEVEL: 'level',
+    LEVEL: 'xp',
   };
   private readonly numberFormat = new Intl.NumberFormat('fr-FR', {
     maximumFractionDigits: 0,
@@ -38,18 +38,18 @@ export class GlobalComponent implements OnInit {
   readonly metricOptions: LeaderboardMetricOption[] = [
     {
       id: 'VERSE',
-      label: 'Plus de Verse possede',
-      description: 'Wallet + en cours + investissements',
+      label: 'Nombre de Verse détenus',
+      description: 'Somme du portefeuille, des Verse engagés en paris en cours et des investissements à venir',
     },
     {
       id: 'WINS',
-      label: 'Plus de paris gagnes',
-      description: 'Regularite et lecture du marche',
+      label: 'Taux de victoire',
+      description: 'Classement basé sur le taux de victoire',
     },
     {
       id: 'LEVEL',
-      label: 'Plus haut niveau',
-      description: 'Progression par missions et XP',
+      label: 'XP accumulées',
+      description: "Classement basé sur l'XP des joueurs",
     },
   ];
 
@@ -136,11 +136,11 @@ export class GlobalComponent implements OnInit {
   formatPrimaryValue(entry: LeaderboardEntry) {
     switch (this.selectedMetric()) {
       case 'VERSE':
-        return `${this.numberFormat.format(entry.versePossessedTotal)} Verse possedes`;
+        return `${this.numberFormat.format(entry.versePossessedTotal)} Verse détenus`;
       case 'WINS':
-        return `${entry.betsWon} paris gagnes`;
+        return `${entry.betsWon} paris gagnés`;
       case 'LEVEL':
-        return `Niveau ${entry.level}`;
+        return `${this.numberFormat.format(entry.xp ?? 0)} XP`;
     }
   }
 
@@ -149,9 +149,9 @@ export class GlobalComponent implements OnInit {
       case 'VERSE':
         return `${this.numberFormat.format(entry.verseWallet)} wallet`;
       case 'WINS':
-        return `${this.numberFormat.format(entry.verseEarned)} Verse cumules`;
+        return `${this.numberFormat.format(entry.verseEarned)} Verse cumulés`;
       case 'LEVEL':
-        return `${entry.betsWon} paris gagnes`;
+        return `Niveau ${entry.level}`;
     }
   }
 
