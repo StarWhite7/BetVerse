@@ -65,6 +65,35 @@ button[disabled] {
   color: #a78bfa;
   text-decoration: none;
 }
+.auth-social {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.auth-social__link {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.auth-social__link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(248, 250, 252, 0.6);
+}
+
+.auth-social__link svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
 .auth-card__eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.3em;
