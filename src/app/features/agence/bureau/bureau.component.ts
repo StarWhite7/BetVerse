@@ -476,7 +476,7 @@ export class AgenceBureauComponent implements OnInit {
         },
         error: () => {
           this.savingRoles.set(false);
-          this.roleError.set('Impossible de mettre a jour les roles.');
+          this.roleError.set('Impossible de mettre à jour les rôles.');
         },
       });
   }

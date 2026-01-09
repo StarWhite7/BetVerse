@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -117,9 +117,9 @@ export class Home implements OnInit {
 
     if (this.hasWalletAccess()) {
       actions.push({
-        title: 'Crediter ton wallet',
+        title: 'Créditer ton wallet',
         description: 'Ajoute des fonds avant ton prochain ticket.',
-        cta: 'Deposer',
+        cta: 'Déposer',
         link: '/wallet',
         accent: 'primary',
       });
@@ -136,7 +136,7 @@ export class Home implements OnInit {
     if (this.hasWalletAccess()) {
       actions.push({
         title: 'Mon historique',
-        description: 'Transactions et paris passes.',
+        description: 'Transactions et paris passés.',
         cta: 'Consulter',
         link: '/wallet/history',
         accent: 'ghost',
@@ -146,7 +146,7 @@ export class Home implements OnInit {
     if (this.hasAdminAccess()) {
       actions.push({
         title: 'Panel administrateur',
-        description: 'Resoudre matchs et paris.',
+        description: 'Résoudre matchs et paris.',
         cta: "Ouvrir l'admin",
         link: '/admin',
         accent: 'primary',
@@ -190,3 +190,6 @@ export class Home implements OnInit {
     return this.formatVerse(amount);
   }
 }
+
+
+

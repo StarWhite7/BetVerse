@@ -7,7 +7,7 @@
         <span>{{ transactions().length }} transactions recentes</span>
         <div class="wallet-card__actions">
           <button type="button" (click)="openModal('credit')" [disabled]="submitting()">
-            {{ submitting() && modalMode() === 'credit' ? 'En cours...' : 'Deposer' }}
+            {{ submitting() && modalMode() === 'credit' ? 'En cours...' : 'Déposer' }}
           </button>
           <button
             type="button"
@@ -24,19 +24,19 @@
             [disabled]="submitting()"
             *ngIf="canTransfer()"
           >
-            {{ submitting() && modalMode() === 'transfer' ? 'En cours...' : 'Transferer' }}
+            {{ submitting() && modalMode() === 'transfer' ? 'En cours...' : 'Transférer' }}
           </button>
         </div>
       </div>
 
       <div class="wallet-card secondary">
-        <p>Activite recente</p>
+        <p>Activité récente</p>
         <div class="wallet-card__stat positive">
-          <span>Credits</span>
+          <span>Crédits</span>
           <strong>+{{ stats().credits | number: '1.0-0' }} V</strong>
         </div>
         <div class="wallet-card__stat negative">
-          <span>Debits</span>
+          <span>Débits</span>
           <strong>-{{ stats().debits | number: '1.0-0' }} V</strong>
         </div>
         <ul class="wallet-card__list">
@@ -101,7 +101,7 @@
         <td>{{ tx.id }}</td>
         <td>
           <span class="badge" [class.credit]="tx.type === 'CREDIT'">
-            {{ tx.type === 'CREDIT' ? 'Credit' : 'Debit' }}
+            {{ tx.type === 'CREDIT' ? 'Crédit' : 'Débit' }}
           </span>
         </td>
         <td [class.credit]="tx.type === 'CREDIT'">
@@ -121,10 +121,10 @@
     <h3>
       {{
         modalMode() === 'credit'
-          ? 'Deposer des fonds'
+          ? 'Déposer des fonds'
           : modalMode() === 'debit'
             ? 'Retirer des fonds'
-            : 'Transferer des Verse'
+            : 'Transférer des Verse'
       }}
     </h3>
     <label *ngIf="modalMode() === 'transfer'">
@@ -181,10 +181,10 @@
           submitting()
             ? 'En cours...'
             : modalMode() === 'credit'
-              ? 'Deposer'
+              ? 'Déposer'
               : modalMode() === 'debit'
                 ? 'Retirer'
-                : 'Transferer'
+                : 'Transférer'
         }}
       </button>
     </div>

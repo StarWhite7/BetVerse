@@ -77,7 +77,7 @@
       </header>
       <form [formGroup]="matchForm" (ngSubmit)="submitMatch()">
         <label>
-          Equipe a domicile
+          Équipe à domicile
           <input type="text" formControlName="homeTeam" placeholder="Team A" />
         </label>
         <label>
@@ -103,7 +103,7 @@
           </label>
         </div>
         <button type="submit" [disabled]="submitting()">
-          {{ submitting() ? 'Enregistrement...' : (matchForm.value.id ? 'Mettre a jour' : 'Créer le match') }}
+          {{ submitting() ? 'Enregistrement...' : (matchForm.value.id ? 'Mettre à jour' : 'Créer le match') }}
         </button>
       </form>
     </section>
@@ -118,7 +118,7 @@
       {{ finishTarget()?.homeTeam }} vs {{ finishTarget()?.awayTeam }}
     </p>
     <label>
-      Resultat
+      Résultat
       <select [value]="finishResult()" (change)="updateFinishResult($event)">
         <option value="HOME">Victoire Home</option>
         <option value="DRAW">Match nul</option>

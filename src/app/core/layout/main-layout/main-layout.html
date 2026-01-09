@@ -300,7 +300,7 @@
         class="field-error"
         *ngIf="usernamePromptForm.get('username')?.touched && usernamePromptForm.get('username')?.invalid"
       >
-        3-24 caracteres (lettres, chiffres, . _ -)
+        3-24 caractères (lettres, chiffres, . _ -)
       </span>
       <button type="submit" [disabled]="usernamePromptSubmitting() || usernamePromptForm.invalid">
         {{ usernamePromptSubmitting() ? 'Enregistrement...' : 'Valider mon pseudo' }}

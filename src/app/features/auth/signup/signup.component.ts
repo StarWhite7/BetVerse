@@ -86,7 +86,7 @@ export class SignupComponent {
         },
         error: (err) => {
           this.loading.set(false);
-          const message = err?.error?.message ?? 'Impossible de creer le compte';
+          const message = err?.error?.message ?? 'Impossible de créer le compte';
           this.error.set(message);
           this.notifications.error(message);
         },

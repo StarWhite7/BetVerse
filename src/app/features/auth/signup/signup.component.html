@@ -15,7 +15,7 @@
       Pseudo
       <input type="text" formControlName="username" placeholder="neonverse" autocomplete="off" />
       <span class="field-error" *ngIf="form.get('username')?.touched && form.get('username')?.invalid">
-        Entre 3 et 24 caracteres (lettres, chiffres, . _ -)
+        Entre 3 et 24 caractères (lettres, chiffres, . _ -)
       </span>
     </label>
 
@@ -23,7 +23,7 @@
       Mot de passe
       <input type="password" formControlName="password" placeholder="********" />
       <span class="field-error" *ngIf="form.get('password')?.touched && (form.get('password')?.hasError('strongPassword') || form.get('password')?.hasError('required'))">
-        8 caracteres minimum avec majuscule, minuscule et chiffre
+        8 caractères minimum avec majuscule, minuscule et chiffre
       </span>
     </label>
 
@@ -52,7 +52,7 @@
   </p>
 
   <p class="form-footer">
-    Deja inscrit ?
+    Déjà inscrit ?
     <a routerLink="/auth/login">Se connecter</a>
   </p>
 </section>

@@ -132,7 +132,7 @@ export class MatchesComponent implements OnInit {
       },
       error: (err) => {
         this.submitting.set(false);
-        const message = err?.error?.message ?? 'Operation impossible.';
+        const message = err?.error?.message ?? 'Opération impossible.';
         this.notifications.error(message);
       },
     });

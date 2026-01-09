@@ -23,7 +23,7 @@
     <h1>Salle de coordination</h1>
     <p class="coordination__lead">
       Sélectionnez, suivez et coordonnez les missions de clan. Travaillez
-      ensemble pour atteindre les objectifs et obtenir des recompenses.
+      ensemble pour atteindre les objectifs et obtenir des récompenses.
     </p>
     <div class="coordination__divider" aria-hidden="true"></div>
   </header>
@@ -36,7 +36,7 @@
     </article>
 
     <article class="stat-card stat-card--done">
-      <span class="stat-card__label">Completes</span>
+      <span class="stat-card__label">Complétées</span>
       <span class="stat-card__value">{{ stats()?.completedCount ?? 0 }}</span>
       <span class="stat-card__trend">Saison actuelle</span>
     </article>
@@ -48,9 +48,9 @@
     </article>
 
     <article class="stat-card stat-card--streak">
-      <span class="stat-card__label">Serie active</span>
+      <span class="stat-card__label">Série active</span>
       <span class="stat-card__value">{{ stats()?.activeStreak ?? 0 }}</span>
-      <span class="stat-card__trend">Jours consecutifs</span>
+      <span class="stat-card__trend">Jours consécutifs</span>
     </article>
   </div>
 
@@ -76,7 +76,7 @@
           </span>
         </div>
         <div class="mission-card__reward">
-          <span>Recompense</span>
+          <span>Récompense</span>
           <strong>{{ rewardLabel(mission) }}</strong>
         </div>
       </div>
@@ -99,7 +99,7 @@
             {{ mission.dueAt | date: 'd MMM' }}
           </span>
           <button type="button" class="mission-card__button" [disabled]="mission.status === 'LOCKED'">
-            Voir details
+            Voir détails
           </button>
         </div>
       </div>

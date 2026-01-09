@@ -108,7 +108,7 @@ export class BetsComponent implements OnInit {
         },
         error: (err) => {
           this.resolveSubmitting.set(false);
-          const message = err?.error?.message ?? 'Impossible de resoudre le pari.';
+          const message = err?.error?.message ?? 'Impossible de résoudre le pari.';
           this.notifications.error(message);
         },
       });

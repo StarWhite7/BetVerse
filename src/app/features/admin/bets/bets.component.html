@@ -83,7 +83,7 @@
               (click)="openResolveModal(bet)"
               [disabled]="bet.status !== 'PENDING'"
             >
-              Resoudre
+              Résoudre
             </button>
             <button
               type="button"
@@ -114,12 +114,12 @@
 <div class="bets-modal" *ngIf="resolveModalOpen()">
   <div class="bets-modal__backdrop" (click)="closeResolveModal()"></div>
   <div class="bets-modal__content">
-    <h3>Resoudre un pari</h3>
+    <h3>Résoudre un pari</h3>
     <p>
       {{ resolveTarget()?.match }}
     </p>
     <label>
-      Resultat
+      Résultat
       <select [value]="resolveResult()" (change)="updateResolveResult($event)">
         <option value="WON">Gagne</option>
         <option value="LOST">Perdu</option>

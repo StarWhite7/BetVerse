@@ -530,8 +530,8 @@ export class MainLayout implements OnInit {
     if (!note) {
       return {
         matchLabel: fallbackMatch,
-        homeTeam: 'Equipe A',
-        awayTeam: 'Equipe B',
+        homeTeam: 'Équipe A',
+        awayTeam: 'Équipe B',
         betTypeLabel: 'Pari gagnant',
         amount: null,
         odds: null,
@@ -546,8 +546,8 @@ export class MainLayout implements OnInit {
       this.extractMatchFromMessage(note.message) ||
       fallbackMatch;
     const teams = this.parseTeams(matchLabel);
-    const homeTeam = this.displayTeamName(teams?.home ?? 'Equipe A');
-    const awayTeam = this.displayTeamName(teams?.away ?? 'Equipe B');
+    const homeTeam = this.displayTeamName(teams?.home ?? 'Équipe A');
+    const awayTeam = this.displayTeamName(teams?.away ?? 'Équipe B');
     const betTypeLabel = this.formatBetType(
       metadata.betType ?? fallbackBet?.betType,
       homeTeam,

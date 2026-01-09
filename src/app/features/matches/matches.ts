@@ -230,7 +230,7 @@ export class MatchesComponent implements OnInit {
           this.auth.fetchProfile().subscribe();
         },
         error: (err) => {
-          const message = err?.error?.message ?? 'Impossible de creer le pari.';
+          const message = err?.error?.message ?? 'Impossible de créer le pari.';
           this.betError.set(message);
           this.notifications.error(message);
           this.betting.set(false);

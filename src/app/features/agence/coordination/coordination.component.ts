@@ -82,7 +82,7 @@ export class AgenceCoordinationComponent implements OnInit {
   }
 
   progressLabel(mission: AgencyMission) {
-    return `${mission.progress}/${mission.target} completes`;
+    return `${mission.progress}/${mission.target} complétées`;
   }
 
   rewardLabel(mission: AgencyMission) {

@@ -362,7 +362,7 @@ export class MatchDeClanComponent implements OnInit {
   }
 
   matchResultLabel(match: MatchEntity): string {
-    return this.matchScoreLabel(match) ?? 'Resultat indisponible';
+    return this.matchScoreLabel(match) ?? 'Résultat indisponible';
   }
 
   private matchScoreLabel(match: MatchEntity): string | null {

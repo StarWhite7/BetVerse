@@ -186,7 +186,7 @@ export class WalletComponent implements OnInit {
         this.submitting.set(false);
       },
       error: (err) => {
-        const message = err?.error?.message ?? 'Operation impossible.';
+        const message = err?.error?.message ?? 'Opération impossible.';
         this.modalError.set(message);
         this.notifications.error(message);
         this.submitting.set(false);

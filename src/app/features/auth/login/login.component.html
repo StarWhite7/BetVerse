@@ -7,7 +7,7 @@
       Email ou pseudo
       <input type="text" formControlName="identifier" placeholder="john@betverse.gg ou neonverse" />
       <span class="field-error" *ngIf="form.get('identifier')?.touched && form.get('identifier')?.invalid">
-        Identifiant requis (3 caracteres min)
+        Identifiant requis (3 caractères min)
       </span>
     </label>
 
@@ -15,7 +15,7 @@
       Mot de passe
       <input type="password" formControlName="password" placeholder="********" />
       <span class="field-error" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">
-        6 caracteres minimum
+        6 caractères minimum
       </span>
     </label>
 

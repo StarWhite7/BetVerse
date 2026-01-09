@@ -101,7 +101,7 @@ export class ProfileComponent implements OnInit {
       },
       error: () => {
         this.usernameSubmitting.set(false);
-        this.notifications.error("Impossible de mettre a jour le nom d'utilisateur.");
+        this.notifications.error("Impossible de mettre à jour le nom d'utilisateur.");
       },
     });
   }
