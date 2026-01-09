@@ -8,7 +8,7 @@
       <a routerLink="/bets" routerLinkActive="active">
         <span>Mes paris</span>
       </a>
-      <a routerLink="/agence" routerLinkActive="active">
+      <a routerLink="/agence" routerLinkActive="active" *ngIf="hasAdminAccess()">
         <span>Mon agence</span>
       </a>
       <a routerLink="/leaderboard" routerLinkActive="active">
