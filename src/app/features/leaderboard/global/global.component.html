@@ -1,13 +1,12 @@
-<section class="leaderboard-page" [class.leaderboard-level]="selectedMetric() === 'LEVEL'">
+﻿<section class="leaderboard-page" [class.leaderboard-level]="selectedMetric() === 'LEVEL'">
   <header class="leaderboard-header">
     <div class="leaderboard-header__copy">
       <p class="eyebrow">Classement</p>
-      <h1>Les strateges qui dominent BetVerse</h1>
+      <h1>Classement</h1>
       <p class="subtitle">
-        Choisis une vue pour afficher le classement par Verse possedes, paris gagnes ou niveau general. Les donnees
-        évoluent en direct selon les performances de la communauté.
+        Choisis une vue pour afficher le classement par Verse possédés, paris gagnés ou niveau général. Les données évoluent en direct selon les performances de la communauté.
       </p>
-    </div>
+</div>
     <div class="metric-toggle">
       <button
         type="button"
@@ -25,7 +24,7 @@
     <div class="status-card" *ngIf="loading()">Chargement du classement...</div>
     <div class="status-card error" *ngIf="error() && !loading()">
       <span>{{ error() }}</span>
-      <button type="button" (click)="reload()">Reessayer</button>
+      <button type="button" (click)="reload()">Réessayer</button>
     </div>
   </section>
 
@@ -90,7 +89,7 @@
           <ng-container *ngIf="selectedMetric() === 'WINS'; else highlightDefault">
             <div class="highlight-value">
               <p>{{ player.winRate }}% winrate</p>
-              <span>{{ player.betsWon }} paris gagnes</span>
+              <span>{{ player.betsWon }} paris gagnés</span>
             </div>
             <div class="highlight-winrate">
               <div class="progress-bar">
@@ -107,7 +106,7 @@
           </div>
           <div class="highlight-meta">
             <span>{{ player.winRate }}% winrate</span>
-            <span>{{ player.currentStreak }} série en cours</span>
+            <span>{{ player.currentStreak }} sÃ©rie en cours</span>
           </div>
         </ng-template>
       </ng-template>
@@ -151,7 +150,7 @@
             <span>Wallet {{ player.verseWallet | number: '1.0-0' }} | En cours {{ player.versePending | number: '1.0-0' }} | Investis {{ player.verseInvested | number: '1.0-0' }}</span>
           </div>
           <div class="leaderboard-row__meta">
-            <span>{{ player.betsPlayed }} paris joues</span>
+            <span>{{ player.betsPlayed }} paris joués</span>
           </div>
           <div class="leaderboard-row__progress">
             <div class="progress-bar progress-bar--stack">
@@ -179,11 +178,11 @@
           <ng-container *ngIf="selectedMetric() === 'WINS'; else rowDefault">
             <div class="leaderboard-row__stat">
               <p>{{ player.winRate }}% winrate</p>
-              <span>{{ player.betsWon }} paris gagnes</span>
+              <span>{{ player.betsWon }} paris gagnés</span>
             </div>
             <div class="leaderboard-row__meta">
-              <span>{{ player.betsPlayed }} paris joues</span>
-              <span>{{ player.currentStreak }} série en cours</span>
+              <span>{{ player.betsPlayed }} paris joués</span>
+              <span>{{ player.currentStreak }} sÃ©rie en cours</span>
             </div>
             <div class="leaderboard-row__progress">
               <div class="progress-bar">
@@ -200,7 +199,7 @@
           </div>
           <div class="leaderboard-row__meta">
             <span>{{ player.winRate }}% winrate</span>
-            <span>{{ player.betsPlayed }} paris joues</span>
+            <span>{{ player.betsPlayed }} paris joués</span>
           </div>
           <div class="leaderboard-row__progress">
             <div class="progress-bar">
@@ -218,3 +217,6 @@
     </p>
   </section>
 </section>
+
+
+
