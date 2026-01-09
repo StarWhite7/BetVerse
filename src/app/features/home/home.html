@@ -1,9 +1,8 @@
 ﻿<section class="home-hero">
   <div>
-    <p class="home-hero__eyebrow">Neon Sportsbook</p>
-    <h1>Construis ton edge avec BetVerse</h1>
+    <h1>Tableau de bord de {{ user()?.username ?? user()?.email }}</h1>
     <p class="home-hero__subtitle">
-      Wallet connecté, paris sécurisés, résolution instantanée. Tout est prêt pour ton prochain move.
+      Depuis cette page, tu peux suivre tes paris, voir tes gains et accéder rapidement aux matchs.
     </p>
     <div class="home-hero__actions">
       <a routerLink="/matches">Créer un pari</a>
@@ -136,6 +135,7 @@
     </ul>
   </article>
 </section>
+
 
 
 
