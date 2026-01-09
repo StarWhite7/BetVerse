@@ -56,7 +56,7 @@
               <span>Mise {{ formatCurrency(bet.amount) }}</span>
             </div>
             <div class="bet-meta">
-              <span>Cote {{ bet.odds }}</span>
+              <span>Cote {{ bet.odds | number: '1.2-2' }}</span>
               <span>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
             </div>
           </li>
@@ -102,9 +102,9 @@
           <span>{{ match.start }}</span>
         </div>
         <div class="match-meta">
-          <span>Home {{ match.oddsHome }}</span>
-          <span *ngIf="match.oddsDraw">Draw {{ match.oddsDraw }}</span>
-          <span>Away {{ match.oddsAway }}</span>
+          <span>Home {{ match.oddsHome | number: '1.2-2' }}</span>
+          <span *ngIf="match.oddsDraw">Draw {{ match.oddsDraw | number: '1.2-2' }}</span>
+          <span>Away {{ match.oddsAway | number: '1.2-2' }}</span>
         </div>
       </li>
       <li *ngIf="!featuredMatches().length">

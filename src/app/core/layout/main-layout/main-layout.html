@@ -233,7 +233,9 @@
         </div>
         <div class="bet-win-ticket__item">
           <span>Cote</span>
-          <strong>{{ betWinMeta().odds ?? '--' }}</strong>
+          <strong>
+            {{ betWinMeta().odds == null ? '--' : (betWinMeta().odds | number: '1.2-2') }}
+          </strong>
         </div>
         <div class="bet-win-ticket__item bet-win-ticket__gain">
           <span>Gain</span>
