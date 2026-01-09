@@ -155,7 +155,7 @@
         <small>{{ tx.type }}</small>
       </div>
       <strong [class.credit]="tx.type === 'CREDIT'">
-        {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} â–“''Ð†Ñ–
+        {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} Verse
       </strong>
     </li>
     <li *ngIf="!transactionsPreview().length && !historyLoading()">
