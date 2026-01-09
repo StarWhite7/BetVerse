@@ -14,10 +14,11 @@ type MetricField = 'verseEarned' | 'betsWon' | 'level' | 'versePossessedTotal';
 export class LeaderboardApiService {
   private readonly baseUrl = `${environment.apiUrl}/leaderboard`;
   private readonly metricField: Record<LeaderboardMetric, MetricField> = {
-   VERSE: 'versePossessedTotal',
+    VERSE: 'versePossessedTotal',
     WINS: 'betsWon',
     LEVEL: 'level',
   };
+  private readonly excludedUsernames = new Set(['pierretest', 'test']);
 
   constructor(private readonly http: HttpClient) {}
 
@@ -31,11 +32,18 @@ export class LeaderboardApiService {
 
   private sortAndRank(players: LeaderboardPlayer[], metric: LeaderboardMetric): LeaderboardEntry[] {
     const field = this.metricField[metric];
-    return [...players]
+    return players
+      .filter((player) => !this.isExcluded(player))
+      .slice()
       .sort((a, b) => Number(b[field]) - Number(a[field]))
       .map<LeaderboardEntry>((player, index) => ({
         ...player,
         rank: index + 1,
       }));
+  }
+
+  private isExcluded(player: LeaderboardPlayer) {
+    const username = player.username?.trim().toLowerCase();
+    return username ? this.excludedUsernames.has(username) : false;
   }
 }

@@ -47,6 +47,7 @@ export class AgenceBureauComponent implements OnInit {
     { key: 'MEMBRE', label: 'Membre', layoutClass: 'role-card--membre' },
     { key: 'STAGIAIRE', label: 'Stagiaire', layoutClass: 'role-card--stagiaire' },
   ];
+  private readonly excludedUsernames = new Set(['pierretest', 'test']);
 
   ngOnInit() {
     this.loadRoster();
@@ -244,7 +245,10 @@ export class AgenceBureauComponent implements OnInit {
 
   membersByPrediction(): AgencyMember[] {
     const members = this.roster()?.members ?? [];
-    return [...members].sort((a, b) => {
+    return members
+      .filter((member) => !this.isExcludedMember(member))
+      .slice()
+      .sort((a, b) => {
       const diff = (b.predictionScore ?? 0) - (a.predictionScore ?? 0);
       if (diff !== 0) {
         return diff;
@@ -409,6 +413,11 @@ export class AgenceBureauComponent implements OnInit {
 
   private pendingKey(username: string | null) {
     return username?.trim().toLowerCase() ?? '';
+  }
+
+  private isExcludedMember(member: AgencyMember) {
+    const username = member.username?.trim().toLowerCase();
+    return username ? this.excludedUsernames.has(username) : false;
   }
 
   private assignRole(memberId: string, role: RoleKey) {
