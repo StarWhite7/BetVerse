@@ -1,0 +1,204 @@
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-dashboard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-dashboard__header p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.admin-dashboard__header h1 {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+  color: #f8fafc;
+}
+
+.admin-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.admin-dashboard__card {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.admin-dashboard__card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-dashboard__card header p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.7rem;
+  color: rgba(248, 250, 252, 0.6);
+}
+
+.admin-dashboard__card header h2 {
+  margin: 0.3rem 0 0;
+  font-size: 1.4rem;
+  color: #f8fafc;
+}
+
+.admin-dashboard__card button {
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: #e2e8f0;
+}
+
+.admin-dashboard__card button.danger {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(239, 68, 68, 0.2);
+  color: #fee2e2;
+}
+
+.admin-dashboard__card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-dashboard__hint {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.admin-dashboard__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #e2e8f0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-reset-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 1.5rem;
+}
+
+.admin-reset-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.3), rgba(2, 6, 23, 0.85));
+  backdrop-filter: blur(6px);
+}
+
+.admin-reset-modal__content {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 100%);
+  border-radius: 1.25rem;
+  padding: 1.6rem;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
+  color: #e2e8f0;
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-reset-modal__content header p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: rgba(248, 250, 252, 0.6);
+}
+
+.admin-reset-modal__content header h3 {
+  margin: 0.35rem 0 0;
+  font-size: 1.4rem;
+  color: #f8fafc;
+}
+
+.admin-reset-modal__content p {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.admin-reset-modal__list {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem;
+  border-radius: 0.9rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.admin-reset-modal__list span {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(248, 250, 252, 0.6);
+}
+
+.admin-reset-modal__list ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-reset-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-reset-modal__actions button {
+  padding: 0.65rem 1.4rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: transparent;
+  color: #e2e8f0;
+}
+
+.admin-reset-modal__actions button.ghost {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.admin-reset-modal__actions button.danger {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(239, 68, 68, 0.2);
+  color: #fee2e2;
+}
+
+.admin-reset-modal__actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -59,6 +59,12 @@ export interface AdminUserSummary {
   createdAt: string;
 }
 
+export interface ResetEconomyResult {
+  betsDeleted: number;
+  walletsUpdated: number;
+  usersUpdated: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsersApiService {
   private readonly baseUrl = `${environment.apiUrl}/users`;
@@ -97,5 +103,9 @@ export class UsersApiService {
 
   resetXp() {
     return this.http.patch<User>(`${this.baseUrl}/me/xp/reset`, {});
+  }
+
+  resetEconomy() {
+    return this.http.post<ResetEconomyResult>(`${this.baseUrl}/reset-economy`, {});
   }
 }
