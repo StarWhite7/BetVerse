@@ -256,6 +256,7 @@ export class MainLayout implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (wallet) => {
+          this.wallet.set(wallet);
           const hasServerData = this.syncClaimWindowFromWallet(wallet);
           if (!hasServerData) {
             this.scheduleNextClaim();

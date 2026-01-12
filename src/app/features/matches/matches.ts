@@ -120,6 +120,12 @@ export class MatchesComponent implements OnInit {
   ngOnInit() {
     this.loadMatches();
     this.loadWalletBalance();
+    this.walletApi
+      .walletChanges()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((wallet) => {
+        this.walletBalance.set(wallet?.balance ?? null);
+      });
     interval(30_000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
