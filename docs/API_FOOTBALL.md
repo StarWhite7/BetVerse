@@ -26,6 +26,8 @@ Un premier match avec liste de bookmakers vide nécessite donc jusqu’à **troi
 
 ## Protection du quota et des données
 
+Pour la recette sans fournisseur, `node scripts/import-beta-matches.mjs PSEUDO_ADMIN HORAIRE_ISO_AVEC_FUSEAU` importe explicitement les sept rencontres et cotes de la capture utilisateur du 4 novembre, en excluant les deux premières rencontres en direct. L’horaire doit être futur, avec fuseau explicite, et choisi par l’utilisateur ; la compétition est marquée « Recette ». La commande exige un administrateur existant, journalise les créations et refuse d’écraser une rencontre modifiée. Une relance identique ne crée pas de doublons. Sur Render, l’exécuter dans le Shell du service déployé, qui dispose du disque persistant. Elle n’est appelée par aucun build, démarrage ou migration et ne contacte aucun fournisseur.
+
 - Cache persistant d’une heure par endpoint et paramètres : une action identique dans cette période ne consomme pas de quota. Une clé d’idempotence déjà traitée ne relance pas l’appel, même après redémarrage.
 - Les copies du cache partagent une seule réponse stockée. Les réponses brutes de plus de 24 heures sont purgées lors d’une action manuelle ; le journal des tentatives reste conservé. Une ancienne clé dont la réponse a expiré est refusée sans nouvel appel.
 - Réservation en SQLite avant le réseau : double clic et appels concurrents bloqués. Une minute minimum entre deux appels distincts non servis du cache.
