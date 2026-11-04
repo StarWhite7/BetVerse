@@ -2,7 +2,7 @@
 
 ## Ajout du 4 novembre : API Football manuelle
 
-Validation de l’import manuel : 40 tests backend et 21 tests frontend réussis, compilation de production réussie. Deux avertissements CSS d’agence déjà présents restent non bloquants. Les tests fournisseur utilisent exclusivement des réponses simulées : aucun quota réel consommé, aucune clé réelle requise. Le fonctionnement avec l’abonnement réel reste à vérifier après configuration sur Render.
+Validation de l’import manuel : 41 tests backend et 21 tests frontend réussis, compilation de production réussie. Deux avertissements CSS d’agence déjà présents restent non bloquants. Les tests fournisseur utilisent exclusivement des réponses simulées : aucun quota réel consommé, aucune clé réelle requise. Le fonctionnement avec l’abonnement réel reste à vérifier après configuration sur Render.
 
 Les vérifications couvrent le mode désactivé par défaut même avec une clé, le refus des modes automatiques, l’absence d’appel au démarrage/health check/consultation des pages, les droits administrateur et le CSRF, une requête maximum par action sans pagination ni retry, le cache et le budget après réouverture SQLite, les doubles clics, les erreurs fournisseur, l’expiration des réponses sans rejeu et la protection des paris existants.
 

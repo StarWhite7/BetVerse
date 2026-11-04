@@ -30,6 +30,7 @@ Un premier match avec liste de bookmakers vide nécessite donc jusqu’à **troi
 - Les copies du cache partagent une seule réponse stockée. Les réponses brutes de plus de 24 heures sont purgées lors d’une action manuelle ; le journal des tentatives reste conservé. Une ancienne clé dont la réponse a expiré est refusée sans nouvel appel.
 - Réservation en SQLite avant le réseau : double clic et appels concurrents bloqués. Une minute minimum entre deux appels distincts non servis du cache.
 - Les échecs et délais dépassés sont comptés par précaution dans le plafond local, sans relance. Le quota fournisseur restant est celui de l’en-tête du dernier appel, sans requête `/status` supplémentaire.
+- Le dernier échec conserve un diagnostic classifié (accès/abonnement, saison, authentification, limite ou paramètres) lisible après rechargement sans appel externe. Le texte brut du fournisseur et les clés ne sont pas exposés. Les échecs antérieurs à cet ajout ne peuvent pas être reconstitués à partir du seul message générique.
 - Les tests utilisent des réponses simulées, aucune clé réelle et aucun accès fournisseur. Les migrations ne contiennent aucun code réseau.
 - Les paris existants conservent leurs cotes acceptées. Les équipes et le coup d’envoi d’un match avec des mises sont verrouillés. Les changements de calendrier nécessitant une annulation/remboursement doivent être traités dans l’administration.
 - Les résultats restent à saisir et à valider manuellement pendant cette bêta. Sans mise à jour volontaire, le calendrier et les cotes peuvent être anciens.

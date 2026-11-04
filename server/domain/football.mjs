@@ -6,6 +6,23 @@ const CACHE_MS = 60 * 60 * 1000;
 const COOLDOWN_MS = 60 * 1000;
 const MAX_BYTES = 4 * 1024 * 1024;
 
+function providerError(errors) {
+  // Classify in memory; never expose provider text, which may echo credentials.
+  const details = JSON.stringify(errors ?? {}).toLowerCase();
+  let reason = 'Réponse refusée par le fournisseur ; motif non reconnu.';
+  if (/season/.test(details) && /plan|subscription|access|available/.test(details))
+    reason = 'La saison demandée n’est pas accessible avec cet abonnement.';
+  else if (/plan|subscription|permission|access to|not allowed/.test(details))
+    reason = 'Le fournisseur refuse l’accès à cet endpoint avec cet abonnement.';
+  else if (/quota|limit|too many|requests per/.test(details))
+    reason = 'Le fournisseur signale une limite de requêtes atteinte.';
+  else if (/token|api.?key|authentication/.test(details))
+    reason = 'Le fournisseur refuse l’authentification de la clé API.';
+  else if (/parameter|field|invalid|required/.test(details))
+    reason = 'Le fournisseur refuse les paramètres de cette requête.';
+  return `API Football : ${reason} Aucun nouvel essai automatique.`;
+}
+
 // Constructing this service never calls the provider. Only admin POST actions do.
 export function manualFootball({ db, config }) {
   const fetchProvider = config.footballFetch || globalThis.fetch;
@@ -29,6 +46,7 @@ export function manualFootball({ db, config }) {
       providerRemaining: latest?.remaining ?? null,
       lastCallAt: latest ? new Date(latest.createdAt).toISOString() : null,
       nextSyncAt: null,
+      lastError: latest?.errorMessage ?? null,
     };
   };
 
@@ -39,7 +57,7 @@ export function manualFootball({ db, config }) {
       'Import désactivé. Configurer API_FOOTBALL_MODE=manual et API_FOOTBALL_KEY sur le serveur.',
     );
     const query = new URLSearchParams(params).toString();
-    const cacheKey = `${path}?${query}`;
+    const cacheKey = query ? `${path}?${query}` : path;
     const timestamp = Date.now();
     // Keep request receipts, but bound storage even when the next action is refused.
     db.prepare(
@@ -134,6 +152,8 @@ export function manualFootball({ db, config }) {
         await reader.cancel().catch(() => {});
       }
       const data = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      if (data?.errors != null && Object.keys(data.errors).length > 0)
+        throw new AppError(502, providerError(data.errors));
       // Provider error bodies may contain account details: never echo or log them.
       ensure(
         data &&
@@ -150,15 +170,17 @@ export function manualFootball({ db, config }) {
       );
       return { data, cached: false };
     } catch (error) {
-      db.prepare("UPDATE football_calls SET state='FAILED',remaining=? WHERE id=?").run(
-        remaining,
-        requestId,
-      );
-      if (error instanceof AppError) throw error;
-      throw new AppError(
-        502,
-        'Appel API Football interrompu ou réponse invalide. Il est compté par précaution ; aucune relance automatique.',
-      );
+      const failure =
+        error instanceof AppError
+          ? error
+          : new AppError(
+              502,
+              'Appel API Football interrompu ou réponse invalide. Il est compté par précaution ; aucune relance automatique.',
+            );
+      db.prepare(
+        "UPDATE football_calls SET state='FAILED',remaining=?,errorMessage=? WHERE id=?",
+      ).run(remaining, failure.message, requestId);
+      throw failure;
     }
   }
 

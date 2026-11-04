@@ -12,6 +12,7 @@ interface FootballUsage {
   remaining: number;
   providerRemaining: number | null;
   lastCallAt: string | null;
+  lastError?: string | null;
 }
 interface FootballFixture {
   externalId: number;
@@ -55,6 +56,9 @@ interface FootballState {
             Import désactivé. La configuration se fait uniquement dans les variables du serveur
             Render.
           </p>
+        }
+        @if (quota.lastError) {
+          <p role="alert">Dernier échec enregistré : {{ quota.lastError }}</p>
         }
       }
       <p role="status">{{ message() }}</p>

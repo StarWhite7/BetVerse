@@ -109,6 +109,7 @@ test('calendar, bookmaker list and 1X2 imports each make exactly one request, wi
   f.advance();
   await f.service.loadBookmakers(randomUUID(), f.actor);
   assert.equal(f.requests.length, 2);
+  assert.equal(f.requests[1].url.href, 'https://v3.football.api-sports.io/odds/bookmakers');
   f.advance();
   const result = await f.service.importOdds(
     { fixtureId: 1234, bookmakerId: 55 },
@@ -246,6 +247,25 @@ test('HTTP 200 provider errors are sanitized and never trigger a fallback reques
   );
   assert.equal(f.requests.length, 1);
   assert.equal(f.service.usage().used, 1);
+});
+
+test('bookmaker access failures have a persistent safe diagnostic, without another provider call', async (t) => {
+  const f = setup(t, {
+    fetcher: async () =>
+      Response.json({
+        errors: { access: 'Free plans do not have access to this endpoint. fake-private-value' },
+        response: [],
+      }),
+  });
+  await assert.rejects(
+    f.service.loadBookmakers(randomUUID(), f.actor),
+    /refuse l’accès à cet endpoint/,
+  );
+  const restarted = manualFootball({ db: f.db, config: f.config });
+  assert.match(restarted.usage().lastError, /abonnement/);
+  assert.equal(restarted.usage().lastError.includes('fake-private-value'), false);
+  assert.equal(restarted.bookmakers().length, 0);
+  assert.equal(f.requests.length, 1);
 });
 
 test('missing 1X2 prices do not publish a match or request another bookmaker', async (t) => {
