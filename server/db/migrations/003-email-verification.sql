@@ -1,0 +1,5 @@
+ALTER TABLE users ADD COLUMN emailVerified INTEGER NOT NULL DEFAULT 1 CHECK(emailVerified IN (0,1));
+CREATE TABLE email_verifications (
+ tokenHash TEXT PRIMARY KEY, userId TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+ expiresAt INTEGER NOT NULL
+);

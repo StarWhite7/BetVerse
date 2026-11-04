@@ -25,7 +25,7 @@ export interface PublicBet {
   betType: string;
   amount: number;
   odds: number;
-  status: 'PENDING' | 'WON' | 'LOST';
+  status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
   createdAt: string;
   matchId?: string | null;
 }
@@ -59,17 +59,17 @@ export interface AdminUserSummary {
   createdAt: string;
 }
 
-export interface ResetEconomyResult {
-  betsDeleted: number;
-  walletsUpdated: number;
-  usersUpdated: number;
-}
-
 @Injectable({ providedIn: 'root' })
 export class UsersApiService {
   private readonly baseUrl = `${environment.apiUrl}/users`;
 
   constructor(private readonly http: HttpClient) {}
+
+  getMyStats() {
+    return this.http.get<PublicProfile['stats'] & { verseEarned: number }>(
+      `${this.baseUrl}/me/stats`,
+    );
+  }
 
   updateProfile(payload: UpdateProfilePayload): Observable<User> {
     return this.http.patch<User>(`${this.baseUrl}/me`, payload);
@@ -91,21 +91,5 @@ export class UsersApiService {
   getAdminUsers(query?: string) {
     const params = query ? new HttpParams().set('q', query) : undefined;
     return this.http.get<AdminUserSummary[]>(this.baseUrl, { params });
-  }
-
-  addXp() {
-    return this.http.patch<User>(`${this.baseUrl}/me/xp/add`, {});
-  }
-
-  removeXp() {
-    return this.http.patch<User>(`${this.baseUrl}/me/xp/remove`, {});
-  }
-
-  resetXp() {
-    return this.http.patch<User>(`${this.baseUrl}/me/xp/reset`, {});
-  }
-
-  resetEconomy() {
-    return this.http.post<ResetEconomyResult>(`${this.baseUrl}/reset-economy`, {});
   }
 }

@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, effect, signal } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { ReplaySubject, tap } from 'rxjs';
 import { environment } from '../../core/config/environment';
+import { AuthService } from '../../core/services/auth.service';
 
 export interface WalletEntity {
   id: string;
@@ -18,24 +19,41 @@ export interface WalletTransaction {
   amount: number;
   type: 'CREDIT' | 'DEBIT';
   createdAt: string;
+  reason?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class WalletApiService {
+  readonly wallet = signal<WalletEntity | null>(null);
   private readonly baseUrl = `${environment.apiUrl}/wallet`;
   private readonly walletSubject = new ReplaySubject<WalletEntity | null>(1);
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly auth: AuthService,
+  ) {
+    let version = this.auth.sessionVersion();
+    effect(() => {
+      const current = this.auth.sessionVersion();
+      if (version !== current) {
+        version = current;
+        this.clearCachedWallet();
+      }
+    });
+  }
 
   walletChanges() {
     return this.walletSubject.asObservable();
   }
 
   clearCachedWallet() {
+    this.wallet.set(null);
     this.walletSubject.next(null);
   }
 
   private pushWallet(wallet: WalletEntity) {
+    if (wallet.userId !== this.auth.currentUser()?.id) return;
+    this.wallet.set(wallet);
     this.walletSubject.next(wallet);
   }
 
@@ -47,8 +65,10 @@ export class WalletApiService {
     );
   }
 
-  getHistory() {
-    return this.http.get<WalletTransaction[]>(`${this.baseUrl}/history`);
+  getHistory(skip = 0, limit = 25) {
+    return this.http.get<WalletTransaction[]>(`${this.baseUrl}/history`, {
+      params: new HttpParams().set('skip', skip).set('limit', limit),
+    });
   }
 
   claimDailyReward() {
@@ -59,25 +79,41 @@ export class WalletApiService {
     );
   }
 
-  credit(amount: number) {
-    return this.http.post<WalletEntity>(`${this.baseUrl}/credit`, { amount }).pipe(
-      tap((wallet) => {
-        this.pushWallet(wallet);
-      }),
-    );
-  }
-
-  debit(amount: number) {
-    return this.http.post<WalletEntity>(`${this.baseUrl}/debit`, { amount }).pipe(
-      tap((wallet) => {
-        this.pushWallet(wallet);
-      }),
-    );
-  }
-
-  transfer(username: string, amount: number) {
+  credit(amount: number, requestKey = crypto.randomUUID()) {
     return this.http
-      .post<WalletEntity>(`${this.baseUrl}/transfer`, { username, amount })
+      .post<WalletEntity>(
+        `${this.baseUrl}/credit`,
+        { amount },
+        { headers: { 'Idempotency-Key': requestKey } },
+      )
+      .pipe(
+        tap((wallet) => {
+          this.pushWallet(wallet);
+        }),
+      );
+  }
+
+  debit(amount: number, requestKey = crypto.randomUUID()) {
+    return this.http
+      .post<WalletEntity>(
+        `${this.baseUrl}/debit`,
+        { amount },
+        { headers: { 'Idempotency-Key': requestKey } },
+      )
+      .pipe(
+        tap((wallet) => {
+          this.pushWallet(wallet);
+        }),
+      );
+  }
+
+  transfer(username: string, amount: number, requestKey = crypto.randomUUID()) {
+    return this.http
+      .post<WalletEntity>(
+        `${this.baseUrl}/transfer`,
+        { username, amount },
+        { headers: { 'Idempotency-Key': requestKey } },
+      )
       .pipe(
         tap((wallet) => {
           this.pushWallet(wallet);

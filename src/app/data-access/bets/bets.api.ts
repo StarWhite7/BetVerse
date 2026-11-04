@@ -8,7 +8,7 @@ export interface BetEntity {
   betType: string;
   amount: number;
   odds: number;
-  status: 'PENDING' | 'WON' | 'LOST';
+  status: 'PENDING' | 'WON' | 'LOST' | 'VOID';
   createdAt: string;
   matchId?: string | null;
 }
@@ -19,23 +19,14 @@ export interface CreateBetPayload {
   betType: string;
   amount: number;
   odds: number;
+  requestKey: string;
 }
 
 export interface BetsQuery {
-  status?: 'PENDING' | 'WON' | 'LOST';
+  status?: 'PENDING' | 'WON' | 'LOST' | 'VOID';
   order?: 'asc' | 'desc';
   limit?: number;
   skip?: number;
-}
-
-export interface ResolveBetPayload {
-  betId: string;
-  result: 'WON' | 'LOST';
-}
-
-export interface ResolveBetResponse {
-  bet: BetEntity;
-  payout: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -45,7 +36,24 @@ export class BetsApiService {
   constructor(private readonly http: HttpClient) {}
 
   createBet(payload: CreateBetPayload) {
-    return this.http.post<BetEntity>(this.baseUrl, payload);
+    const { requestKey, ...body } = payload;
+    return this.http.post<BetEntity>(this.baseUrl, body, {
+      headers: { 'Idempotency-Key': requestKey },
+    });
+  }
+
+  getAdminBets(query: BetsQuery = {}) {
+    let params = new HttpParams();
+    for (const [key, value] of Object.entries(query))
+      if (value !== undefined) params = params.set(key, value);
+    return this.http.get<BetEntity[]>(`${this.baseUrl}/admin-bets`, { params });
+  }
+
+  getMyBetsPage(query: BetsQuery = {}) {
+    let params = new HttpParams();
+    for (const [key, value] of Object.entries(query))
+      if (value !== undefined) params = params.set(key, value);
+    return this.http.get<BetEntity[]>(`${this.baseUrl}/my-bets`, { params, observe: 'response' });
   }
 
   getMyBets(query: BetsQuery = {}) {
@@ -56,9 +64,5 @@ export class BetsApiService {
     if (query.skip !== undefined) params = params.set('skip', query.skip);
 
     return this.http.get<BetEntity[]>(`${this.baseUrl}/my-bets`, { params });
-  }
-
-  resolveBet(payload: ResolveBetPayload) {
-    return this.http.post<ResolveBetResponse>(`${this.baseUrl}/resolve`, payload);
   }
 }

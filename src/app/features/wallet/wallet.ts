@@ -25,6 +25,7 @@ export class WalletComponent implements OnInit {
   private readonly usersApi = inject(UsersApiService);
   private usernameSearchTimeout: ReturnType<typeof setTimeout> | null = null;
   private lastUsernameQuery = '';
+  private operationRequestKey = crypto.randomUUID();
 
   wallet = signal<WalletEntity | null>(null);
   transactions = signal<WalletTransaction[]>([]);
@@ -69,6 +70,7 @@ export class WalletComponent implements OnInit {
     return this.modalAmount();
   }
   set modalAmountValue(value: number) {
+    if (value !== this.modalAmount()) this.operationRequestKey = crypto.randomUUID();
     this.modalAmount.set(value);
   }
   get transferUsernameValue() {
@@ -120,6 +122,7 @@ export class WalletComponent implements OnInit {
   }
 
   openModal(mode: 'credit' | 'debit' | 'transfer') {
+    this.operationRequestKey = crypto.randomUUID();
     this.modalMode.set(mode);
     this.modalAmount.set(50);
     this.resetTransferAutocomplete();
@@ -136,8 +139,9 @@ export class WalletComponent implements OnInit {
   }
 
   submitOperation() {
+    if (this.submitting()) return;
     const amount = this.modalAmount();
-    if (amount <= 0) {
+    if (!Number.isSafeInteger(amount) || amount < 1 || amount > 1_000_000) {
       this.modalError.set('Montant invalide');
       return;
     }
@@ -152,7 +156,7 @@ export class WalletComponent implements OnInit {
     if (this.modalMode() === 'transfer') {
       const username = this.transferUsername().trim();
       if (!username) {
-        this.modalError.set("Pseudo destinataire requis.");
+        this.modalError.set('Pseudo destinataire requis.');
         return;
       }
     }
@@ -162,11 +166,15 @@ export class WalletComponent implements OnInit {
 
     let request;
     if (this.modalMode() === 'credit') {
-      request = this.walletApi.credit(amount);
+      request = this.walletApi.credit(amount, this.operationRequestKey);
     } else if (this.modalMode() === 'debit') {
-      request = this.walletApi.debit(amount);
+      request = this.walletApi.debit(amount, this.operationRequestKey);
     } else {
-      request = this.walletApi.transfer(this.transferUsername().trim(), amount);
+      request = this.walletApi.transfer(
+        this.transferUsername().trim(),
+        amount,
+        this.operationRequestKey,
+      );
     }
 
     request.subscribe({
@@ -199,6 +207,7 @@ export class WalletComponent implements OnInit {
   }
 
   handleUsernameInput(value: string) {
+    if (value !== this.transferUsername()) this.operationRequestKey = crypto.randomUUID();
     this.transferUsername.set(value);
     const trimmed = value.trim();
     if (!trimmed) {

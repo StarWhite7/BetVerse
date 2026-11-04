@@ -26,11 +26,7 @@ export class UsersComponent implements OnInit {
       const username = user.username?.toLowerCase() ?? '';
       const email = user.email.toLowerCase();
       const id = user.id.toLowerCase();
-      return (
-        username.includes(term) ||
-        email.includes(term) ||
-        id.includes(term)
-      );
+      return username.includes(term) || email.includes(term) || id.includes(term);
     });
   });
 
@@ -41,7 +37,7 @@ export class UsersComponent implements OnInit {
   loadUsers() {
     this.loading.set(true);
     this.error.set(null);
-    this.usersApi.getAdminUsers().subscribe({
+    this.usersApi.getAdminUsers(this.searchTerm().trim()).subscribe({
       next: (users) => {
         this.users.set(users);
         this.loading.set(false);

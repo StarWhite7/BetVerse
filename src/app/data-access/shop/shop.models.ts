@@ -1,2 +1,0 @@
-// Models for shop
-export {};

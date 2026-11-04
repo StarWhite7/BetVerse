@@ -5,13 +5,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WalletApiService, WalletEntity } from '../../data-access/wallet/wallet.api';
 import { AuthService } from '../../core/services/auth.service';
 import { AgenceApiService, AgencyEntity } from '../../data-access/agence/agence.api';
+import { DialogDirective } from '../../shared/directives/dialog.directive';
+import { NotificationService } from '../../core/services/notification.service';
 
 const AGENCY_CREATE_COST = 100;
 
 @Component({
   selector: 'app-agence',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, DialogDirective],
   templateUrl: './agence.html',
   styleUrl: './agence.css',
 })
@@ -20,6 +22,7 @@ export class AgenceComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly agenceApi = inject(AgenceApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly notices = inject(NotificationService);
 
   wallet = signal<WalletEntity | null>(null);
   creating = signal(false);
@@ -71,6 +74,7 @@ export class AgenceComponent implements OnInit {
   }
 
   closeCreateModal() {
+    if (this.creating()) return;
     this.modalOpen.set(false);
   }
 
@@ -117,8 +121,9 @@ export class AgenceComponent implements OnInit {
           this.creating.set(false);
           this.modalOpen.set(false);
         },
-        error: () => {
+        error: (error) => {
           this.creating.set(false);
+          this.notices.error(error?.error?.message ?? 'Impossible de créer l’agence.');
         },
       });
   }
@@ -128,8 +133,7 @@ export class AgenceComponent implements OnInit {
   }
 
   canCreate() {
-    const isAdmin = this.auth.currentUser()?.role === 'ADMIN';
-    return (isAdmin || (this.wallet()?.shards ?? 0) >= AGENCY_CREATE_COST) && !this.hasAgency();
+    return (this.wallet()?.shards ?? 0) >= AGENCY_CREATE_COST && !this.hasAgency();
   }
 
   shardBalance() {

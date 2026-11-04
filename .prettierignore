@@ -1,0 +1,11 @@
+node_modules
+server/node_modules
+server/.data
+dist
+.angular
+package-lock.json
+server/package-lock.json
+public
+src/assets
+.git
+coverage

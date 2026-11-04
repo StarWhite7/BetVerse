@@ -1,0 +1,14 @@
+{
+  "appId": "fr.betverse.app.beta",
+  "appName": "BetVerse Bêta",
+  "webDir": "dist/BetVerse/browser",
+  "loggingBehavior": "debug",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

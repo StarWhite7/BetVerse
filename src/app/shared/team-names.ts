@@ -107,7 +107,7 @@ const BUNDESLIGA_OFFICIAL_NAMES: Record<string, string> = {
   augsburg: 'FC Augsburg',
   unionberlin: 'FC Union Berlin',
   hoffenheim: 'TSG Hoffenheim',
-  
+
   //'1fcheidenheim': 'FC Heidenheim 1846',
   //'1fckoln': 'FC Koln'
 };

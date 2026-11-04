@@ -3,7 +3,11 @@ import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin } from 'rxjs';
-import { AgenceApiService, AgencyMember, AgencyRoster } from '../../../data-access/agence/agence.api';
+import {
+  AgenceApiService,
+  AgencyMember,
+  AgencyRoster,
+} from '../../../data-access/agence/agence.api';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -47,7 +51,7 @@ export class AgenceBureauComponent implements OnInit {
     { key: 'MEMBRE', label: 'Membre', layoutClass: 'role-card--membre' },
     { key: 'STAGIAIRE', label: 'Stagiaire', layoutClass: 'role-card--stagiaire' },
   ];
-  private readonly excludedUsernames = new Set(['pierretest', 'test']);
+  private readonly excludedUsernames = new Set<string>();
 
   ngOnInit() {
     this.loadRoster();
@@ -55,15 +59,18 @@ export class AgenceBureauComponent implements OnInit {
 
   loadRoster() {
     this.loading.set(true);
-    this.agenceApi.getRoster().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (roster) => {
-        this.roster.set(roster);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-      },
-    });
+    this.agenceApi
+      .getRoster()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (roster) => {
+          this.roster.set(roster);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loading.set(false);
+        },
+      });
   }
 
   openInvite() {
@@ -219,16 +226,19 @@ export class AgenceBureauComponent implements OnInit {
     }
     this.inviting.set(true);
     this.addPending(username);
-    this.agenceApi.invite(username).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.inviting.set(false);
-        this.refreshCandidates();
-      },
-      error: () => {
-        this.inviting.set(false);
-        this.removePending(username);
-      },
-    });
+    this.agenceApi
+      .invite(username)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.inviting.set(false);
+          this.refreshCandidates();
+        },
+        error: () => {
+          this.inviting.set(false);
+          this.removePending(username);
+        },
+      });
   }
 
   members(): AgencyMember[] {
@@ -249,12 +259,12 @@ export class AgenceBureauComponent implements OnInit {
       .filter((member) => !this.isExcludedMember(member))
       .slice()
       .sort((a, b) => {
-      const diff = (b.predictionScore ?? 0) - (a.predictionScore ?? 0);
-      if (diff !== 0) {
-        return diff;
-      }
-      return (b.xp ?? 0) - (a.xp ?? 0);
-    });
+        const diff = (b.predictionScore ?? 0) - (a.predictionScore ?? 0);
+        if (diff !== 0) {
+          return diff;
+        }
+        return (b.xp ?? 0) - (a.xp ?? 0);
+      });
   }
 
   toggleRosterView() {
@@ -266,7 +276,7 @@ export class AgenceBureauComponent implements OnInit {
   }
 
   onlineCount() {
-    return Math.min(5, this.membersCount());
+    return this.membersCount();
   }
 
   averageXp() {
@@ -466,7 +476,8 @@ export class AgenceBureauComponent implements OnInit {
     }
 
     this.savingRoles.set(true);
-    forkJoin(changes.map((change) => this.agenceApi.updateRole(change.id, change.role)))
+    this.agenceApi
+      .updateRoles(changes)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

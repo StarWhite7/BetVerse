@@ -4,9 +4,10 @@
       <p class="eyebrow">Classement</p>
       <h1>Classement</h1>
       <p class="subtitle">
-        Choisis une vue pour afficher le classement par Verse possédés, paris gagnés ou niveau général. Les données évoluent en direct selon les performances de la communauté.
+        Choisis une vue pour afficher le classement par Verse possédés, paris gagnés ou niveau
+        général. Les données évoluent en direct selon les performances de la communauté.
       </p>
-</div>
+    </div>
     <div class="metric-toggle">
       <button
         type="button"
@@ -28,7 +29,7 @@
     </div>
   </section>
 
-    <section class="leaderboard-highlight" *ngIf="!loading() && !error() && topPlayers().length">
+  <section class="leaderboard-highlight" *ngIf="!loading() && !error() && topPlayers().length">
     <article
       class="highlight-card"
       *ngFor="let player of topPodium(); trackBy: trackByEntry"
@@ -53,7 +54,10 @@
             <div class="progress-bar">
               <div class="progress-bar__value" [style.width.%]="xpProgress(player)"></div>
             </div>
-            <span>{{ xpCurrent(player) | number: '1.0-0' }} / {{ xpNeeded(player) | number: '1.0-0' }} XP</span>
+            <span
+              >{{ xpCurrent(player) | number: '1.0-0' }} /
+              {{ xpNeeded(player) | number: '1.0-0' }} XP</span
+            >
           </div>
         </div>
       </ng-container>
@@ -61,7 +65,11 @@
         <ng-container *ngIf="selectedMetric() === 'VERSE'; else highlightWins">
           <div class="highlight-value">
             <p>{{ formatPrimaryValue(player) }}</p>
-            <span>Wallet {{ player.verseWallet | number: '1.0-0' }} | En cours {{ player.versePending | number: '1.0-0' }} | Investis {{ player.verseInvested | number: '1.0-0' }}</span>
+            <span
+              >Wallet {{ player.verseWallet | number: '1.0-0' }} | En cours
+              {{ player.versePending | number: '1.0-0' }} | Investis
+              {{ player.verseInvested | number: '1.0-0' }}</span
+            >
           </div>
           <div class="highlight-verse">
             <div class="progress-bar progress-bar--stack">
@@ -69,17 +77,23 @@
                 <span
                   class="progress-segment wallet"
                   [style.width.%]="verseSegment(player, 'wallet')"
-                  [attr.data-tooltip]="'Wallet\n' + (player.verseWallet | number: '1.0-0') + ' Verse'"
+                  [attr.data-tooltip]="
+                    'Wallet\n' + (player.verseWallet | number: '1.0-0') + ' Verse'
+                  "
                 ></span>
                 <span
                   class="progress-segment pending"
                   [style.width.%]="verseSegment(player, 'pending')"
-                  [attr.data-tooltip]="'En cours\n' + (player.versePending | number: '1.0-0') + ' Verse'"
+                  [attr.data-tooltip]="
+                    'En cours\n' + (player.versePending | number: '1.0-0') + ' Verse'
+                  "
                 ></span>
                 <span
                   class="progress-segment invested"
                   [style.width.%]="verseSegment(player, 'invested')"
-                  [attr.data-tooltip]="'Investis\n' + (player.verseInvested | number: '1.0-0') + ' Verse'"
+                  [attr.data-tooltip]="
+                    'Investis\n' + (player.verseInvested | number: '1.0-0') + ' Verse'
+                  "
                 ></span>
               </div>
             </div>
@@ -113,7 +127,6 @@
     </article>
   </section>
 
-
   <section class="leaderboard-list" *ngIf="!loading() && !error()">
     <header class="leaderboard-list__header" *ngIf="players().length">
       <div>
@@ -123,7 +136,7 @@
       <span>{{ players().length }} joueurs</span>
     </header>
 
-        <article class="leaderboard-row" *ngFor="let player of otherPlayers(); trackBy: trackByEntry">
+    <article class="leaderboard-row" *ngFor="let player of otherPlayers(); trackBy: trackByEntry">
       <div class="leaderboard-row__rank">#{{ player.rank }}</div>
       <div class="leaderboard-row__identity">
         <a class="player-link" [routerLink]="['/users', player.id]">
@@ -140,14 +153,21 @@
           <div class="progress-bar">
             <div class="progress-bar__value" [style.width.%]="xpProgress(player)"></div>
           </div>
-          <span>{{ xpCurrent(player) | number: '1.0-0' }} / {{ xpNeeded(player) | number: '1.0-0' }} XP</span>
+          <span
+            >{{ xpCurrent(player) | number: '1.0-0' }} /
+            {{ xpNeeded(player) | number: '1.0-0' }} XP</span
+          >
         </div>
       </ng-container>
       <ng-template #rowOther>
         <ng-container *ngIf="selectedMetric() === 'VERSE'; else rowWins">
           <div class="leaderboard-row__stat">
             <p>{{ formatPrimaryValue(player) }}</p>
-            <span>Wallet {{ player.verseWallet | number: '1.0-0' }} | En cours {{ player.versePending | number: '1.0-0' }} | Investis {{ player.verseInvested | number: '1.0-0' }}</span>
+            <span
+              >Wallet {{ player.verseWallet | number: '1.0-0' }} | En cours
+              {{ player.versePending | number: '1.0-0' }} | Investis
+              {{ player.verseInvested | number: '1.0-0' }}</span
+            >
           </div>
           <div class="leaderboard-row__meta">
             <span>{{ player.betsPlayed }} paris joués</span>
@@ -158,17 +178,23 @@
                 <span
                   class="progress-segment wallet"
                   [style.width.%]="verseSegment(player, 'wallet')"
-                  [attr.data-tooltip]="'Wallet\n' + (player.verseWallet | number: '1.0-0') + ' Verse'"
+                  [attr.data-tooltip]="
+                    'Wallet\n' + (player.verseWallet | number: '1.0-0') + ' Verse'
+                  "
                 ></span>
                 <span
                   class="progress-segment pending"
                   [style.width.%]="verseSegment(player, 'pending')"
-                  [attr.data-tooltip]="'En cours\n' + (player.versePending | number: '1.0-0') + ' Verse'"
+                  [attr.data-tooltip]="
+                    'En cours\n' + (player.versePending | number: '1.0-0') + ' Verse'
+                  "
                 ></span>
                 <span
                   class="progress-segment invested"
                   [style.width.%]="verseSegment(player, 'invested')"
-                  [attr.data-tooltip]="'Investis\n' + (player.verseInvested | number: '1.0-0') + ' Verse'"
+                  [attr.data-tooltip]="
+                    'Investis\n' + (player.verseInvested | number: '1.0-0') + ' Verse'
+                  "
                 ></span>
               </div>
             </div>
@@ -211,12 +237,8 @@
       </ng-template>
     </article>
 
-
     <p class="leaderboard-empty" *ngIf="!otherPlayers().length && !topPlayers().length">
       Aucun joueur n'est disponible pour cette vue.
     </p>
   </section>
 </section>
-
-
-

@@ -243,3 +243,16 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.matches-table {
+  overflow-x: auto;
+}
+@media (max-width: 1000px) {
+  .admin-matches__layout {
+    grid-template-columns: 1fr;
+  }
+  .admin-matches__header {
+    align-items: flex-start;
+    gap: 1rem;
+    flex-direction: column;
+  }
+}

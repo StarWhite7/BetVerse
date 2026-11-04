@@ -15,7 +15,7 @@
         />
       </label>
       <button type="button" (click)="loadUsers()" [disabled]="loading()">
-        {{ loading() ? 'Chargement...' : 'Actualiser' }}
+        {{ loading() ? 'Chargement...' : 'Rechercher' }}
       </button>
     </div>
   </header>
@@ -50,7 +50,7 @@
           <td>{{ user.username || '—' }}</td>
           <td>{{ user.email }}</td>
           <td>{{ user.role }}</td>
-          <td>{{ user.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
+          <td>{{ user.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
         </tr>
         <tr *ngIf="!filteredUsers().length && !loading()">
           <td colspan="5">Aucun utilisateur trouve.</td>

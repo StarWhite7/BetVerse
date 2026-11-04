@@ -150,7 +150,9 @@
   font-size: 0.7rem;
   cursor: pointer;
   box-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .match-clan__save:hover {
@@ -414,7 +416,6 @@
   height: 100%;
   gap: 0.6rem;
 }
-
 
 .match-card__score input {
   width: 56px;

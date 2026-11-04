@@ -1,10 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  WalletApiService,
-  WalletTransaction,
-} from '../../../data-access/wallet/wallet.api';
+import { walletReason } from '../../../shared/utils/wallet-reasons';
+import { WalletApiService, WalletTransaction } from '../../../data-access/wallet/wallet.api';
 
 type TransactionFilter = 'ALL' | 'CREDIT' | 'DEBIT';
 
@@ -16,12 +14,22 @@ type TransactionFilter = 'ALL' | 'CREDIT' | 'DEBIT';
   styleUrl: './history.component.css',
 })
 export class WalletHistoryComponent implements OnInit {
+  walletReason = walletReason;
   private readonly walletApi = inject(WalletApiService);
 
   transactions = signal<WalletTransaction[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   filter = signal<TransactionFilter>('ALL');
+  offset = signal(0);
+  nextPage() {
+    this.offset.update((value) => value + 25);
+    this.loadHistory();
+  }
+  previousPage() {
+    this.offset.update((value) => Math.max(0, value - 25));
+    this.loadHistory();
+  }
   startDate = signal<string>('');
   endDate = signal<string>('');
 
@@ -61,13 +69,13 @@ export class WalletHistoryComponent implements OnInit {
   loadHistory() {
     this.loading.set(true);
     this.error.set(null);
-    this.walletApi.getHistory().subscribe({
+    this.walletApi.getHistory(this.offset()).subscribe({
       next: (tx) => {
         this.transactions.set(tx);
         this.loading.set(false);
       },
       error: () => {
-        this.error.set("Impossible de charger les transactions.");
+        this.error.set('Impossible de charger les transactions.');
         this.loading.set(false);
       },
     });
@@ -90,11 +98,12 @@ export class WalletHistoryComponent implements OnInit {
       id: tx.id,
       type: tx.type,
       amount: tx.amount,
+      reason: tx.reason ?? '',
       createdAt: tx.createdAt,
     }));
-    const header = 'id,type,amount,createdAt';
+    const header = 'id,type,amount,reason,createdAt';
     const data = rows
-      .map((row) => `${row.id},${row.type},${row.amount},${row.createdAt}`)
+      .map((row) => `${row.id},${row.type},${row.amount},${row.reason},${row.createdAt}`)
       .join('\n');
     const csv = `${header}\n${data}`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

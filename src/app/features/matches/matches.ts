@@ -11,6 +11,8 @@ import { TEAM_LOGO_MAP } from '../../shared/team-logos';
 import { officialTeamName } from '../../shared/team-names';
 import { interval } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DialogDirective } from '../../shared/directives/dialog.directive';
+import { teamLogoUrl as localTeamLogo } from '../../shared/utils/team-presentation';
 
 type SportFilter = {
   key: string;
@@ -22,7 +24,7 @@ type SportFilter = {
 @Component({
   selector: 'app-matches',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DialogDirective],
   templateUrl: './matches.html',
   styleUrl: './matches.css',
 })
@@ -48,6 +50,7 @@ export class MatchesComponent implements OnInit {
   betOdds = signal<number>(1.0);
   betError = signal<string | null>(null);
   betting = signal(false);
+  private betRequestKey = crypto.randomUUID();
   walletBalance = signal<number | null>(null);
   walletLoading = signal(false);
   readonly sportFilters: SportFilter[] = [
@@ -88,8 +91,7 @@ export class MatchesComponent implements OnInit {
       return matchesBySport.filter((match) => this.isMatchUpcoming(match));
     }
     return matchesBySport.filter(
-      (match) =>
-        this.resolveCompetitionLabel(match) === competition && this.isMatchUpcoming(match),
+      (match) => this.resolveCompetitionLabel(match) === competition && this.isMatchUpcoming(match),
     );
   });
   activeSportLabel = computed(() => {
@@ -130,44 +132,52 @@ export class MatchesComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.currentTime.set(Date.now());
+        if (!this.betModalOpen() && !this.loading()) this.loadMatches(true);
       });
   }
 
-  loadMatches() {
-    this.loading.set(true);
+  loadMatches(background = false) {
+    if (!background) this.loading.set(true);
     this.error.set(null);
     this.lastApiCallAt.set(new Date());
-    this.matchesApi.getMatches('UPCOMING').subscribe({
-      next: (matches) => {
-        this.matches.set(matches);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Impossible de charger les matchs.');
-        this.loading.set(false);
-      },
-    });
+    this.matchesApi
+      .getMatches('UPCOMING')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (matches) => {
+          this.matches.set(matches);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.error.set('Impossible de charger les matchs.');
+          this.loading.set(false);
+        },
+      });
   }
 
   private loadWalletBalance() {
     this.walletLoading.set(true);
-    this.walletApi.getWallet().subscribe({
-      next: (wallet) => {
-        this.walletBalance.set(wallet.balance);
-        this.walletLoading.set(false);
-      },
-      error: () => {
-        this.walletBalance.set(null);
-        this.walletLoading.set(false);
-      },
-    });
+    this.walletApi
+      .getWallet()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (wallet) => {
+          this.walletBalance.set(wallet.balance);
+          this.walletLoading.set(false);
+        },
+        error: () => {
+          this.walletBalance.set(null);
+          this.walletLoading.set(false);
+        },
+      });
   }
 
   openBetModal(match: MatchEntity, type: 'HOME' | 'AWAY' | 'DRAW') {
+    this.betRequestKey = crypto.randomUUID();
     this.selectedMatch.set(match);
     this.betType.set(type);
     this.betOdds.set(
-      type === 'HOME' ? match.oddsHome : type === 'AWAY' ? match.oddsAway : match.oddsDraw ?? 1.0,
+      type === 'HOME' ? match.oddsHome : type === 'AWAY' ? match.oddsAway : (match.oddsDraw ?? 1.0),
     );
     this.betAmount.set(50);
     this.betError.set(null);
@@ -184,6 +194,7 @@ export class MatchesComponent implements OnInit {
   }
 
   set betAmountValue(value: number) {
+    if (this.betAmount() !== value) this.betRequestKey = crypto.randomUUID();
     this.betAmount.set(value);
   }
 
@@ -204,9 +215,10 @@ export class MatchesComponent implements OnInit {
   }
 
   submitBet() {
+    if (this.betting()) return;
     const match = this.selectedMatch();
     const amount = this.betAmount();
-    if (!match || amount <= 0) {
+    if (!match || !Number.isSafeInteger(amount) || amount < 1 || amount > 1_000_000) {
       this.betError.set('Montant invalide');
       return;
     }
@@ -225,6 +237,7 @@ export class MatchesComponent implements OnInit {
         betType: this.betType(),
         amount,
         odds: this.betOdds(),
+        requestKey: this.betRequestKey,
       })
       .subscribe({
         next: () => {
@@ -245,7 +258,7 @@ export class MatchesComponent implements OnInit {
   }
 
   noopRefresh() {
-    // Le bouton ne fait rien pour le moment.
+    this.loadMatches();
   }
 
   private resolveSportKey(match: MatchEntity): string {
@@ -285,23 +298,18 @@ export class MatchesComponent implements OnInit {
   }
 
   teamLogoUrl(team: string): string {
-    const normalized = this.normalizeTeamName(this.displayTeamName(team));
-    const matched = TEAM_LOGO_MAP[normalized];
-    if (matched) {
-      return matched;
-    }
-    const initials = this.teamInitials(team);
-    const base = 'https://placehold.co/80x80/020617/ffffff?text=';
-    return `${base}${encodeURIComponent(initials)}`;
+    return localTeamLogo(team);
   }
 
   private teamInitials(team: string): string {
-    return team
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((word) => word.charAt(0).toUpperCase())
-      .join('') || team.charAt(0).toUpperCase();
+    return (
+      team
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word.charAt(0).toUpperCase())
+        .join('') || team.charAt(0).toUpperCase()
+    );
   }
 
   private normalizeTeamName(team: string): string {

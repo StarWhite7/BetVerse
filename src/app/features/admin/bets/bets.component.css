@@ -139,7 +139,6 @@
   opacity: 0.85;
 }
 
-
 .status {
   padding: 0.3rem 0.8rem;
   border-radius: 999px;
@@ -232,4 +231,7 @@
 .bets-modal__actions button[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
+}
+.bets-table {
+  overflow-x: auto;
 }

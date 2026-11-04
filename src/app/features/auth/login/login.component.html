@@ -6,7 +6,10 @@
     <label>
       Email ou pseudo
       <input type="text" formControlName="identifier" placeholder="john@betverse.gg ou neonverse" />
-      <span class="field-error" *ngIf="form.get('identifier')?.touched && form.get('identifier')?.invalid">
+      <span
+        class="field-error"
+        *ngIf="form.get('identifier')?.touched && form.get('identifier')?.invalid"
+      >
         Identifiant requis (3 caractères min)
       </span>
     </label>
@@ -14,7 +17,10 @@
     <label>
       Mot de passe
       <input type="password" formControlName="password" placeholder="********" />
-      <span class="field-error" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">
+      <span
+        class="field-error"
+        *ngIf="form.get('password')?.touched && form.get('password')?.invalid"
+      >
         6 caractères minimum
       </span>
     </label>
@@ -29,6 +35,9 @@
   <p class="form-error" *ngIf="error()">
     {{ error() }}
   </p>
+  <button type="button" (click)="resendVerification()" [disabled]="loading()">
+    Renvoyer la confirmation
+  </button>
 
   <p class="form-footer">
     Pas encore de compte ?

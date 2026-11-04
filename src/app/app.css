@@ -1,1 +1,15 @@
 /* App component specific styles go here */
+:host {
+  display: block;
+}
+.service-error {
+  padding: 1rem;
+  background: #7f1d1d;
+  color: white;
+  text-align: center;
+}
+.service-error button {
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}

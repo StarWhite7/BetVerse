@@ -13,8 +13,7 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadChildren: () =>
-          import('./features/matches/matches.routes').then((m) => m.default),
+        loadChildren: () => import('./features/matches/matches.routes').then((m) => m.default),
       },
       {
         path: 'matches',
@@ -23,14 +22,12 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        loadChildren: () =>
-          import('./features/home/home.routes').then((m) => m.default),
+        loadChildren: () => import('./features/home/home.routes').then((m) => m.default),
       },
       {
         path: 'wallet',
-        loadChildren: () =>
-          import('./features/wallet/wallet.routes').then((m) => m.default),
-        canActivate: [roleGuard(['ADMIN'])],
+        loadChildren: () => import('./features/wallet/wallet.routes').then((m) => m.default),
+        canActivate: [authGuard],
       },
       {
         path: 'leaderboard',
@@ -40,7 +37,9 @@ export const routes: Routes = [
       {
         path: 'users/:id',
         loadComponent: () =>
-          import('./features/users/public-profile/public-profile').then((m) => m.PublicProfileComponent),
+          import('./features/users/public-profile/public-profile').then(
+            (m) => m.PublicProfileComponent,
+          ),
       },
       {
         path: 'admin-usage',
@@ -51,33 +50,28 @@ export const routes: Routes = [
       {
         path: 'profile',
         canActivate: [authGuard],
-        loadChildren: () =>
-          import('./features/profile/profile.routes').then((m) => m.default),
+        loadChildren: () => import('./features/profile/profile.routes').then((m) => m.default),
       },
       {
         path: 'bets',
-        loadChildren: () =>
-          import('./features/bets/bets.routes').then((m) => m.default),
+        loadChildren: () => import('./features/bets/bets.routes').then((m) => m.default),
         canActivate: [authGuard, roleGuard(['USER', 'ADMIN'])],
       },
       {
         path: 'shards',
         loadComponent: () =>
-          import('./features/shards/shards.component').then(
-            (m) => m.ShardsComponent
-          ),
+          import('./features/shards/shards.component').then((m) => m.ShardsComponent),
       },
       {
         path: 'notification',
         loadComponent: () =>
           import('./features/notifications/notifications.component').then(
-            (m) => m.NotificationsComponent
+            (m) => m.NotificationsComponent,
           ),
       },
-            {
+      {
         path: 'agence',
-        loadChildren: () =>
-          import('./features/agence/agence.routes').then((m) => m.default),
+        loadChildren: () => import('./features/agence/agence.routes').then((m) => m.default),
       },
 
       {
@@ -90,20 +84,16 @@ export const routes: Routes = [
   {
     path: 'auth',
     component: AuthLayout,
-    loadChildren: () =>
-      import('./features/auth/auth.routes').then((m) => m.default),
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.default),
   },
   {
     path: 'admin',
     component: AdminLayout,
-    loadChildren: () =>
-      import('./features/admin/admin.routes').then((m) => m.default),
-    canActivate: [authGuard, roleGuard(['ADMIN'])]
+    loadChildren: () => import('./features/admin/admin.routes').then((m) => m.default),
+    canActivate: [authGuard, roleGuard(['ADMIN'])],
   },
   {
     path: '**',
     redirectTo: '',
-  }
+  },
 ];
-
-

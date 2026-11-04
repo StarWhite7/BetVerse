@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { strongPasswordValidator } from '../../../shared/utils/validators';
 
 @Component({
   selector: 'auth-reset-password',
@@ -26,7 +27,7 @@ export class ResetPasswordComponent {
   protected readonly token = signal<string | null>(null);
 
   protected readonly form = this.fb.group({
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: ['', [Validators.required, strongPasswordValidator()]],
     confirmPassword: ['', [Validators.required]],
   });
 
@@ -84,4 +85,3 @@ export class ResetPasswordComponent {
     });
   }
 }
-

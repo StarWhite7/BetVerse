@@ -56,4 +56,23 @@ export class LoginComponent {
       },
     });
   }
+
+  resendVerification() {
+    const identifier = this.form.controls.identifier.value ?? '';
+    if (identifier.trim().length < 3 || this.loading()) {
+      this.error.set('Renseigne ton email ou ton pseudo pour recevoir un nouveau lien.');
+      return;
+    }
+    this.loading.set(true);
+    this.auth.resendVerification(identifier).subscribe({
+      next: (response) => {
+        this.loading.set(false);
+        this.notifications.success(response.message);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set('Envoi impossible. Réessaie plus tard.');
+      },
+    });
+  }
 }

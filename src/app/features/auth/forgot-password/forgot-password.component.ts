@@ -37,22 +37,19 @@ export class ForgotPasswordComponent {
 
     const identifier = this.form.value.identifier ?? '';
 
-    this.auth
-      .requestPasswordReset({ identifier })
-      .subscribe({
-        next: (response) => {
-          this.loading.set(false);
-          const message = response?.message ?? 'Si un compte existe, un email a été envoyé.';
-          this.successMessage.set(message);
-          this.notifications.success(message);
-        },
-        error: (err) => {
-          this.loading.set(false);
-          const message = err?.error?.message ?? 'Impossible de traiter la requête';
-          this.errorMessage.set(message);
-          this.notifications.error(message);
-        },
-      });
+    this.auth.requestPasswordReset({ identifier }).subscribe({
+      next: (response) => {
+        this.loading.set(false);
+        const message = response?.message ?? 'Si un compte existe, un email a été envoyé.';
+        this.successMessage.set(message);
+        this.notifications.success(message);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        const message = err?.error?.message ?? 'Impossible de traiter la requête';
+        this.errorMessage.set(message);
+        this.notifications.error(message);
+      },
+    });
   }
 }
-

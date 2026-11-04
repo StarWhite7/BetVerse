@@ -1,0 +1,149 @@
+<div class="notifications" #notificationsWrap (click)="$event.stopPropagation()">
+  <button
+    type="button"
+    class="notifications__toggle"
+    aria-label="Notifications"
+    [attr.aria-expanded]="notificationsOpen()"
+    (click)="toggleNotifications()"
+  >
+    <span class="notifications__icon" aria-hidden="true">✉</span>
+    <span class="notifications__label">Notifications</span>
+    <span class="notifications__badge" *ngIf="unreadNotifications() > 0">
+      {{ unreadNotifications() }}
+    </span>
+  </button>
+  <div class="notifications__panel" *ngIf="notificationsOpen()">
+    <div class="notifications__header">
+      <span>Dernieres notifications</span>
+      <button type="button" (click)="refreshNotifications()">Rafraichir</button>
+    </div>
+    <div class="notifications__list" *ngIf="!notificationsLoading(); else notifLoading">
+      <div
+        class="notifications__item"
+        *ngFor="let note of notifications()"
+        (click)="onNotificationClick(note)"
+        [class.unread]="!note.readAt"
+        [class.notifications__item--expanded]="isInviteExpanded(note)"
+      >
+        <div class="notifications__title">{{ note.title }}</div>
+        <div class="notifications__message" *ngIf="!isInviteNotification(note)">
+          {{ note.message }}
+        </div>
+        <div
+          class="notifications__details"
+          *ngIf="isInviteNotification(note)"
+          [class.notifications__details--open]="isInviteExpanded(note)"
+        >
+          <div class="notifications__message">
+            {{ note.message }}
+          </div>
+          <div class="notifications__actions">
+            <button type="button" (click)="acceptInviteFromDropdown(note, $event)">Accepter</button>
+            <button
+              type="button"
+              class="notifications__actions-ghost"
+              (click)="declineInviteFromDropdown(note, $event)"
+            >
+              Refuser
+            </button>
+          </div>
+        </div>
+        <div class="notifications__status" *ngIf="isInviteResolved(note)">
+          {{ note.message }}
+        </div>
+      </div>
+      <div class="notifications__empty" *ngIf="notifications().length === 0">
+        Aucune notification.
+      </div>
+    </div>
+    <ng-template #notifLoading>
+      <div class="notifications__loading">Chargement...</div>
+    </ng-template>
+    <a class="notifications__footer" routerLink="/notification" (click)="closeNotifications()">
+      Voir notification
+    </a>
+  </div>
+</div>
+<dialog
+  class="bet-win-popup"
+  *ngIf="betWinVisible()"
+  bvDialog
+  aria-label="Résultat de vos paris"
+  (dialogDismiss)="confirmBetWin()"
+>
+  <div class="bet-win-popup__backdrop"></div>
+  <div class="bet-win-popup__spotlight bet-win-popup__spotlight--left"></div>
+  <div class="bet-win-popup__spotlight bet-win-popup__spotlight--right"></div>
+  <div class="bet-win-popup__card" aria-live="polite" (click)="$event.stopPropagation()">
+    <div class="bet-win-popup__confetti">
+      <span *ngFor="let _ of betWinConfetti(); let i = index" class="bet-win-popup__spark"></span>
+    </div>
+    <h3 class="bet-win-popup__title">{{ betWinCurrent().title }}</h3>
+    <div class="bet-win-ticket">
+      <div class="bet-win-ticket__match">
+        <div class="bet-win-team">
+          <div class="bet-win-team__logo">
+            <img [src]="teamLogoUrl(betWinMeta().homeTeam)" [alt]="betWinMeta().homeTeam" />
+          </div>
+          <span>{{ betWinMeta().homeTeam }}</span>
+        </div>
+        <div class="bet-win-ticket__vs">VS</div>
+        <div class="bet-win-team">
+          <div class="bet-win-team__logo">
+            <img [src]="teamLogoUrl(betWinMeta().awayTeam)" [alt]="betWinMeta().awayTeam" />
+          </div>
+          <span>{{ betWinMeta().awayTeam }}</span>
+        </div>
+      </div>
+      <div class="bet-win-ticket__grid">
+        <div class="bet-win-ticket__item">
+          <span>Pari</span>
+          <strong>{{ betWinMeta().betTypeLabel }}</strong>
+        </div>
+        <div class="bet-win-ticket__item">
+          <span>Mise</span>
+          <strong>{{ betWinMeta().amount ?? '--' }} V</strong>
+        </div>
+        <div class="bet-win-ticket__item">
+          <span>Cote</span>
+          <strong>
+            {{ betWinMeta().odds == null ? '--' : (betWinMeta().odds | number: '1.2-2') }}
+          </strong>
+        </div>
+        <div class="bet-win-ticket__item bet-win-ticket__gain">
+          <span>Gain</span>
+          <strong>{{ betWinMeta().payout ?? '--' }} V</strong>
+        </div>
+      </div>
+    </div>
+    <div class="bet-win-popup__cta">
+      <button
+        type="button"
+        class="bet-win-popup__primary"
+        (click)="confirmBetWin()"
+        *ngIf="betWinIndex() === betWinNotifications().length - 1"
+      >
+        Compris
+      </button>
+    </div>
+    <div class="bet-win-popup__nav" *ngIf="betWinNotifications().length > 1">
+      <button
+        type="button"
+        class="bet-win-popup__arrow"
+        (click)="prevBetWin()"
+        [disabled]="betWinIndex() === 0"
+        [class.is-hidden]="betWinIndex() === 0"
+      >
+        ‹
+      </button>
+      <div class="bet-win-popup__dots">
+        <span
+          class="bet-win-popup__dot"
+          *ngFor="let _ of betWinDots(); let i = index"
+          [class.active]="i === betWinIndex()"
+        ></span>
+      </div>
+      <button type="button" class="bet-win-popup__arrow" (click)="nextBetWin()">›</button>
+    </div>
+  </div>
+</dialog>

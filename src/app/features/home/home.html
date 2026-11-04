@@ -1,4 +1,4 @@
-﻿<section class="home-hero">
+<section class="home-hero">
   <div>
     <h1>Tableau de bord de {{ user()?.username ?? user()?.email }}</h1>
     <p class="home-hero__subtitle">
@@ -56,7 +56,7 @@
             </div>
             <div class="bet-meta">
               <span>Cote {{ bet.odds | number: '1.2-2' }}</span>
-              <span>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
+              <span>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
             </div>
           </li>
           <li *ngIf="!pendingBets().length">
@@ -70,7 +70,7 @@
           <li *ngFor="let bet of recentBets()">
             <div>
               <strong>{{ bet.match }}</strong>
-              <span>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
+              <span>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
             </div>
             <span
               class="badge"
@@ -135,7 +135,3 @@
     </ul>
   </article>
 </section>
-
-
-
-

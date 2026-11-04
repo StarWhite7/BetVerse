@@ -8,13 +8,15 @@ import {
   MatchStatus,
 } from '../../../data-access/matches/matches.api';
 import { NotificationService } from '../../../core/services/notification.service';
+import { FormsModule } from '@angular/forms';
+import { DialogDirective } from '../../../shared/directives/dialog.directive';
 
 type FilterValue = MatchStatus | 'ALL';
 
 @Component({
   selector: 'admin-matches',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DialogDirective],
   templateUrl: './matches.component.html',
   styleUrl: './matches.component.css',
 })
@@ -28,6 +30,7 @@ export class MatchesComponent implements OnInit {
     { label: 'A venir', value: 'UPCOMING' },
     { label: 'En cours', value: 'LIVE' },
     { label: 'Termines', value: 'FINISHED' },
+    { label: 'Annulés', value: 'CANCELLED' },
   ];
 
   matches = signal<MatchEntity[]>([]);
@@ -39,12 +42,18 @@ export class MatchesComponent implements OnInit {
   finishTarget = signal<MatchEntity | null>(null);
   finishResult = signal<MatchResult>('HOME');
   finishSubmitting = signal(false);
+  homeScore = 0;
+  awayScore = 0;
+  cancelMode = signal(false);
+  cancellationReason = '';
 
   readonly matchForm = this.fb.group({
     id: [''],
     homeTeam: ['', [Validators.required]],
     awayTeam: ['', [Validators.required]],
     startDate: ['', [Validators.required]],
+    sportKey: ['football', [Validators.required]],
+    competition: ['Catalogue BetVerse', [Validators.required, Validators.maxLength(80)]],
     oddsHome: [1.5, [Validators.required, Validators.min(1)]],
     oddsAway: [1.5, [Validators.required, Validators.min(1)]],
     oddsDraw: [null as number | null, [Validators.min(1)]],
@@ -83,6 +92,8 @@ export class MatchesComponent implements OnInit {
       homeTeam: match.homeTeam,
       awayTeam: match.awayTeam,
       startDate: this.toDatetimeInput(match.startDate),
+      sportKey: match.sportKey ?? 'football',
+      competition: match.competition ?? 'Catalogue BetVerse',
       oddsHome: match.oddsHome,
       oddsAway: match.oddsAway,
       oddsDraw: match.oddsDraw ?? null,
@@ -95,6 +106,8 @@ export class MatchesComponent implements OnInit {
       homeTeam: '',
       awayTeam: '',
       startDate: '',
+      sportKey: 'football',
+      competition: 'Catalogue BetVerse',
       oddsHome: 1.5,
       oddsAway: 1.5,
       oddsDraw: null,
@@ -115,6 +128,15 @@ export class MatchesComponent implements OnInit {
       oddsHome: Number(raw.oddsHome),
       oddsAway: Number(raw.oddsAway),
       oddsDraw: raw.oddsDraw ? Number(raw.oddsDraw) : null,
+      sportKey: raw.sportKey!,
+      sportTitle:
+        (
+          { football: 'Football', tennis: 'Tennis', basketball: 'Basketball' } as Record<
+            string,
+            string
+          >
+        )[raw.sportKey!] ?? 'Football',
+      competition: raw.competition!.trim(),
     };
 
     this.submitting.set(true);
@@ -139,6 +161,9 @@ export class MatchesComponent implements OnInit {
   }
 
   openFinishModal(match: MatchEntity) {
+    this.cancelMode.set(false);
+    this.homeScore = 0;
+    this.awayScore = 0;
     this.finishTarget.set(match);
     this.finishResult.set('HOME');
     this.finishModalOpen.set(true);
@@ -148,16 +173,34 @@ export class MatchesComponent implements OnInit {
     if (this.finishSubmitting()) return;
     this.finishModalOpen.set(false);
   }
+  openCancelModal(match: MatchEntity) {
+    this.openFinishModal(match);
+    this.cancelMode.set(true);
+    this.cancellationReason = '';
+  }
 
   finishMatch() {
     const target = this.finishTarget();
     if (!target) return;
     this.finishSubmitting.set(true);
-    this.matchesApi.finishMatch(target.id, this.finishResult()).subscribe({
+    const result =
+      this.homeScore === this.awayScore
+        ? 'DRAW'
+        : this.homeScore > this.awayScore
+          ? 'HOME'
+          : 'AWAY';
+    const request = this.cancelMode()
+      ? this.matchesApi.cancelMatch(target.id, this.cancellationReason.trim())
+      : this.matchesApi.finishMatch(target.id, result, this.homeScore, this.awayScore);
+    request.subscribe({
       next: () => {
         this.finishSubmitting.set(false);
         this.finishModalOpen.set(false);
-        this.notifications.success('Match cloture.');
+        this.notifications.success(
+          this.cancelMode()
+            ? 'Match annulé. Toutes les mises ont été remboursées.'
+            : 'Match clôturé.',
+        );
         this.loadMatches();
       },
       error: (err) => {

@@ -1,67 +1,49 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import {
-  BetsApiService,
-  BetEntity,
-  ResolveBetResponse,
-} from '../../../data-access/bets/bets.api';
-import { NotificationService } from '../../../core/services/notification.service';
-
-type BetsFilter = 'ALL' | 'PENDING' | 'WON' | 'LOST';
-type SearchColumn = 'match' | 'id';
-
+import { RouterLink } from '@angular/router';
+import { BetsApiService, BetEntity } from '../../../data-access/bets/bets.api';
+type BetsFilter = 'ALL' | 'PENDING' | 'WON' | 'LOST' | 'VOID';
 @Component({
   selector: 'admin-bets',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './bets.component.html',
   styleUrl: './bets.component.css',
 })
 export class BetsComponent implements OnInit {
-  private readonly betsApi = inject(BetsApiService);
-  private readonly notifications = inject(NotificationService);
-
+  private readonly api = inject(BetsApiService);
   filters: { label: string; value: BetsFilter }[] = [
     { label: 'Tous', value: 'ALL' },
     { label: 'En attente', value: 'PENDING' },
-    { label: 'Gagnes', value: 'WON' },
+    { label: 'Gagnés', value: 'WON' },
     { label: 'Perdus', value: 'LOST' },
+    { label: 'Remboursés', value: 'VOID' },
   ];
-
   bets = signal<BetEntity[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
   filter = signal<BetsFilter>('PENDING');
   searchTerm = signal('');
-  searchColumn = signal<SearchColumn>('match');
-  filteredBets = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const column = this.searchColumn();
-    if (!term) return this.bets();
-    return this.bets().filter((bet) => {
-      const field = bet[column];
-      if (!field) return false;
-      return field.toLowerCase().includes(term);
-    });
-  });
-  resolveModalOpen = signal(false);
-  resolveTarget = signal<BetEntity | null>(null);
-  resolveResult = signal<'WON' | 'LOST'>('WON');
-  resolveSubmitting = signal(false);
-
+  searchColumn = signal<'match' | 'id'>('match');
+  offset = signal(0);
+  filteredBets = computed(() =>
+    this.bets().filter((bet) =>
+      bet[this.searchColumn()].toLowerCase().includes(this.searchTerm().trim().toLowerCase()),
+    ),
+  );
   ngOnInit() {
     this.loadBets();
   }
-
   loadBets() {
+    if (this.loading()) return;
     this.loading.set(true);
     this.error.set(null);
-    const status = this.filter();
-    this.betsApi
-      .getMyBets({
-        status: status === 'ALL' ? undefined : (status as BetEntity['status']),
-        order: 'desc',
+    this.api
+      .getAdminBets({
+        status: this.filter() === 'ALL' ? undefined : (this.filter() as BetEntity['status']),
         limit: 100,
+        skip: this.offset(),
+        order: 'desc',
       })
       .subscribe({
         next: (bets) => {
@@ -74,64 +56,20 @@ export class BetsComponent implements OnInit {
         },
       });
   }
-
   applyFilter(filter: BetsFilter) {
-    if (this.filter() === filter) return;
     this.filter.set(filter);
+    this.offset.set(0);
     this.loadBets();
   }
-
-  openResolveModal(bet: BetEntity, result: 'WON' | 'LOST' = 'WON') {
-    this.resolveTarget.set(bet);
-    this.resolveResult.set(result);
-    this.resolveModalOpen.set(true);
+  previous() {
+    this.offset.update((n) => Math.max(0, n - 100));
+    this.loadBets();
   }
-
-  closeResolveModal() {
-    if (this.resolveSubmitting()) return;
-    this.resolveModalOpen.set(false);
+  next() {
+    this.offset.update((n) => n + 100);
+    this.loadBets();
   }
-
-  resolveBet() {
-    const bet = this.resolveTarget();
-    if (!bet) return;
-
-    this.resolveSubmitting.set(true);
-    this.betsApi
-      .resolveBet({ betId: bet.id, result: this.resolveResult() })
-      .subscribe({
-        next: (response: ResolveBetResponse) => {
-          this.resolveSubmitting.set(false);
-          this.resolveModalOpen.set(false);
-          this.notifications.success('Pari mis a jour.');
-          this.updateBetInList(response.bet);
-        },
-        error: (err) => {
-          this.resolveSubmitting.set(false);
-          const message = err?.error?.message ?? 'Impossible de résoudre le pari.';
-          this.notifications.error(message);
-        },
-      });
-  }
-
-  quickResolve(bet: BetEntity, result: 'WON' | 'LOST') {
-    this.resolveTarget.set(bet);
-    this.resolveResult.set(result);
-    this.resolveBet();
-  }
-
-  updateResolveResult(event: Event) {
-    const value = (event.target as HTMLSelectElement | null)?.value ?? 'WON';
-    this.resolveResult.set(value as 'WON' | 'LOST');
-  }
-
   trackByBet(_index: number, bet: BetEntity) {
     return bet.id;
-  }
-
-  private updateBetInList(updated: BetEntity) {
-    this.bets.update((items) =>
-      items.map((bet) => (bet.id === updated.id ? { ...bet, ...updated } : bet)),
-    );
   }
 }

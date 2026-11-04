@@ -40,8 +40,8 @@ export class PublicProfileComponent {
       },
       error: () => {
         this.loading.set(false);
-        this.error.set("Impossible de charger le profil.");
-        this.notifications.error("Impossible de charger le profil.");
+        this.error.set('Impossible de charger le profil.');
+        this.notifications.error('Impossible de charger le profil.');
       },
     });
   }

@@ -5,6 +5,18 @@
   </div>
   <a routerLink="/wallet">Retour au wallet</a>
 </section>
+<nav aria-label="Pages de transactions" class="history-pagination">
+  <button type="button" (click)="previousPage()" [disabled]="loading() || offset() === 0">
+    Précédent
+  </button>
+  <span
+    >Transactions {{ offset() + 1 }} à {{ offset() + transactions().length }} · filtres et export
+    sur cette page</span
+  >
+  <button type="button" (click)="nextPage()" [disabled]="loading() || transactions().length < 25">
+    Suivant
+  </button>
+</nav>
 
 <div class="history-controls">
   <div class="history-filters">
@@ -51,13 +63,14 @@
       <tr>
         <th>ID</th>
         <th>Type</th>
+        <th>Opération</th>
         <th>Montant</th>
         <th>Date</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngIf="loading()">
-        <td colspan="4">Chargement des transactions...</td>
+        <td colspan="5">Chargement des transactions...</td>
       </tr>
       <tr *ngFor="let tx of filteredTransactions(); trackBy: trackByTx">
         <td>{{ tx.id }}</td>
@@ -66,13 +79,14 @@
             {{ tx.type }}
           </span>
         </td>
+        <td>{{ walletReason(tx.reason) }}</td>
         <td [class.credit]="tx.type === 'CREDIT'">
           {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} V
         </td>
-        <td>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
+        <td>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
       </tr>
       <tr *ngIf="!filteredTransactions().length && !loading()">
-        <td colspan="4">Aucune transaction pour ce filtre.</td>
+        <td colspan="5">Aucune transaction pour ce filtre.</td>
       </tr>
     </tbody>
   </table>

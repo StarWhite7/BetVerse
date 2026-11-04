@@ -13,6 +13,7 @@ import { officialTeamName } from '../../../shared/team-names';
 })
 export class MyBetsComponent implements OnInit {
   private readonly betsStore = inject(BetsStore);
+  readonly pagination = this.betsStore;
   private readonly auth = inject(AuthService);
 
   filters: { label: string; value: BetsFilter }[] = [
@@ -20,6 +21,7 @@ export class MyBetsComponent implements OnInit {
     { label: 'En attente', value: 'PENDING' },
     { label: 'Gagnes', value: 'WON' },
     { label: 'Perdus', value: 'LOST' },
+    { label: 'Remboursés', value: 'VOID' },
   ];
 
   bets = this.betsStore.bets;
@@ -41,66 +43,6 @@ export class MyBetsComponent implements OnInit {
   trackByBet(_index: number, bet: { id: string }) {
     return bet.id;
   }
-
-  triggerBetWinTest() {
-    const bets = this.bets();
-    const lastWin = [...bets].reverse().find((bet) => bet.status === 'WON');
-    const matchLabel = lastWin ? this.matchLabel(lastWin) : 'Votre dernier ticket';
-    const payout = lastWin ? Math.round(lastWin.amount * lastWin.odds) : null;
-    const message = payout
-      ? `Votre ticket "${matchLabel}" est gagnant. +${payout} Verse.`
-      : `Votre ticket "${matchLabel}" est gagnant.`;
-    window.dispatchEvent(
-      new CustomEvent('betverse-bet-win-test', {
-        detail: {
-          title: 'Pari gagnant',
-          message,
-          metadata: lastWin
-            ? {
-                match: matchLabel,
-                betType: lastWin.betType,
-                amount: lastWin.amount,
-                odds: lastWin.odds,
-                payout: payout ?? undefined,
-              }
-            : undefined,
-        },
-      }),
-    );
-  }
-
-  triggerBetWinTestLastThree() {
-    const wins = this.bets()
-      .filter((bet) => bet.status === 'WON')
-      .slice(-3)
-      .reverse();
-    if (!wins.length) {
-      this.triggerBetWinTest();
-      return;
-    }
-
-    wins.forEach((bet) => {
-      const matchLabel = this.matchLabel(bet);
-      const payout = Math.round(bet.amount * bet.odds);
-      const message = `Votre ticket "${matchLabel}" est gagnant. +${payout} Verse.`;
-      window.dispatchEvent(
-        new CustomEvent('betverse-bet-win-test', {
-          detail: {
-            title: 'Pari gagnant',
-            message,
-            metadata: {
-              match: matchLabel,
-              betType: bet.betType,
-              amount: bet.amount,
-              odds: bet.odds,
-              payout,
-            },
-          },
-        }),
-      );
-    });
-  }
-
 
   matchLabel(bet: { match?: string | null }): string {
     const match = bet.match ?? '';

@@ -14,7 +14,8 @@
   padding: 2rem;
   border-radius: 1.5rem;
   border: 1px solid rgba(226, 232, 240, 0.08);
-  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.35), transparent 65%),
+  background:
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.35), transparent 65%),
     linear-gradient(130deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.65));
 }
 
@@ -50,7 +51,10 @@
   color: #e2e8f0;
   text-align: left;
   cursor: pointer;
-  transition: border 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .metric-toggle button span {
@@ -425,7 +429,6 @@
   color: rgba(226, 232, 240, 0.7);
 }
 
-
 .highlight-verse {
   display: flex;
   align-items: center;
@@ -485,7 +488,9 @@
   box-shadow: 0 12px 28px rgba(8, 13, 24, 0.4);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .progress-segment::before {
@@ -502,7 +507,9 @@
   transform: translateX(-50%) rotate(45deg);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .progress-segment:hover::after,

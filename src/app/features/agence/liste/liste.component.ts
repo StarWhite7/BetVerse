@@ -2,7 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AgenceApiService, AgencyEntity, AgencyRoster } from '../../../data-access/agence/agence.api';
+import {
+  AgenceApiService,
+  AgencyEntity,
+  AgencyRoster,
+} from '../../../data-access/agence/agence.api';
 
 @Component({
   selector: 'app-agence-liste',
@@ -62,13 +66,7 @@ export class AgenceListeComponent implements OnInit {
 
   roleLabel(role?: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE' | null) {
     const value = role as
-      | 'DIRECTEUR'
-      | 'ASSOCIE'
-      | 'RESPONSABLE'
-      | 'MEMBRE'
-      | 'STAGIAIRE'
-      | null
-      | undefined;
+      'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE' | null | undefined;
     switch (value) {
       case 'DIRECTEUR':
         return 'Directeur';

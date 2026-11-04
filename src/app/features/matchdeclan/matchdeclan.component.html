@@ -70,15 +70,16 @@
       <span>{{ matchesFiltered().length }} rencontres</span>
     </div>
     <p class="match-clan__error" *ngIf="error()">{{ error() }}</p>
-    <div class="match-clan__list" *ngIf="!loading() && matchesFiltered().length; else matchClanEmpty">
+    <div
+      class="match-clan__list"
+      *ngIf="!loading() && matchesFiltered().length; else matchClanEmpty"
+    >
       <article class="match-card" *ngFor="let match of matchesFiltered()">
         <header>
           <span class="match-card__date">
-            {{ match.startDate | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}
+            {{ match.startDate | date: 'dd/MM/yyyy HH:mm' }}
           </span>
-          <div class="match-card__agency-score">
-            Score agence: {{ agencyScoreLabel(match.id) }}
-          </div>
+          <div class="match-card__agency-score">Score agence: {{ agencyScoreLabel(match.id) }}</div>
           <div class="match-card__result" *ngIf="match.status === 'FINISHED'">
             Résultat réel: {{ matchResultLabel(match) }}
           </div>
@@ -97,7 +98,10 @@
           <div class="match-card__teams">
             <div class="match-card__team">
               <div class="match-card__team-logo">
-                <img [src]="teamLogoUrl(match.homeTeam)" [alt]="displayTeamName(match.homeTeam) + ' logo'" />
+                <img
+                  [src]="teamLogoUrl(match.homeTeam)"
+                  [alt]="displayTeamName(match.homeTeam) + ' logo'"
+                />
               </div>
               <span>{{ displayTeamName(match.homeTeam) }}</span>
             </div>
@@ -162,7 +166,10 @@
             </div>
             <div class="match-card__team">
               <div class="match-card__team-logo">
-                <img [src]="teamLogoUrl(match.awayTeam)" [alt]="displayTeamName(match.awayTeam) + ' logo'" />
+                <img
+                  [src]="teamLogoUrl(match.awayTeam)"
+                  [alt]="displayTeamName(match.awayTeam) + ' logo'"
+                />
               </div>
               <span>{{ displayTeamName(match.awayTeam) }}</span>
             </div>

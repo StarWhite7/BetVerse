@@ -6,6 +6,10 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
 
 const routes: Routes = [
   {
+    path: 'verify-email',
+    loadComponent: () => import('./verify-email/verify-email').then((m) => m.VerifyEmailComponent),
+  },
+  {
     path: 'login',
     component: LoginComponent,
   },

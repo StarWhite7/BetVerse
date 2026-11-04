@@ -1,12 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import {
-  Component,
-  OnInit,
-  computed,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { LeaderboardApiService } from '../../../data-access/leaderboard/leaderboard.api';
 import {
@@ -39,7 +33,8 @@ export class GlobalComponent implements OnInit {
     {
       id: 'VERSE',
       label: 'Nombre de Verse détenus',
-      description: 'Somme du portefeuille, des Verse engagés en paris en cours et des investissements à venir',
+      description:
+        'Somme du portefeuille, des Verse engagés en paris en cours et des investissements à venir',
     },
     {
       id: 'WINS',
@@ -71,7 +66,9 @@ export class GlobalComponent implements OnInit {
   });
   readonly otherPlayers = computed(() => this.players().slice(3));
   readonly activeMetric = computed(
-    () => this.metricOptions.find((option) => option.id === this.selectedMetric()) ?? this.metricOptions[0],
+    () =>
+      this.metricOptions.find((option) => option.id === this.selectedMetric()) ??
+      this.metricOptions[0],
   );
   readonly topMetricValue = computed(() => {
     const field = this.metricField[this.selectedMetric()];

@@ -2,63 +2,27 @@
   <header class="admin-dashboard__header">
     <div>
       <p>Administration</p>
-      <h1>Dashboard</h1>
+      <h1>Gestion de la V1</h1>
     </div>
   </header>
-
-  <section class="admin-dashboard__grid">
-    <article class="admin-dashboard__card admin-dashboard__card--danger">
-      <header>
-        <div>
-          <p>Zone sensible</p>
-          <h2>Remise à zéro globale</h2>
-        </div>
-        <button type="button" class="danger" (click)="resetEconomy()" [disabled]="resetting()">
-          {{ resetting() ? 'Remise à zéro...' : 'Remise à zéro' }}
-        </button>
-      </header>
-      <p class="admin-dashboard__hint">
-        Cette action est irréversible et appliquée à tous les utilisateurs.
+  <div class="admin-dashboard__grid">
+    <article class="admin-dashboard__card">
+      <h2>Rencontres et résultats</h2>
+      <p>
+        Créez les rencontres à venir et leurs cotes. Après le début du match, saisissez le score
+        final : les paris et pronostics seront réglés ensemble, une seule fois.
       </p>
-      <ul class="admin-dashboard__list">
-        <li>Solde Verse des wallets</li>
-        <li>XP utilisateurs</li>
-        <li>Niveau utilisateurs (retour à 1)</li>
-        <li>Paris en cours et passés</li>
-        <li>Cooldown du bonus quotidien (500 Verse)</li>
-      </ul>
+      <a routerLink="/admin/matches">Gérer les matchs</a>
     </article>
-  </section>
-</section>
-
-<div class="admin-reset-modal" *ngIf="resetModalOpen()">
-  <div class="admin-reset-modal__backdrop" (click)="cancelReset()"></div>
-  <div class="admin-reset-modal__content">
-    <header>
-      <p>Attention</p>
-      <h3>Confirmer la remise à zéro</h3>
-    </header>
-    <p>
-      Cette action remettra les Verse, l'XP, le niveau, les paris et le temps du bonus quotidien pour
-      tous les utilisateurs.
-    </p>
-    <div class="admin-reset-modal__list">
-      <span>Inclus dans la remise à zéro :</span>
-      <ul>
-        <li>Solde Verse des wallets</li>
-        <li>XP utilisateurs</li>
-        <li>Niveau utilisateurs (retour à 1)</li>
-        <li>Paris en cours et passés</li>
-        <li>Cooldown du bonus quotidien (500 Verse)</li>
-      </ul>
-    </div>
-    <div class="admin-reset-modal__actions">
-      <button type="button" class="ghost" (click)="cancelReset()" [disabled]="resetting()">
-        Annuler
-      </button>
-      <button type="button" class="danger" (click)="confirmReset()" [disabled]="resetting()">
-        {{ resetting() ? 'Remise à zéro...' : 'Confirmer' }}
-      </button>
-    </div>
+    <article class="admin-dashboard__card">
+      <h2>Paris des joueurs</h2>
+      <p>Consultez les tickets. Le résultat de chaque ticket découle du score officiel du match.</p>
+      <a routerLink="/admin/bets">Consulter les paris</a>
+    </article>
+    <article class="admin-dashboard__card">
+      <h2>Utilisateurs</h2>
+      <p>Recherchez les comptes et consultez les profils publics.</p>
+      <a routerLink="/admin/users">Consulter les utilisateurs</a>
+    </article>
   </div>
-</div>
+</section>

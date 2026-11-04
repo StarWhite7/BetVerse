@@ -5,28 +5,18 @@
       <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
         Overview
       </a>
-      <a routerLink="/admin/matches" routerLinkActive="active">
-        Matches
-      </a>
-      <a routerLink="/admin/bets" routerLinkActive="active">
-        Bets
-      </a>
-      <a routerLink="/admin/rewards" routerLinkActive="active">
-        Rewards
-      </a>
-      <a routerLink="/admin/users" routerLinkActive="active">
-        Users
-      </a>
+      <a routerLink="/admin/matches" routerLinkActive="active"> Matches </a>
+      <a routerLink="/admin/bets" routerLinkActive="active"> Bets </a>
+      <a routerLink="/admin/users" routerLinkActive="active"> Users </a>
     </nav>
   </aside>
   <section class="admin-shell__content">
     <header class="admin-shell__header">
       <h1>Panel Administrateur</h1>
-      <button type="button">Créer un match</button>
+      <a routerLink="/admin/matches">Gérer les matchs</a>
     </header>
     <main class="admin-shell__main">
       <router-outlet></router-outlet>
     </main>
   </section>
 </div>
-

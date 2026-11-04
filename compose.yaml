@@ -1,0 +1,27 @@
+services:
+  app:
+    build: .
+    init: true
+    restart: unless-stopped
+    env_file: server/.env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3001
+      DATABASE_PATH: /app/server/.data/betverse.sqlite
+      NODE_OPTIONS: --max-old-space-size=384
+    ports:
+      - '127.0.0.1:3001:3001'
+    volumes:
+      - betverse-data:/app/server/.data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    mem_limit: 512m
+volumes:
+  betverse-data:

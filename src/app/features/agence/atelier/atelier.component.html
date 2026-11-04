@@ -9,7 +9,6 @@
   </a>
 
   <header class="atelier__hero">
-
     <div class="atelier__badge" aria-hidden="true">
       <svg viewBox="0 0 24 24">
         <path d="M14.7 6.3a4 4 0 0 0-5.6 5.6l7.4 7.4 5.6-5.6-7.4-7.4Z" />
@@ -20,8 +19,8 @@
     <p class="atelier__eyebrow">Atelier creatif</p>
     <h1>Atelier de personnalisation</h1>
     <p class="atelier__lead">
-      Définissez l'identité de votre clan. Modifiez le logo, les couleurs et la
-      bannière pour vous démarquer.
+      Définissez l'identité de votre clan. Modifiez le logo, les couleurs et la bannière pour vous
+      démarquer.
     </p>
     <div class="atelier__divider" aria-hidden="true"></div>
   </header>
@@ -88,77 +87,83 @@
         <p>Un aperçu du rendu final.</p>
       </header>
       <div class="preview">
-      <div
-        class="preview__banner"
-        [class.preview__banner--grid]="selectedBanner() === 'grid'"
-        [class.preview__banner--waves]="selectedBanner() === 'waves'"
-        [class.preview__banner--rain]="selectedBanner() === 'rain'"
-        [class.preview__banner--circuit]="selectedBanner() === 'circuit'"
-        [style.--primary]="primaryColor()"
-        [style.--secondary]="secondaryColor()"
+        <div
+          class="preview__banner"
+          [class.preview__banner--grid]="selectedBanner() === 'grid'"
+          [class.preview__banner--waves]="selectedBanner() === 'waves'"
+          [class.preview__banner--rain]="selectedBanner() === 'rain'"
+          [class.preview__banner--circuit]="selectedBanner() === 'circuit'"
+          [style.--primary]="primaryColor()"
+          [style.--secondary]="secondaryColor()"
+        >
+          <div class="preview__logo">
+            <ng-container [ngSwitch]="selectedLogo()">
+              <svg
+                *ngSwitchCase="'logo-1'"
+                viewBox="0 0 64 64"
+                [style.fill]="primaryColor()"
+                [style.stroke]="secondaryColor()"
+              >
+                <path d="M32 6l20 10v18c0 12-9 20-20 24-11-4-20-12-20-24V16Z" />
+              </svg>
+              <svg
+                *ngSwitchCase="'logo-2'"
+                viewBox="0 0 64 64"
+                [style.fill]="primaryColor()"
+                [style.stroke]="secondaryColor()"
+              >
+                <circle cx="32" cy="32" r="18" />
+                <circle cx="32" cy="32" r="8" />
+              </svg>
+              <svg
+                *ngSwitchCase="'logo-3'"
+                viewBox="0 0 64 64"
+                [style.fill]="primaryColor()"
+                [style.stroke]="secondaryColor()"
+              >
+                <path d="M10 20l22-12 22 12-22 12Z" />
+                <path d="M12 28l20 10 20-10v16L32 56 12 44Z" />
+              </svg>
+              <svg
+                *ngSwitchCase="'logo-4'"
+                viewBox="0 0 64 64"
+                [style.fill]="primaryColor()"
+                [style.stroke]="secondaryColor()"
+              >
+                <path d="M12 10h40v18H12z" />
+                <path d="M18 28h28l-6 24H24Z" />
+              </svg>
+            </ng-container>
+          </div>
+        </div>
+        <div class="preview__info">
+          <h3>Nom du clan</h3>
+          <p>{{ agencyName() }}</p>
+          <div class="preview__stats">
+            <span
+              ><strong>{{ agencyMembers() }}</strong> Membres</span
+            >
+            <span
+              ><strong>{{ agencyClanScore() }}</strong> Score clan</span
+            >
+            <span
+              ><strong>{{ agencyRank() }}</strong> Rang</span
+            >
+          </div>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="preview__save"
+        [class.preview__save--pulse]="saving()"
+        (click)="saveChanges()"
+        [disabled]="saving() || !hasChanges() || !hasAgency()"
       >
-        <div class="preview__logo">
-          <ng-container [ngSwitch]="selectedLogo()">
-            <svg
-              *ngSwitchCase="'logo-1'"
-              viewBox="0 0 64 64"
-              [style.fill]="primaryColor()"
-              [style.stroke]="secondaryColor()"
-            >
-              <path d="M32 6l20 10v18c0 12-9 20-20 24-11-4-20-12-20-24V16Z" />
-            </svg>
-            <svg
-              *ngSwitchCase="'logo-2'"
-              viewBox="0 0 64 64"
-              [style.fill]="primaryColor()"
-              [style.stroke]="secondaryColor()"
-            >
-              <circle cx="32" cy="32" r="18" />
-              <circle cx="32" cy="32" r="8" />
-            </svg>
-            <svg
-              *ngSwitchCase="'logo-3'"
-              viewBox="0 0 64 64"
-              [style.fill]="primaryColor()"
-              [style.stroke]="secondaryColor()"
-            >
-              <path d="M10 20l22-12 22 12-22 12Z" />
-              <path d="M12 28l20 10 20-10v16L32 56 12 44Z" />
-            </svg>
-            <svg
-              *ngSwitchCase="'logo-4'"
-              viewBox="0 0 64 64"
-              [style.fill]="primaryColor()"
-              [style.stroke]="secondaryColor()"
-            >
-              <path d="M12 10h40v18H12z" />
-              <path d="M18 28h28l-6 24H24Z" />
-            </svg>
-          </ng-container>
-        </div>
-      </div>
-      <div class="preview__info">
-        <h3>Nom du clan</h3>
-        <p>{{ agencyName() }}</p>
-        <div class="preview__stats">
-          <span><strong>{{ agencyMembers() }}</strong> Membres</span>
-          <span><strong>{{ agencyClanScore() }}</strong> Score clan</span>
-          <span><strong>{{ agencyRank() }}</strong> Rang</span>
-        </div>
-      </div>
-    </div>
-    <button
-      type="button"
-      class="preview__save"
-      [class.preview__save--pulse]="saving()"
-      (click)="saveChanges()"
-      [disabled]="saving() || !hasChanges() || !hasAgency()"
-    >
-      {{ saving() ? 'Sauvegarde...' : 'Sauvegarder' }}
-    </button>
-    <p class="preview__success" *ngIf="saveSuccess()">Sauvegarde effectuée.</p>
-    <p class="preview__error" *ngIf="error()">{{ error() }}</p>
-  </section>
+        {{ saving() ? 'Sauvegarde...' : 'Sauvegarder' }}
+      </button>
+      <p class="preview__success" *ngIf="saveSuccess()">Sauvegarde effectuée.</p>
+      <p class="preview__error" *ngIf="error()">{{ error() }}</p>
+    </section>
 
     <section class="panel panel--colors">
       <header class="panel__header">
@@ -245,44 +250,44 @@
         <h2>Style de bannière</h2>
         <p>Choisissez une ambiance pour votre entête.</p>
       </header>
-        <div class="banner-grid">
-          <button
-            type="button"
-            class="banner"
-            [class.active]="selectedBanner() === 'grid'"
-            (click)="selectBanner('grid')"
-          >
-            <span class="banner__preview banner__preview--grid"></span>
-            Cyber Grid
-          </button>
-          <button
-            type="button"
-            class="banner"
-            [class.active]="selectedBanner() === 'waves'"
-            (click)="selectBanner('waves')"
-          >
-            <span class="banner__preview banner__preview--waves"></span>
-            Neon Waves
-          </button>
-          <button
-            type="button"
-            class="banner"
-            [class.active]="selectedBanner() === 'rain'"
-            (click)="selectBanner('rain')"
-          >
-            <span class="banner__preview banner__preview--rain"></span>
-            Digital Rain
-          </button>
-          <button
-            type="button"
-            class="banner"
-            [class.active]="selectedBanner() === 'circuit'"
-            (click)="selectBanner('circuit')"
-          >
-            <span class="banner__preview banner__preview--circuit"></span>
-            Circuit Board
-          </button>
-        </div>
-      </section>
+      <div class="banner-grid">
+        <button
+          type="button"
+          class="banner"
+          [class.active]="selectedBanner() === 'grid'"
+          (click)="selectBanner('grid')"
+        >
+          <span class="banner__preview banner__preview--grid"></span>
+          Cyber Grid
+        </button>
+        <button
+          type="button"
+          class="banner"
+          [class.active]="selectedBanner() === 'waves'"
+          (click)="selectBanner('waves')"
+        >
+          <span class="banner__preview banner__preview--waves"></span>
+          Neon Waves
+        </button>
+        <button
+          type="button"
+          class="banner"
+          [class.active]="selectedBanner() === 'rain'"
+          (click)="selectBanner('rain')"
+        >
+          <span class="banner__preview banner__preview--rain"></span>
+          Digital Rain
+        </button>
+        <button
+          type="button"
+          class="banner"
+          [class.active]="selectedBanner() === 'circuit'"
+          (click)="selectBanner('circuit')"
+        >
+          <span class="banner__preview banner__preview--circuit"></span>
+          Circuit Board
+        </button>
+      </div>
+    </section>
   </div>
 </section>

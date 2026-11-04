@@ -6,6 +6,7 @@ import { WalletApiService, WalletEntity } from '../../data-access/wallet/wallet.
 import { BetsApiService, BetEntity } from '../../data-access/bets/bets.api';
 import { MatchesApiService, MatchEntity } from '../../data-access/matches/matches.api';
 import { AuthService } from '../../core/services/auth.service';
+import { UsersApiService, PublicProfile } from '../../data-access/users/users.api';
 
 interface StatCard {
   label: string;
@@ -38,6 +39,8 @@ interface ActionCard {
   styleUrl: './home.css',
 })
 export class Home implements OnInit {
+  private readonly usersApi = inject(UsersApiService);
+  totals = signal<(PublicProfile['stats'] & { verseEarned: number }) | null>(null);
   private readonly walletApi = inject(WalletApiService);
   private readonly betsApi = inject(BetsApiService);
   private readonly matchesApi = inject(MatchesApiService);
@@ -53,17 +56,13 @@ export class Home implements OnInit {
   error = signal<string | null>(null);
   user = computed(() => this.auth.currentUser());
   hasAdminAccess = computed(() => this.user()?.role === 'ADMIN');
-  hasWalletAccess = computed(() => this.user()?.role === 'ADMIN');
+  hasWalletAccess = computed(() => !!this.user());
 
   stats = computed<StatCard[]>(() => {
     const wallet = this.wallet();
     const bets = this.bets();
-    const pendingAmount = bets
-      .filter((bet) => bet.status === 'PENDING')
-      .reduce((sum, bet) => sum + bet.amount, 0);
-    const wonAmount = bets
-      .filter((bet) => bet.status === 'WON')
-      .reduce((sum, bet) => sum + bet.amount * bet.odds, 0);
+    const pendingAmount = this.totals()?.versePending ?? 0;
+    const wonAmount = this.totals()?.verseEarned ?? 0;
 
     return [
       {
@@ -73,11 +72,11 @@ export class Home implements OnInit {
       },
       {
         label: 'Paris gagnés',
-        value: `${bets.filter((b) => b.status === 'WON').length}`,
-        trend: `${bets.length} paris au total`,
+        value: `${this.totals()?.betsWon ?? 0}`,
+        trend: `${this.totals()?.betsPlayed ?? 0} paris au total`,
       },
       {
-        label: 'Gain potentiel',
+        label: 'Gains cumulés',
         value: wonAmount ? this.formatVerse(wonAmount) : '0 V',
         trend: 'Basé sur les gains cumulés',
       },
@@ -117,9 +116,9 @@ export class Home implements OnInit {
 
     if (this.hasWalletAccess()) {
       actions.push({
-        title: 'Créditer ton wallet',
-        description: 'Ajoute des fonds avant ton prochain ticket.',
-        cta: 'Déposer',
+        title: 'Mon portefeuille',
+        description: 'Consulte tes Verse et tes transactions.',
+        cta: 'Consulter',
         link: '/wallet',
         accent: 'primary',
       });
@@ -127,7 +126,7 @@ export class Home implements OnInit {
 
     actions.push({
       title: 'Parier sur un match',
-      description: 'Consulte les cotes en direct.',
+      description: 'Consulte les rencontres et leurs cotes.',
       cta: 'Voir les matchs',
       link: '/matches',
       accent: 'secondary',
@@ -168,8 +167,10 @@ export class Home implements OnInit {
       wallet: this.walletApi.getWallet(),
       bets: this.betsApi.getMyBets({ limit: 5 }),
       matches: this.matchesApi.getMatches('UPCOMING'),
+      totals: this.usersApi.getMyStats(),
     }).subscribe({
-      next: ({ wallet, bets, matches }) => {
+      next: ({ wallet, bets, matches, totals }) => {
+        this.totals.set(totals);
         this.wallet.set(wallet);
         this.bets.set(bets);
         this.matches.set(matches);
@@ -190,6 +191,3 @@ export class Home implements OnInit {
     return this.formatVerse(amount);
   }
 }
-
-
-

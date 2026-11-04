@@ -1,4 +1,4 @@
-﻿<section class="profile-header">
+<section class="profile-header">
   <div>
     <p>Identité</p>
     <h1>{{ displayName() }}</h1>
@@ -42,25 +42,21 @@
 
   <article class="profile-card" *ngIf="wallet(); else walletPlaceholder">
     <h3>Wallet</h3>
-    <p class="profile-card__balance">
-      {{ wallet()?.balance | number: '1.0-0' }} Verse
-    </p>
+    <p class="profile-card__balance">{{ wallet()?.balance | number: '1.0-0' }} Verse</p>
     <div class="profile-card__meta">
       <span>ID Wallet</span>
       <strong>{{ wallet()?.id }}</strong>
     </div>
     <div class="profile-card__meta">
       <span>Dernière mise à jour</span>
-      <strong>{{ wallet()?.updatedAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</strong>
+      <strong>{{ wallet()?.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
     </div>
   </article>
 
   <ng-template #walletPlaceholder>
     <article class="profile-card empty">
       <h3>Wallet</h3>
-      <p *ngIf="walletLoading(); else walletEmpty">
-        Chargement du wallet...
-      </p>
+      <p *ngIf="walletLoading(); else walletEmpty">Chargement du wallet...</p>
       <ng-template #walletEmpty>
         <p>Aucune information wallet disponible.</p>
       </ng-template>
@@ -101,9 +97,7 @@
           {{ usernameSubmitting() ? 'Mise à jour...' : 'Enregistrer' }}
         </button>
       </div>
-      <small class="input-hint">
-        3-24 caractères. Lettres, chiffres, ".", "_" ou "-".
-      </small>
+      <small class="input-hint"> 3-24 caractères. Lettres, chiffres, ".", "_" ou "-". </small>
     </form>
   </article>
 
@@ -132,8 +126,12 @@
         autocomplete="new-password"
         placeholder="********"
       />
-      <small class="input-hint">6 caractères minimum.</small>
-      <button type="submit" class="primary" [disabled]="passwordForm.invalid || passwordSubmitting()">
+      <small class="input-hint">10 à 128 caractères avec majuscule, minuscule et chiffre.</small>
+      <button
+        type="submit"
+        class="primary"
+        [disabled]="passwordForm.invalid || passwordSubmitting()"
+      >
         {{ passwordSubmitting() ? 'Modification...' : 'Mettre à jour' }}
       </button>
     </form>
@@ -151,16 +149,13 @@
     <li *ngIf="historyLoading()">Chargement de l'historique...</li>
     <li *ngFor="let tx of transactionsPreview(); trackBy: trackByTx">
       <div>
-        <span>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</span>
+        <span>{{ tx.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
         <small>{{ tx.type }}</small>
       </div>
       <strong [class.credit]="tx.type === 'CREDIT'">
         {{ tx.type === 'CREDIT' ? '+' : '-' }}{{ tx.amount }} Verse
       </strong>
     </li>
-    <li *ngIf="!transactionsPreview().length && !historyLoading()">
-      Aucune transaction récente.
-    </li>
+    <li *ngIf="!transactionsPreview().length && !historyLoading()">Aucune transaction récente.</li>
   </ul>
 </section>
-

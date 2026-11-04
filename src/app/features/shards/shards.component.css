@@ -248,10 +248,16 @@
 
 @keyframes shardsGrid {
   0% {
-    background-position: 0 0, 0 0, 0 0;
+    background-position:
+      0 0,
+      0 0,
+      0 0;
   }
   100% {
-    background-position: 120px 60px, 140px 0, 0 120px;
+    background-position:
+      120px 60px,
+      140px 0,
+      0 120px;
   }
 }
 

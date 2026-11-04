@@ -1,3 +1,8 @@
+@if (auth.startupError()) {
+  <div class="service-error" role="alert">
+    {{ auth.startupError() }} <button type="button" (click)="retryConnection()">Réessayer</button>
+  </div>
+}
 <router-outlet></router-outlet>
 <div class="toast-container" *ngIf="toasts().length">
   <div class="toast" *ngFor="let toast of toasts()" [class.error]="toast.type === 'error'">

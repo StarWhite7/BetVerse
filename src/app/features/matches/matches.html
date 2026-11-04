@@ -1,3 +1,20 @@
+<header class="matches-toolbar">
+  <div>
+    <h1>Matchs et pronostics</h1>
+    <p>Catalogue BetVerse · cotes enregistrées lors de la confirmation du pari</p>
+  </div>
+  <button type="button" (click)="loadMatches()" [disabled]="loading()">Actualiser</button>
+  <nav aria-label="Choisir un sport">
+    <button
+      *ngFor="let sport of sportFilters"
+      type="button"
+      (click)="selectSport(sport.key)"
+      [attr.aria-pressed]="selectedSport() === sport.key"
+    >
+      {{ sport.label }}
+    </button>
+  </nav>
+</header>
 <p class="matches-error" *ngIf="error()">
   {{ error() }}
 </p>
@@ -61,19 +78,25 @@
   <article class="match-card" *ngFor="let match of filteredMatches()">
     <header>
       <span class="match-card__date">
-        {{ match.startDate | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}
+        {{ match.startDate | date: 'dd/MM/yyyy HH:mm' }}
       </span>
       <div class="match-card__teams">
         <div class="match-card__team">
           <div class="match-card__team-logo">
-            <img [src]="teamLogoUrl(match.homeTeam)" [alt]="displayTeamName(match.homeTeam) + ' logo'" />
+            <img
+              [src]="teamLogoUrl(match.homeTeam)"
+              [alt]="displayTeamName(match.homeTeam) + ' logo'"
+            />
           </div>
           <span>{{ displayTeamName(match.homeTeam) }}</span>
         </div>
         <span class="match-card__vs">vs</span>
         <div class="match-card__team">
           <div class="match-card__team-logo">
-            <img [src]="teamLogoUrl(match.awayTeam)" [alt]="displayTeamName(match.awayTeam) + ' logo'" />
+            <img
+              [src]="teamLogoUrl(match.awayTeam)"
+              [alt]="displayTeamName(match.awayTeam) + ' logo'"
+            />
           </div>
           <span>{{ displayTeamName(match.awayTeam) }}</span>
         </div>
@@ -110,7 +133,12 @@
 
 <div class="match-bet-modal" *ngIf="betModalOpen()">
   <div class="match-bet-modal__backdrop" (click)="closeBetModal()"></div>
-  <div class="match-bet-modal__content">
+  <div
+    class="match-bet-modal__content"
+    bvDialog
+    aria-label="Confirmer le pari"
+    (dialogDismiss)="closeBetModal()"
+  >
     <h3>Parier sur {{ selectedMatch()?.homeTeam }} vs {{ selectedMatch()?.awayTeam }}</h3>
     <div class="match-bet-modal__details">
       <div>
@@ -128,10 +156,18 @@
     </div>
     <label>
       Montant (V)
-      <input type="number" min="1" [(ngModel)]="betAmountValue" />
+      <input
+        type="number"
+        min="1"
+        max="1000000"
+        step="1"
+        [(ngModel)]="betAmountValue"
+        [disabled]="betting()"
+      />
     </label>
     <p class="match-bet-modal__balance">
-      Solde: {{ walletBalance() !== null ? (walletBalance() | number: '1.0-0') + " V" : 'Non disponible' }}
+      Solde:
+      {{ walletBalance() !== null ? (walletBalance() | number: '1.0-0') + ' V' : 'Non disponible' }}
     </p>
     <p class="matches-error" *ngIf="betError()">
       {{ betError() }}

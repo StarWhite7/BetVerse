@@ -9,7 +9,6 @@
   </a>
 
   <header class="coordination__hero">
-
     <div class="coordination__badge" aria-hidden="true">
       <svg viewBox="0 0 24 24">
         <path d="M8 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
@@ -22,8 +21,8 @@
     <p class="coordination__eyebrow">Mission control</p>
     <h1>Salle de coordination</h1>
     <p class="coordination__lead">
-      Sélectionnez, suivez et coordonnez les missions de clan. Travaillez
-      ensemble pour atteindre les objectifs et obtenir des récompenses.
+      Sélectionnez, suivez et coordonnez les missions de clan. Travaillez ensemble pour atteindre
+      les objectifs et obtenir des récompenses.
     </p>
     <div class="coordination__divider" aria-hidden="true"></div>
   </header>
@@ -71,7 +70,10 @@
           <span class="mission-card__tag" [ngClass]="difficultyClass(mission.mission.difficulty)">
             {{ difficultyLabel(mission.mission.difficulty) }}
           </span>
-          <span class="mission-card__tag mission-card__tag--locked" *ngIf="mission.status === 'LOCKED'">
+          <span
+            class="mission-card__tag mission-card__tag--locked"
+            *ngIf="mission.status === 'LOCKED'"
+          >
             Locked
           </span>
         </div>
@@ -82,10 +84,7 @@
       </div>
       <p>
         {{ mission.mission.description
-        }}<span
-          class="mission-card__note-inline"
-          *ngIf="mission.mission.slug === 'weekly-bets'"
-        >
+        }}<span class="mission-card__note-inline" *ngIf="mission.mission.slug === 'weekly-bets'">
           Chaque match compte une seule fois par joueur.
         </span>
       </p>
@@ -98,12 +97,18 @@
           <span class="mission-card__timer" *ngIf="mission.dueAt">
             {{ mission.dueAt | date: 'd MMM' }}
           </span>
-          <button type="button" class="mission-card__button" [disabled]="mission.status === 'LOCKED'">
+          <button
+            type="button"
+            class="mission-card__button"
+            [disabled]="mission.status === 'LOCKED'"
+          >
             Voir détails
           </button>
         </div>
       </div>
     </article>
-    <p class="missions__empty" *ngIf="missions().length === 0 && !loading()">Aucune mission disponible.</p>
+    <p class="missions__empty" *ngIf="missions().length === 0 && !loading()">
+      Aucune mission disponible.
+    </p>
   </section>
 </section>

@@ -2,13 +2,21 @@
   <aside class="shell__sidebar">
     <a class="shell__logo" routerLink="/">BETVERSE</a>
     <nav class="shell__nav">
-      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
         <span>Tableau de bord</span>
       </a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+        ><span>Matchs</span></a
+      >
+      <a routerLink="/wallet" routerLinkActive="active"><span>Portefeuille</span></a>
       <a routerLink="/bets" routerLinkActive="active">
         <span>Mes paris</span>
       </a>
-      <a routerLink="/agence" routerLinkActive="active" *ngIf="hasAdminAccess()">
+      <a routerLink="/agence" routerLinkActive="active">
         <span>Mon agence</span>
       </a>
       <a routerLink="/leaderboard" routerLinkActive="active">
@@ -30,7 +38,11 @@
         <a routerLink="/admin-usage" routerLinkActive="active">
           <span>Requ&#234;te</span>
         </a>
-        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a
+          routerLink="/admin"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
           <span>Panel</span>
         </a>
       </div>
@@ -69,134 +81,12 @@
   <div class="shell__content">
     <header class="shell__header">
       <div class="shell__breadcrumbs">
-        <span *ngIf="user(); else guest">
-          Bonjour, {{ user()?.username ?? user()?.email }}
-        </span>
+        <span *ngIf="user(); else guest"> Bonjour, {{ user()?.username ?? user()?.email }} </span>
         <ng-template #guest>Bienvenue</ng-template>
       </div>
       <div class="shell__cta">
-        <div class="admin-xp" *ngIf="hasAdminAccess()">
-          <button type="button" class="ghost" (click)="addAdminXp()" [disabled]="adminXpLoading()">
-            +100 XP
-          </button>
-          <button type="button" class="ghost" (click)="removeAdminXp()" [disabled]="adminXpLoading()">
-            -100 XP
-          </button>
-          <button type="button" class="ghost" (click)="resetAdminXp()" [disabled]="adminXpLoading()">
-            Reset XP
-          </button>
-        </div>
-        <button
-          type="button"
-          (click)="claimDailyVerses()"
-          [disabled]="claimLoading() || !claimAvailable()"
-        >
-          <ng-container *ngIf="claimAvailable(); else claimCountdownTpl">
-            {{ claimLoading() ? 'Réclamation...' : 'Réclamer' }}
-          </ng-container>
-        </button>
-        <ng-template #claimCountdownTpl>
-          <span class="claim-countdown">{{ claimCountdown() }}</span>
-        </ng-template>
-        <div class="wallet-balance" aria-live="polite">
-          <div class="wallet-balance__label">Verse</div>
-          <ng-container *ngIf="!walletLoading(); else balanceLoading">
-            <div class="wallet-balance__value">
-              {{ wallet()?.balance ?? 0 | number: '1.0-0' }}
-            </div>
-          </ng-container>
-          <ng-template #balanceLoading>
-            <div class="wallet-balance__value wallet-balance__value--loading">...</div>
-          </ng-template>
-        </div>
-        <div class="wallet-balance wallet-balance--shards" aria-live="polite">
-          <div class="wallet-balance__label">Shards</div>
-          <ng-container *ngIf="!walletLoading(); else shardsLoading">
-            <div class="wallet-balance__value">
-              {{ wallet()?.shards ?? 0 | number: '1.0-0' }}
-            </div>
-          </ng-container>
-          <ng-template #shardsLoading>
-            <div class="wallet-balance__value wallet-balance__value--loading">...</div>
-          </ng-template>
-          <ng-container *ngIf="hasAdminAccess(); else shardsLocked">
-            <a class="wallet-balance__action" routerLink="/shards" aria-label="Acheter des shards">
-              +
-            </a>
-          </ng-container>
-          <ng-template #shardsLocked>
-            <span
-              class="wallet-balance__action wallet-balance__action--locked"
-              role="button"
-              aria-label="Prochainement disponible"
-              [attr.data-tooltip]="'Prochainement disponible'"
-            >
-              +
-            </span>
-          </ng-template>
-        </div>
-        <div class="notifications" #notificationsWrap (click)="$event.stopPropagation()">
-          <button type="button" class="notifications__toggle" (click)="toggleNotifications()">
-            <span class="notifications__icon" aria-hidden="true">✉</span>
-            <span class="notifications__label">Notifications</span>
-            <span class="notifications__badge" *ngIf="unreadNotifications() > 0">
-              {{ unreadNotifications() }}
-            </span>
-          </button>
-          <div class="notifications__panel" *ngIf="notificationsOpen()">
-            <div class="notifications__header">
-              <span>Dernieres notifications</span>
-              <button type="button" (click)="refreshNotifications()">Rafraichir</button>
-            </div>
-            <div class="notifications__list" *ngIf="!notificationsLoading(); else notifLoading">
-              <div
-                class="notifications__item"
-                *ngFor="let note of notifications()"
-                (click)="onNotificationClick(note)"
-                [class.unread]="!note.readAt"
-                [class.notifications__item--expanded]="isInviteExpanded(note)"
-              >
-                <div class="notifications__title">{{ note.title }}</div>
-                <div class="notifications__message" *ngIf="!isInviteNotification(note)">
-                  {{ note.message }}
-                </div>
-                <div
-                  class="notifications__details"
-                  *ngIf="isInviteNotification(note)"
-                  [class.notifications__details--open]="isInviteExpanded(note)"
-                >
-                  <div class="notifications__message">
-                    {{ note.message }}
-                  </div>
-                  <div class="notifications__actions">
-                    <button type="button" (click)="acceptInviteFromDropdown(note, $event)">
-                      Accepter
-                    </button>
-                    <button
-                      type="button"
-                      class="notifications__actions-ghost"
-                      (click)="declineInviteFromDropdown(note, $event)"
-                    >
-                      Refuser
-                    </button>
-                  </div>
-                </div>
-                <div class="notifications__status" *ngIf="isInviteResolved(note)">
-                  {{ note.message }}
-                </div>
-              </div>
-              <div class="notifications__empty" *ngIf="notifications().length === 0">
-                Aucune notification.
-              </div>
-            </div>
-            <ng-template #notifLoading>
-              <div class="notifications__loading">Chargement...</div>
-            </ng-template>
-            <a class="notifications__footer" routerLink="/notification" (click)="closeNotifications()">
-              Voir notification
-            </a>
-          </div>
-        </div>
+        <app-wallet-status />
+        <app-notification-center />
         <a class="profile-chip" routerLink="/profile">
           <span class="profile-chip__avatar">{{ profileInitials() }}</span>
           <div class="profile-chip__body">
@@ -225,115 +115,3 @@
     </main>
   </div>
 </div>
-
-<section class="bet-win-popup" *ngIf="betWinVisible()">
-  <div class="bet-win-popup__backdrop"></div>
-  <div class="bet-win-popup__spotlight bet-win-popup__spotlight--left"></div>
-  <div class="bet-win-popup__spotlight bet-win-popup__spotlight--right"></div>
-  <div class="bet-win-popup__card" role="dialog" aria-live="polite" (click)="$event.stopPropagation()">
-    <div class="bet-win-popup__confetti">
-      <span *ngFor="let _ of betWinConfetti(); let i = index" class="bet-win-popup__spark"></span>
-    </div>
-    <h3 class="bet-win-popup__title">{{ betWinCurrent().title }}</h3>
-    <div class="bet-win-ticket">
-      <div class="bet-win-ticket__match">
-        <div class="bet-win-team">
-          <div class="bet-win-team__logo">
-            <img [src]="teamLogoUrl(betWinMeta().homeTeam)" [alt]="betWinMeta().homeTeam" />
-          </div>
-          <span>{{ betWinMeta().homeTeam }}</span>
-        </div>
-        <div class="bet-win-ticket__vs">VS</div>
-        <div class="bet-win-team">
-          <div class="bet-win-team__logo">
-            <img [src]="teamLogoUrl(betWinMeta().awayTeam)" [alt]="betWinMeta().awayTeam" />
-          </div>
-          <span>{{ betWinMeta().awayTeam }}</span>
-        </div>
-      </div>
-      <div class="bet-win-ticket__grid">
-        <div class="bet-win-ticket__item">
-          <span>Pari</span>
-          <strong>{{ betWinMeta().betTypeLabel }}</strong>
-        </div>
-        <div class="bet-win-ticket__item">
-          <span>Mise</span>
-          <strong>{{ betWinMeta().amount ?? '--' }} V</strong>
-        </div>
-        <div class="bet-win-ticket__item">
-          <span>Cote</span>
-          <strong>
-            {{ betWinMeta().odds == null ? '--' : (betWinMeta().odds | number: '1.2-2') }}
-          </strong>
-        </div>
-        <div class="bet-win-ticket__item bet-win-ticket__gain">
-          <span>Gain</span>
-          <strong>{{ betWinMeta().payout ?? '--' }} V</strong>
-        </div>
-      </div>
-    </div>
-    <div class="bet-win-popup__cta">
-      <button
-        type="button"
-        class="bet-win-popup__primary"
-        (click)="confirmBetWin()"
-        *ngIf="betWinIndex() === betWinNotifications().length - 1"
-      >
-        Encaisser
-      </button>
-    </div>
-    <div class="bet-win-popup__nav" *ngIf="betWinNotifications().length > 1">
-      <button
-        type="button"
-        class="bet-win-popup__arrow"
-        (click)="prevBetWin()"
-        [disabled]="betWinIndex() === 0"
-        [class.is-hidden]="betWinIndex() === 0"
-      >
-        ‹
-      </button>
-      <div class="bet-win-popup__dots">
-        <span
-          class="bet-win-popup__dot"
-          *ngFor="let _ of betWinDots(); let i = index"
-          [class.active]="i === betWinIndex()"
-        ></span>
-      </div>
-      <button type="button" class="bet-win-popup__arrow" (click)="nextBetWin()">
-        ›
-      </button>
-    </div>
-  </div>
-</section>
-
-<section class="username-overlay" *ngIf="usernamePromptVisible()">
-  <div class="username-modal">
-    <div>
-      <p class="username-modal__eyebrow">Personnalisation requise</p>
-      <h2>Choisis ton pseudo BetVerse</h2>
-      <p>
-        Tu peux utiliser des lettres, chiffres ainsi que ".", "_" ou "-". Ce pseudo servira pour
-        t'identifier sur les classements et pour la connexion.
-      </p>
-    </div>
-    <form [formGroup]="usernamePromptForm" (ngSubmit)="submitUsernamePrompt()">
-      <label for="prompt-username">Pseudo</label>
-      <input
-        id="prompt-username"
-        type="text"
-        formControlName="username"
-        placeholder="neonverse"
-        autocomplete="off"
-      />
-      <span
-        class="field-error"
-        *ngIf="usernamePromptForm.get('username')?.touched && usernamePromptForm.get('username')?.invalid"
-      >
-        3-24 caractères (lettres, chiffres, . _ -)
-      </span>
-      <button type="submit" [disabled]="usernamePromptSubmitting() || usernamePromptForm.invalid">
-        {{ usernamePromptSubmitting() ? 'Enregistrement...' : 'Valider mon pseudo' }}
-      </button>
-    </form>
-  </div>
-</section>

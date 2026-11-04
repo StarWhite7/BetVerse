@@ -84,11 +84,9 @@
               {{ bet.betType }} · {{ bet.amount }} V · cote {{ bet.odds | number: '1.2-2' }}
             </span>
           </div>
-          <small>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</small>
+          <small>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
         </li>
-        <li *ngIf="!data.pendingBets.length">
-          Aucun pari en cours.
-        </li>
+        <li *ngIf="!data.pendingBets.length">Aucun pari en cours.</li>
       </ul>
     </article>
 
@@ -105,11 +103,9 @@
               {{ bet.status }} · {{ bet.amount }} V · cote {{ bet.odds | number: '1.2-2' }}
             </span>
           </div>
-          <small>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</small>
+          <small>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
         </li>
-        <li *ngIf="!data.historyBets.length">
-          Aucun historique disponible.
-        </li>
+        <li *ngIf="!data.historyBets.length">Aucun historique disponible.</li>
       </ul>
     </article>
   </section>

@@ -13,23 +13,26 @@
       {{ filter.label }}
     </button>
   </div>
-  <button
-    type="button"
-    class="bets-header__test"
-    (click)="triggerBetWinTest()"
-    *ngIf="isAdmin()"
-  >
-    Tester 1 gain
-  </button>
-  <button
-    type="button"
-    class="bets-header__test"
-    (click)="triggerBetWinTestLastThree()"
-    *ngIf="isAdmin()"
-  >
-    Tester 3 gains
-  </button>
 </section>
+
+<nav aria-label="Pagination des paris" class="pagination">
+  <button type="button" (click)="pagination.refresh()" [disabled]="loading()">Actualiser</button>
+  <button
+    type="button"
+    (click)="pagination.previousPage()"
+    [disabled]="loading() || pagination.offset() === 0"
+  >
+    Précédent
+  </button>
+  <span>Page {{ pagination.page() }} · {{ pagination.total() }} paris</span>
+  <button
+    type="button"
+    (click)="pagination.nextPage()"
+    [disabled]="loading() || !pagination.canNext()"
+  >
+    Suivant
+  </button>
+</nav>
 
 <p class="bets-error" *ngIf="error()">
   {{ error() }}
@@ -65,10 +68,18 @@
             [class.won]="bet.status === 'WON'"
             [class.lost]="bet.status === 'LOST'"
           >
-            {{ bet.status }}
+            {{
+              bet.status === 'VOID'
+                ? 'Remboursé'
+                : bet.status === 'PENDING'
+                  ? 'En attente'
+                  : bet.status === 'WON'
+                    ? 'Gagné'
+                    : 'Perdu'
+            }}
           </span>
         </td>
-        <td>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
+        <td>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
       </tr>
       <tr *ngIf="!bets().length && !loading()">
         <td [attr.colspan]="columnCount()">Aucun pari pour le moment.</td>

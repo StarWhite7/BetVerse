@@ -1,19 +1,14 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
-
+import { environment } from '../config/environment';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const auth = inject(AuthService);
-  const token = auth.token();
-
-  const authReq =
-    token && !req.headers.has('Authorization')
-      ? req.clone({
-          setHeaders: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      : req;
-
-  return next(authReq);
+  if (!req.url.startsWith(`${environment.apiUrl}/`)) return next(req);
+  const csrf = inject(AuthService).csrfToken();
+  return next(
+    req.clone({
+      withCredentials: true,
+      setHeaders: { 'X-Requested-With': 'BetVerse', ...(csrf ? { 'X-CSRF-Token': csrf } : {}) },
+    }),
+  );
 };

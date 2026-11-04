@@ -13,8 +13,6 @@ export function roleGuard(roles: UserRole[]): CanActivateFn {
       return router.createUrlTree(['/auth/login']);
     }
 
-    return roles.includes(user.role)
-      ? true
-      : router.createUrlTree(['/']);
+    return roles.includes(user.role) ? true : router.createUrlTree(['/']);
   };
 }

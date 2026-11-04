@@ -22,7 +22,7 @@ export interface AgencyEntity {
 export interface AgencyMember {
   id: string;
   username?: string | null;
-  email: string;
+  email?: string;
   agencyRole?: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE' | null;
   createdAt: string;
   xp?: number | null;
@@ -109,10 +109,9 @@ export class AgenceApiService {
     if (Number.isFinite(periodOffset ?? NaN)) {
       params['periodOffset'] = String(periodOffset);
     }
-    return this.http.get<Array<AgencyEntity & { _count?: { members: number } }>>(
-      this.baseUrl,
-      { params: Object.keys(params).length ? params : undefined },
-    );
+    return this.http.get<Array<AgencyEntity & { _count?: { members: number } }>>(this.baseUrl, {
+      params: Object.keys(params).length ? params : undefined,
+    });
   }
 
   getAgency(id: string) {
@@ -144,13 +143,8 @@ export class AgenceApiService {
     return this.http.post<{ success: true }>(`${this.baseUrl}/invitations/${id}/decline`, {});
   }
 
-  updateRole(
-    memberId: string,
-    role: 'DIRECTEUR' | 'ASSOCIE' | 'RESPONSABLE' | 'MEMBRE' | 'STAGIAIRE',
-  ) {
-    return this.http.patch<{ success: true }>(`${this.baseUrl}/members/${memberId}/role`, {
-      role,
-    });
+  updateRoles(changes: { id: string; role: string }[]) {
+    return this.http.patch<{ success: true }>(`${this.baseUrl}/members/roles`, { changes });
   }
 
   deleteAgency() {

@@ -50,16 +50,24 @@
                 {{ match.status }}
               </span>
             </td>
-            <td>{{ match.startDate | date: 'dd/MM/yyyy HH:mm':'Europe/Paris' }}</td>
+            <td>{{ match.startDate | date: 'dd/MM/yyyy HH:mm' }}</td>
             <td class="matches-table__actions">
               <button type="button" (click)="selectMatch(match)">Editer</button>
               <button
                 type="button"
                 class="ghost"
                 (click)="openFinishModal(match)"
-                [disabled]="match.status === 'FINISHED'"
+                [disabled]="match.status === 'FINISHED' || match.status === 'CANCELLED'"
               >
                 Clore
+              </button>
+              <button
+                type="button"
+                class="ghost"
+                (click)="openCancelModal(match)"
+                [disabled]="match.status === 'FINISHED' || match.status === 'CANCELLED'"
+              >
+                Annuler et rembourser
               </button>
             </td>
           </tr>
@@ -76,6 +84,15 @@
         <button type="button" class="ghost" (click)="resetForm()">Reset</button>
       </header>
       <form [formGroup]="matchForm" (ngSubmit)="submitMatch()">
+        <label
+          >Sport
+          <select formControlName="sportKey">
+            <option value="football">Football</option>
+            <option value="tennis">Tennis</option>
+            <option value="basketball">Basketball</option>
+          </select></label
+        >
+        <label>Compétition <input formControlName="competition" maxlength="80" /></label>
         <label>
           Équipe à domicile
           <input type="text" formControlName="homeTeam" placeholder="Team A" />
@@ -103,7 +120,13 @@
           </label>
         </div>
         <button type="submit" [disabled]="submitting()">
-          {{ submitting() ? 'Enregistrement...' : (matchForm.value.id ? 'Mettre à jour' : 'Créer le match') }}
+          {{
+            submitting()
+              ? 'Enregistrement...'
+              : matchForm.value.id
+                ? 'Mettre à jour'
+                : 'Créer le match'
+          }}
         </button>
       </form>
     </section>
@@ -112,24 +135,49 @@
 
 <div class="matches-modal" *ngIf="finishModalOpen()">
   <div class="matches-modal__backdrop" (click)="closeFinishModal()"></div>
-  <div class="matches-modal__content">
-    <h3>Clore le match</h3>
-    <p>
-      {{ finishTarget()?.homeTeam }} vs {{ finishTarget()?.awayTeam }}
-    </p>
-    <label>
-      Résultat
-      <select [value]="finishResult()" (change)="updateFinishResult($event)">
-        <option value="HOME">Victoire Home</option>
-        <option value="DRAW">Match nul</option>
-        <option value="AWAY">Victoire Away</option>
-      </select>
-    </label>
+  <div
+    class="matches-modal__content"
+    bvDialog
+    [attr.aria-label]="cancelMode() ? 'Annuler le match' : 'Clôturer le match'"
+    (dialogDismiss)="closeFinishModal()"
+  >
+    <h3>{{ cancelMode() ? 'Annuler et rembourser le match' : 'Clore le match' }}</h3>
+    <p>{{ finishTarget()?.homeTeam }} vs {{ finishTarget()?.awayTeam }}</p>
+    @if (cancelMode()) {
+      <label
+        >Motif de l’annulation
+        <textarea [(ngModel)]="cancellationReason" minlength="10" maxlength="300"></textarea>
+      </label>
+      <p>
+        Chaque mise en attente sera remboursée une seule fois. Cette rencontre sera définitivement
+        fermée.
+      </p>
+    } @else {
+      <label
+        >Score domicile <input type="number" min="0" max="200" step="1" [(ngModel)]="homeScore"
+      /></label>
+      <label
+        >Score extérieur <input type="number" min="0" max="200" step="1" [(ngModel)]="awayScore"
+      /></label>
+      <p>
+        Le score détermine le résultat. Tous les tickets et pronostics seront réglés
+        automatiquement.
+      </p>
+    }
     <div class="matches-modal__actions">
-      <button type="button" class="ghost" (click)="closeFinishModal()" [disabled]="finishSubmitting()">
+      <button
+        type="button"
+        class="ghost"
+        (click)="closeFinishModal()"
+        [disabled]="finishSubmitting()"
+      >
         Annuler
       </button>
-      <button type="button" (click)="finishMatch()" [disabled]="finishSubmitting()">
+      <button
+        type="button"
+        (click)="finishMatch()"
+        [disabled]="finishSubmitting() || (cancelMode() && cancellationReason.trim().length < 10)"
+      >
         {{ finishSubmitting() ? 'Cloture...' : 'Confirmer' }}
       </button>
     </div>

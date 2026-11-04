@@ -19,8 +19,7 @@
     <p class="bureau__eyebrow">Quartier general</p>
     <h1>Bureau d'agence</h1>
     <p class="bureau__lead">
-      Pilotez votre roster, assignez des rôles et consolidez la stratégie du
-      clan.
+      Pilotez votre roster, assignez des rôles et consolidez la stratégie du clan.
     </p>
     <div class="bureau__divider" aria-hidden="true"></div>
   </header>
@@ -32,9 +31,9 @@
       <span class="stat-card__trend">Total actifs</span>
     </article>
     <article class="stat-card stat-card--online">
-      <span class="stat-card__label">En ligne</span>
+      <span class="stat-card__label">Effectif</span>
       <span class="stat-card__value">{{ onlineCount() }}</span>
-      <span class="stat-card__trend">Connectes</span>
+      <span class="stat-card__trend">Membres de l’agence</span>
     </article>
     <article class="stat-card stat-card--capacity">
       <span class="stat-card__label">Capacite</span>
@@ -61,7 +60,7 @@
       type="button"
       class="bureau__button bureau__button--ghost"
       (click)="openRoles()"
-      *ngIf="canManageAgency()"
+      *ngIf="isDirector()"
     >
       Gérer les rôles
     </button>
@@ -91,25 +90,21 @@
         <h2>Roster du clan</h2>
         <p>Vue d'ensemble des membres et de leurs rôles.</p>
       </div>
-      <button type="button" class="bureau__toggle" (click)="toggleRosterView()">
-        Classement
-      </button>
+      <button type="button" class="bureau__toggle" (click)="toggleRosterView()">Classement</button>
     </header>
 
     <ul class="roster__list">
       <li class="roster__item" *ngFor="let member of members()">
         <div class="roster__identity">
           <span class="roster__avatar">
-            {{ (member.username ?? member.email).slice(0, 2).toUpperCase() }}
+            {{ (member.username ?? 'BV').slice(0, 2).toUpperCase() }}
           </span>
           <div>
             <p class="roster__name">{{ member.username ?? member.email }}</p>
             <span class="roster__role" [ngClass]="roleClass(member.agencyRole)">
               {{ roleLabel(member.agencyRole) }}
             </span>
-            <span class="roster__meta">
-              Rejoint {{ member.createdAt | date: 'MMM yyyy' }}
-            </span>
+            <span class="roster__meta"> Rejoint {{ member.createdAt | date: 'MMM yyyy' }} </span>
           </div>
         </div>
         <div class="roster__stats">
@@ -129,9 +124,7 @@
         <h2>Classement interne</h2>
         <p>Classement des membres par XP.</p>
       </div>
-      <button type="button" class="bureau__toggle" (click)="toggleRosterView()">
-        Roster
-      </button>
+      <button type="button" class="bureau__toggle" (click)="toggleRosterView()">Roster</button>
     </header>
     <ul class="agency-ranking__list">
       <li class="agency-ranking__row" *ngFor="let member of rankedMembers()">
@@ -147,7 +140,10 @@
           <small>PTS</small>
         </div>
       </li>
-      <li class="agency-ranking__row agency-ranking__row--empty" *ngIf="rankedMembers().length === 0">
+      <li
+        class="agency-ranking__row agency-ranking__row--empty"
+        *ngIf="rankedMembers().length === 0"
+      >
         Aucun membre classé.
       </li>
     </ul>
@@ -299,8 +295,7 @@
     </header>
     <div class="bureau-modal__body">
       <p class="bureau-delete__warning-text">
-        Cette action va supprimer l'agence définitivement. Cette opération est
-        irreversible.
+        Cette action va supprimer l'agence définitivement. Cette opération est irreversible.
       </p>
       <input
         type="text"
@@ -309,10 +304,7 @@
         [value]="deleteInput()"
         (input)="updateDeleteInput($any($event.target).value)"
       />
-      <div
-        class="bureau-delete__warning"
-        [class.bureau-delete__warning--flash]="deleteError()"
-      >
+      <div class="bureau-delete__warning" [class.bureau-delete__warning--flash]="deleteError()">
         Écrire "DELETE" pour supprimer définitivement l'agence.
       </div>
       <div class="bureau-delete__actions">

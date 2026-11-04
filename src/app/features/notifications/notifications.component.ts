@@ -2,7 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NotificationsApiService, UserNotification } from '../../data-access/notifications/notifications.api';
+import {
+  NotificationsApiService,
+  UserNotification,
+} from '../../data-access/notifications/notifications.api';
 import { AgenceApiService, AgencyInvite } from '../../data-access/agence/agence.api';
 
 @Component({
@@ -29,28 +32,37 @@ export class NotificationsComponent implements OnInit {
 
   loadAll() {
     this.loading.set(true);
-    this.notificationsApi.list().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (items) => {
-        this.notifications.set(items);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.loading.set(false);
-      },
-    });
-    this.agenceApi.listInvites().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (invites) => {
-        this.invites.set(invites);
-      },
-    });
+    this.notificationsApi
+      .list()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (items) => {
+          this.notifications.set(items);
+          this.loading.set(false);
+        },
+        error: () => {
+          this.loading.set(false);
+        },
+      });
+    this.agenceApi
+      .listInvites()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (invites) => {
+          this.invites.set(invites);
+        },
+      });
   }
 
   markRead(notificationId: string) {
-    this.notificationsApi.markRead(notificationId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.loadAll();
-      },
-    });
+    this.notificationsApi
+      .markRead(notificationId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loadAll();
+        },
+      });
   }
 
   onNotificationClick(note: UserNotification) {
@@ -66,9 +78,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   isInviteResolved(note: UserNotification) {
-    return (
-      note.type === 'AGENCY_INVITE_ACCEPTED' || note.type === 'AGENCY_INVITE_DECLINED'
-    );
+    return note.type === 'AGENCY_INVITE_ACCEPTED' || note.type === 'AGENCY_INVITE_DECLINED';
   }
 
   isInviteExpanded(note: UserNotification) {
@@ -83,19 +93,25 @@ export class NotificationsComponent implements OnInit {
   }
 
   acceptInvite(inviteId: string) {
-    this.agenceApi.acceptInvite(inviteId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.loadAll();
-      },
-    });
+    this.agenceApi
+      .acceptInvite(inviteId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loadAll();
+        },
+      });
   }
 
   declineInvite(inviteId: string) {
-    this.agenceApi.declineInvite(inviteId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.loadAll();
-      },
-    });
+    this.agenceApi
+      .declineInvite(inviteId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loadAll();
+        },
+      });
   }
 
   deleteReadNotifications() {
@@ -103,14 +119,17 @@ export class NotificationsComponent implements OnInit {
       return;
     }
     this.deletingRead.set(true);
-    this.notificationsApi.deleteRead().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => {
-        this.deletingRead.set(false);
-        this.loadAll();
-      },
-      error: () => {
-        this.deletingRead.set(false);
-      },
-    });
+    this.notificationsApi
+      .deleteRead()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.deletingRead.set(false);
+          this.loadAll();
+        },
+        error: () => {
+          this.deletingRead.set(false);
+        },
+      });
   }
 }

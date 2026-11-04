@@ -124,3 +124,6 @@
     min-width: 180px;
   }
 }
+.users-table {
+  overflow-x: auto;
+}

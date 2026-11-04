@@ -3,8 +3,12 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatchesApiService, MatchEntity } from '../../data-access/matches/matches.api';
-import { AgenceApiService, AgencyMatchScore, AgencyMatchVoteSummary } from '../../data-access/agence/agence.api';
-import { TEAM_LOGO_MAP } from '../../shared/team-logos';
+import {
+  AgenceApiService,
+  AgencyMatchScore,
+  AgencyMatchVoteSummary,
+} from '../../data-access/agence/agence.api';
+import { teamLogoUrl as localTeamLogo } from '../../shared/utils/team-presentation';
 import { officialTeamName } from '../../shared/team-names';
 import { interval } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -35,7 +39,9 @@ export class MatchDeClanComponent implements OnInit {
   currentTime = signal(Date.now());
 
   matchesSorted = computed(() =>
-    [...this.matches()].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()),
+    [...this.matches()].sort(
+      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    ),
   );
   weekOptions = computed(() => {
     const now = new Date();
@@ -169,7 +175,7 @@ export class MatchDeClanComponent implements OnInit {
       },
       error: () => {
         this.saving.set(false);
-        this.saveMessage.set("Echec de la sauvegarde.");
+        this.saveMessage.set('Echec de la sauvegarde.');
         this.saveTimeout = window.setTimeout(() => {
           this.saveMessage.set('');
           this.saveTimeout = undefined;
@@ -285,23 +291,18 @@ export class MatchDeClanComponent implements OnInit {
   }
 
   teamLogoUrl(team: string): string {
-    const normalized = this.normalizeTeamName(this.displayTeamName(team));
-    const matched = TEAM_LOGO_MAP[normalized];
-    if (matched) {
-      return matched;
-    }
-    const initials = this.teamInitials(team);
-    const base = 'https://placehold.co/80x80/020617/ffffff?text=';
-    return `${base}${encodeURIComponent(initials)}`;
+    return localTeamLogo(team);
   }
 
   private teamInitials(team: string): string {
-    return team
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((word) => word.charAt(0).toUpperCase())
-      .join('') || team.charAt(0).toUpperCase();
+    return (
+      team
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word.charAt(0).toUpperCase())
+        .join('') || team.charAt(0).toUpperCase()
+    );
   }
 
   private normalizeTeamName(team: string): string {
@@ -317,12 +318,7 @@ export class MatchDeClanComponent implements OnInit {
   }
 
   private matchCompetitionLabel(match: MatchEntity): string {
-    const raw =
-      match.competition ||
-      match.league ||
-      match.sportTitle ||
-      match.sport ||
-      'Autre';
+    const raw = match.competition || match.league || match.sportTitle || match.sport || 'Autre';
     const normalized = raw.trim().toLowerCase();
     if (normalized === 'france') {
       return 'Ligue 1';

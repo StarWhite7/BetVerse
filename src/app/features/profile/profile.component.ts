@@ -11,6 +11,7 @@ import {
 import { NotificationService } from '../../core/services/notification.service';
 import { UsersApiService } from '../../data-access/users/users.api';
 import { User } from '../../shared/models/user.model';
+import { strongPasswordValidator } from '../../shared/utils/validators';
 
 @Component({
   selector: 'app-profile',
@@ -37,22 +38,22 @@ export class ProfileComponent implements OnInit {
   passwordSubmitting = signal(false);
   error = signal<string | null>(null);
   transactionsPreview = computed(() => this.transactions().slice(0, 5));
-  hasWalletAccess = computed(() => this.user()?.role === 'ADMIN');
+  hasWalletAccess = computed(() => !!this.user());
 
   usernameForm = this.fb.nonNullable.group({
     username: [
       '',
       [
-       Validators.required,
-       Validators.minLength(3),
-       Validators.maxLength(24),
-       Validators.pattern(/^[a-zA-Z0-9_.-]+$/),
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(24),
+        Validators.pattern(/^[a-zA-Z0-9_.-]+$/),
       ],
     ],
   });
   passwordForm = this.fb.nonNullable.group({
     currentPassword: ['', [Validators.required]],
-    newPassword: ['', [Validators.required, Validators.minLength(6)]],
+    newPassword: ['', [Validators.required, strongPasswordValidator()]],
   });
 
   private readonly syncUsernameEffect = effect(() => {
@@ -118,6 +119,7 @@ export class ProfileComponent implements OnInit {
         this.passwordSubmitting.set(false);
         this.passwordForm.reset();
         this.notifications.success('Mot de passe modifie.');
+        this.auth.expireSession();
       },
       error: () => {
         this.passwordSubmitting.set(false);

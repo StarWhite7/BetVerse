@@ -20,6 +20,8 @@
 .bets-header__filters {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .bets-header__test {
@@ -55,6 +57,7 @@
 
 .bets-table table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
 }
 
@@ -105,4 +108,31 @@
 .bets-table td[colspan] {
   text-align: center;
   color: rgba(226, 232, 240, 0.75);
+}
+.bets-table {
+  overflow-x: auto;
+}
+.pagination {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+.pagination button {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  border: 1px solid #475569;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.bets-table {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }

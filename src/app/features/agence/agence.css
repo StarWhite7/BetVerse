@@ -118,14 +118,13 @@
 }
 
 .agency-summary__banner--rain::after {
-  background:
-    repeating-linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.28) 0px,
-      rgba(255, 255, 255, 0.28) 2px,
-      transparent 2px,
-      transparent 10px
-    );
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.28) 0px,
+    rgba(255, 255, 255, 0.28) 2px,
+    transparent 2px,
+    transparent 10px
+  );
 }
 
 .agency-summary__banner--circuit::after {
@@ -279,7 +278,9 @@
   overflow: hidden;
   transform: translateY(20px);
   opacity: 0;
-  animation: cardIn 0.6s ease forwards, glowPulse 4.5s ease-in-out infinite;
+  animation:
+    cardIn 0.6s ease forwards,
+    glowPulse 4.5s ease-in-out infinite;
 }
 
 .agency-card--link {
@@ -300,7 +301,9 @@
   inset: 0;
   border-radius: inherit;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 25px rgba(var(--glow), 0.35), 0 0 45px rgba(var(--glow), 0.25);
+  box-shadow:
+    0 0 25px rgba(var(--glow), 0.35),
+    0 0 45px rgba(var(--glow), 0.25);
   opacity: 0.85;
   pointer-events: none;
 }
@@ -394,7 +397,9 @@
   --glow: 34, 211, 238;
   padding: 2.2rem 2.4rem;
   transform: translateY(10px);
-  animation: cardIn 0.6s ease forwards, corePulse 3s ease-in-out infinite;
+  animation:
+    cardIn 0.6s ease forwards,
+    corePulse 3s ease-in-out infinite;
   animation-delay: 0.1s, 0.7s;
 }
 
@@ -741,13 +746,18 @@
 
 @keyframes gridDrift {
   0% {
-    background-position: 0 0, 0 0, 0 0;
+    background-position:
+      0 0,
+      0 0,
+      0 0;
   }
   100% {
-    background-position: 120px 60px, 140px 0, 0 120px;
+    background-position:
+      120px 60px,
+      140px 0,
+      0 120px;
   }
 }
-
 
 @media (max-width: 1100px) {
   .agency__grid {

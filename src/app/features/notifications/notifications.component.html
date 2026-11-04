@@ -27,7 +27,11 @@
         <button type="button" class="invite-card__button" (click)="acceptInvite(invite.id)">
           Accepter
         </button>
-        <button type="button" class="invite-card__button invite-card__button--ghost" (click)="declineInvite(invite.id)">
+        <button
+          type="button"
+          class="invite-card__button invite-card__button--ghost"
+          (click)="declineInvite(invite.id)"
+        >
           Refuser
         </button>
       </div>
@@ -55,11 +59,7 @@
       [class.unread]="!note.readAt"
       [class.notification-card--expanded]="isInviteExpanded(note)"
     >
-      <button
-        type="button"
-        class="notification-card__title"
-        (click)="onNotificationClick(note)"
-      >
+      <button type="button" class="notification-card__title" (click)="onNotificationClick(note)">
         {{ note.title }}
       </button>
       <div class="notification-card__message" *ngIf="!isInviteNotification(note)">
@@ -74,11 +74,7 @@
         <div class="notification-card__divider" aria-hidden="true"></div>
         <div class="notification-card__message">{{ note.message }}</div>
         <div class="invite-card__actions">
-          <button
-            type="button"
-            class="invite-card__button"
-            (click)="acceptInvite(note.inviteId!)"
-          >
+          <button type="button" class="invite-card__button" (click)="acceptInvite(note.inviteId!)">
             Accepter
           </button>
           <button

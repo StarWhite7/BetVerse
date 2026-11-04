@@ -99,7 +99,10 @@
   </ng-template>
 
   <div class="agency__grid">
-    <a class="agency-card agency-card--archive agency-card--link" routerLink="/agence/classementdesagences">
+    <a
+      class="agency-card agency-card--archive agency-card--link"
+      routerLink="/agence/classementdesagences"
+    >
       <div class="agency-card__icon">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M6 4h12a2 2 0 0 1 2 2v3H4V6a2 2 0 0 1 2-2Z" />
@@ -120,9 +123,7 @@
         </svg>
       </div>
       <h3>Bureau d'Agence</h3>
-      <p>
-        Permet de voir les membres du clan et de la gestion des membres du clan.
-      </p>
+      <p>Permet de voir les membres du clan et de la gestion des membres du clan.</p>
     </a>
 
     <a class="agency-card agency-card--prestige agency-card--link" routerLink="/agence/matchdeclan">
@@ -150,7 +151,10 @@
       <p>Personnaliser le logo, les couleurs de l'agence, la bannière d'agence.</p>
     </a>
 
-    <a class="agency-card agency-card--coordination agency-card--link" routerLink="/agence/coordination">
+    <a
+      class="agency-card agency-card--coordination agency-card--link"
+      routerLink="/agence/coordination"
+    >
       <div class="agency-card__icon">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
@@ -173,8 +177,8 @@
       <p class="agency__eyebrow">Nouveau depart</p>
       <h1>Mon agence</h1>
       <p class="agency__lead">
-        Vous n'avez pas encore d'agence. Créez la votre avec des Shards ou explorez
-        les agences déjà actives.
+        Vous n'avez pas encore d'agence. Créez la votre avec des Shards ou explorez les agences déjà
+        actives.
       </p>
     </header>
 
@@ -187,9 +191,7 @@
           </svg>
         </div>
         <h3>Créer une équipe</h3>
-        <p>
-          Lancez votre propre agence. Coût unique: {{ agencyCost() }} Shards.
-        </p>
+        <p>Lancez votre propre agence. Coût unique: {{ agencyCost() }} Shards.</p>
         <div class="agency-empty__meta">
           <span>Shards disponibles</span>
           <strong>{{ shardBalance() }}</strong>
@@ -223,7 +225,12 @@
 
 <section class="agency-modal" *ngIf="modalOpen()">
   <div class="agency-modal__backdrop" (click)="closeCreateModal()"></div>
-  <div class="agency-modal__panel" role="dialog" aria-modal="true">
+  <div
+    class="agency-modal__panel"
+    bvDialog
+    aria-label="Créer une agence"
+    (dialogDismiss)="closeCreateModal()"
+  >
     <header class="agency-modal__header">
       <h2>Créer une agence</h2>
       <button type="button" class="agency-modal__close" (click)="closeCreateModal()">×</button>
@@ -337,7 +344,11 @@
     </div>
 
     <footer class="agency-modal__footer">
-      <button type="button" class="agency-empty__button agency-empty__button--ghost" (click)="closeCreateModal()">
+      <button
+        type="button"
+        class="agency-empty__button agency-empty__button--ghost"
+        (click)="closeCreateModal()"
+      >
         Annuler
       </button>
       <button

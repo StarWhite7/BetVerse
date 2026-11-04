@@ -1,75 +1,20 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import {
-  MatchesApiService,
-  OddsUsageSnapshot,
-} from '../../data-access/matches/matches.api';
-import { NotificationService } from '../../core/services/notification.service';
-
+import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-admin-usage',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './admin-usage.html',
-  styleUrl: './admin-usage.css',
+  imports: [RouterLink],
+  template: ` <section style="padding:2rem;color:#e2e8f0">
+    <h1>Catalogue des rencontres</h1>
+    <p>
+      La V1 utilise un catalogue géré par les administrateurs. Aucune donnée sportive en direct
+      n’est simulée.
+    </p>
+    <p>
+      Créez les rencontres et leurs cotes avant leur début, puis saisissez les scores officiels pour
+      régler les paris.
+    </p>
+    <a routerLink="/admin/matches">Gérer les rencontres</a>
+  </section>`,
 })
-export class AdminUsageComponent implements OnInit {
-  private readonly matchesApi = inject(MatchesApiService);
-  private readonly notifications = inject(NotificationService);
-
-  usage = signal<OddsUsageSnapshot | null>(null);
-  loading = signal(true);
-  error = signal<string | null>(null);
-  lastDelta = signal<number | null>(null);
-  syncing = signal(false);
-  refreshApiLabel = computed(() =>
-    this.syncing() ? 'Sync en cours...' : "Rafraichir l'API",
-  );
-  private lastUsed: number | null = null;
-
-  ngOnInit() {
-    this.loadUsage();
-  }
-
-  loadUsage() {
-    this.loading.set(true);
-    this.error.set(null);
-    this.matchesApi.getOddsUsage().subscribe({
-      next: (snapshot) => {
-        this.usage.set(snapshot);
-        if (snapshot.used !== null && this.lastUsed !== null) {
-          const delta = snapshot.used - this.lastUsed;
-          this.lastDelta.set(delta > 0 ? delta : 0);
-        } else {
-          this.lastDelta.set(snapshot.used ?? null);
-        }
-        this.lastUsed = snapshot.used;
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set("Impossible de recuperer les statistiques d'API.");
-        this.loading.set(false);
-      },
-    });
-  }
-
-  syncApi() {
-    if (this.syncing() || this.loading()) {
-      return;
-    }
-    this.syncing.set(true);
-    this.matchesApi.syncMatches({ force: true }).subscribe({
-      next: (result) => {
-        this.syncing.set(false);
-        this.notifications.success(
-          `Sync API ok (${result.upserts ?? 0} matchs mis a jour).`,
-        );
-        this.loadUsage();
-      },
-      error: () => {
-        this.syncing.set(false);
-        this.notifications.error("Impossible de rafraichir l'API.");
-      },
-    });
-  }
-}
+export class AdminUsageComponent {}

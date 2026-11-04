@@ -1,7 +1,7 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 export function strongPasswordValidator(): ValidatorFn {
-  const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{10,128}$/;
   return (control: AbstractControl): ValidationErrors | null => {
     const value = control.value as string;
     if (!value) return null;
@@ -18,10 +18,7 @@ export function matchControlValidator(
     const matchingControl = group.get(matchingControlName);
     if (!control || !matchingControl) return null;
 
-    if (
-      matchingControl.errors &&
-      !matchingControl.errors['mismatch']
-    ) {
+    if (matchingControl.errors && !matchingControl.errors['mismatch']) {
       return null;
     }
 

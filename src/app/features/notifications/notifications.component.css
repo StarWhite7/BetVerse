@@ -188,7 +188,9 @@
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: max-height 0.25s ease, opacity 0.25s ease;
+  transition:
+    max-height 0.25s ease,
+    opacity 0.25s ease;
 }
 
 .notification-card__details--open {

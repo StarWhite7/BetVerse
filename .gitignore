@@ -8,6 +8,18 @@
 
 # Node
 /node_modules
+/server/node_modules
+/server/.data/
+.env
+.env.*
+!.env.example
+!/server/.env.example
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.backup
+/server/coverage
+/test-results
 npm-debug.log
 yarn-error.log
 
@@ -41,3 +53,16 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Android signing keys and Firebase service account credentials
+/.private/
+*.jks
+*.keystore
+*.p12
+*.pfx
+gha-creds-*.json
+*-firebase-adminsdk-*.json
+/firebase-service-account.json
+/android/app/src/main/assets/public/
+/android/app/src/main/assets/capacitor.config.json
+/android/app/src/main/assets/capacitor.plugins.json
