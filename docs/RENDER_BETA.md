@@ -54,7 +54,16 @@ Dans les réglages SMTP du fournisseur, récupérer le serveur, le port, l’ide
 
 Les identifiants doivent être encodés comme composants URL, notamment `@`, `:`, `/`, `#`, `%` et `?`. Les saisir directement dans Render, pas dans le chat ni dans Git. Pour utiliser le port 587 en STARTTLS, le schéma est `smtp://` ; le backend exige TLS dans les deux cas.
 
+## À prévoir pour la version publique : personnalisation Brevo
+
+Demande utilisateur du 4 novembre 2026 : configurer un sous-domaine personnalisé Brevo pour présenter des liens de suivi et des images d’emails sous le domaine BetVerse. Cette personnalisation est reportée pendant la bêta ; elle est distincte de l’authentification du domaine et de l’expéditeur.
+
+- Choisir un sous-domaine disponible, par exemple `em.betverse.fr`, puis suivre les valeurs DNS fournies par Brevo dans la zone Infomaniak.
+- Vérifier la validation du sous-domaine dans Brevo et le rendu des liens/images sur un email de test avant la diffusion publique.
+
 ## Recette
+
+Pour les vraies rencontres, voir [API Football : imports manuels et protection du quota](API_FOOTBALL.md). Les appels fournisseur sont désactivés par défaut et ne sont jamais liés aux déploiements.
 
 Après un premier déploiement réussi, ouvrir l’URL Render et `/api/health`, créer un compte de test, recevoir le mail, confirmer puis se connecter. Vérifier la persistance après redémarrage et redéploiement. Tester le bonus et les pronostics avant de distribuer l’APK.
 

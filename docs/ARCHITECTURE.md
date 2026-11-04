@@ -67,3 +67,5 @@ Les contrats du frontend sont dans `data-access/*/*.api.ts`. Les endpoints suive
 Le catalogue et la liste d'agences sont bornés à 500 résultats, le classement joueurs à 100, les notifications récentes à 100. Les recherches admin renvoient 100 comptes maximum ; utiliser la recherche pour retrouver un compte ancien. Les historiques sont paginés. Ces bornes doivent évoluer avec le volume réel.
 
 Les notifications sont récupérées toutes les 30 secondes lorsque la page est visible ; le catalogue des rencontres également. Aucun système de WebSocket ou présence en ligne fictif n'est annoncé.
+
+Ces consultations lisent uniquement SQLite. L’intégration API Football sous `/api/admin/football` est désactivée par défaut : seuls trois POST administrateur peuvent contacter le fournisseur, chacun avec une requête maximum. Aucune tâche planifiée, aucun appel au démarrage ou dans le build. Le cache et les réservations de quota sont persistants ; les erreurs ne sont pas retentées. Voir [API_FOOTBALL.md](API_FOOTBALL.md).

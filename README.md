@@ -39,7 +39,7 @@ Se connecter sur le site avec ce compte et ouvrir **Admin → Panel** :
 4. Le serveur règle tous les tickets et pronostics, verse les gains et enregistre les opérations atomiquement.
 5. En cas de report ou d'annulation, « Annuler et rembourser » restitue chaque mise une seule fois. Recréer ensuite une rencontre avec la bonne date.
 
-Le catalogue sportif est **manuel**. Aucun fournisseur de cotes en direct n'est nécessaire au fonctionnement de cette V1.
+Le catalogue sportif est **manuel**. L’import API Football est optionnel, désactivé par défaut et réservé aux actions volontaires de l’administrateur. Aucun push, build ou démarrage ne déclenche d’appel fournisseur. Voir [les garde-fous et la configuration](docs/API_FOOTBALL.md).
 
 ## Fonctionnalités livrées
 

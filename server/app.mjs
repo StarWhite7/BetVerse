@@ -14,6 +14,7 @@ import { matchRoutes, betRoutes } from './routes/matches.mjs';
 import { userRoutes, leaderboardRoutes } from './routes/users.mjs';
 import { notificationRoutes } from './routes/notifications.mjs';
 import { agencyRoutes } from './routes/agencies.mjs';
+import { footballRoutes } from './routes/football.mjs';
 export async function createApp({ db, config }) {
   const app = express();
   app.disable('x-powered-by');
@@ -107,6 +108,7 @@ export async function createApp({ db, config }) {
   app.use('/api/auth', await authRoutes(context));
   app.use('/api/wallet', requireUser, walletRoutes(context));
   app.use('/api/matches', requireUser, matchRoutes(context));
+  app.use('/api/admin/football', requireUser, footballRoutes(context));
   app.use('/api/bet', requireUser, betRoutes(context));
   app.use('/api/users', requireUser, userRoutes(context));
   app.use('/api/leaderboard', requireUser, leaderboardRoutes(context));

@@ -11,7 +11,7 @@ import { configFromEnv } from '../lib/config.mjs';
 import { hashPassword } from '../lib/security.mjs';
 import { createUser } from '../domain/accounts.mjs';
 const credentials = { identifier: 'alice', password: 'StrongPassword123' };
-async function fixture(t, { disk = false, mail = false, production = false } = {}) {
+async function fixture(t, { disk = false, mail = false, production = false, football = {} } = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'betverse-test-'));
   const mailbox = [];
   const config = {
@@ -21,6 +21,7 @@ async function fixture(t, { disk = false, mail = false, production = false } = {
     database: disk ? join(directory, 'test.sqlite') : ':memory:',
     mailDir: join(directory, 'mail'),
     staticDir: directory,
+    ...football,
     ...(production
       ? {
           cookieName: '__Host-betverse_session',
@@ -744,4 +745,66 @@ test('started matches appear live and preserve the database foreign keys', async
   );
   assert.deepEqual(f.db.prepare('PRAGMA foreign_key_check').all(), []);
   assert.equal(f.db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
+});
+
+test('startup, health, admin reads and unauthorized actions never call API Football', async (t) => {
+  let calls = 0;
+  const f = await fixture(t, {
+    football: {
+      footballMode: 'manual',
+      footballKey: 'fake-test-only-key',
+      footballDailyLimit: 10,
+      footballFetch: async () => {
+        calls++;
+        return Response.json({ errors: [], response: [] });
+      },
+    },
+  });
+  assert.equal(calls, 0);
+  assert.equal((await f.request('/health')).status, 200);
+  assert.equal((await f.request('/matches', { session: f.aliceSession })).status, 200);
+  assert.equal(
+    (await f.request('/admin/football', { session: f.adminSession })).body.usage.mode,
+    'manual',
+  );
+  assert.equal((await f.request('/admin/football', { session: f.aliceSession })).status, 403);
+  const action = {
+    method: 'POST',
+    body: { date: '2026-11-04' },
+    headers: { 'Idempotency-Key': randomUUID() },
+  };
+  assert.equal((await f.request('/admin/football/fixtures', action)).status, 401);
+  assert.equal(
+    (await f.request('/admin/football/fixtures', { ...action, session: f.aliceSession })).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.request('/admin/football/fixtures', {
+        ...action,
+        session: f.adminSession,
+        headers: {
+          ...action.headers,
+          'X-CSRF-Token': 'invalid',
+        },
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.request('/admin/football/fixtures', {
+        ...action,
+        session: f.adminSession,
+        body: { date: 'invalid' },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(calls, 0);
+  assert.equal(
+    (await f.request('/admin/football/fixtures', { ...action, session: f.adminSession })).status,
+    200,
+  );
+  assert.equal(calls, 1);
 });

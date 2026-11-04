@@ -4,6 +4,7 @@ import { z, amount, choice, id, queryPage } from '../lib/validation.mjs';
 import { ensure, transaction } from '../lib/errors.mjs';
 import { now, audit } from '../domain/accounts.mjs';
 import { matchDto, betDto, placeBet, finishMatch, cancelMatch } from '../domain/matches.mjs';
+import { manualFootball } from '../domain/football.mjs';
 const odds = z
   .number()
   .min(1)
@@ -22,7 +23,7 @@ const matchInput = z
     competition: z.string().trim().min(1).max(80).default('Catalogue BetVerse'),
   })
   .strict();
-export function matchRoutes({ db, requireAdmin }) {
+export function matchRoutes({ db, requireAdmin, config }) {
   const router = Router();
   router.get('/', (req, res) => {
     const { status } = z
@@ -50,14 +51,7 @@ export function matchRoutes({ db, requireAdmin }) {
     res.json(rows.map(matchDto));
   });
   router.get('/usage', requireAdmin, (_req, res) =>
-    res.json({
-      remaining: null,
-      used: null,
-      total: null,
-      lastCallAt: null,
-      nextSyncAt: null,
-      mode: 'manual',
-    }),
+    res.json(manualFootball({ db, config }).usage()),
   );
   router.get('/:id', (req, res) => {
     const match = db.prepare('SELECT * FROM matches WHERE id=?').get(id.parse(req.params.id));
