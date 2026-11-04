@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { WalletApiService } from '../../../data-access/wallet/wallet.api';
@@ -67,8 +67,17 @@ export class WalletStatusComponent {
   wallet = this.api.wallet;
   loading = signal(false);
   clock = signal(Date.now());
+  private readonly serverClockOffset = signal(0);
   remaining = computed(
-    () => Math.max(0, Date.parse(this.wallet()?.nextClaimAvailableAt ?? '') - this.clock()) || 0,
+    () =>
+      Math.min(
+        86400000,
+        Math.max(
+          0,
+          Date.parse(this.wallet()?.nextClaimAvailableAt ?? '') -
+            (this.clock() + this.serverClockOffset()),
+        ),
+      ) || 0,
   );
   available = computed(() => this.wallet() !== null && this.remaining() === 0);
   countdown = computed(() => {
@@ -78,6 +87,12 @@ export class WalletStatusComponent {
       .join(':');
   });
   constructor() {
+    effect(() => {
+      const serverTime = Date.parse(this.wallet()?.serverTime ?? '');
+      const receivedAt = Date.now();
+      this.clock.set(receivedAt);
+      this.serverClockOffset.set(Number.isFinite(serverTime) ? serverTime - receivedAt : 0);
+    });
     this.api
       .getWallet()
       .pipe(takeUntilDestroyed())

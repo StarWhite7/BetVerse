@@ -43,10 +43,12 @@ export function wallet(db, userId) {
   const row = db.prepare('SELECT * FROM wallets WHERE userId=?').get(userId);
   ensure(row, 404, 'Portefeuille introuvable.');
   const { lastClaimAt, ...rest } = row;
+  const serverTime = Date.now();
   return {
     ...rest,
+    serverTime: new Date(serverTime).toISOString(),
     nextClaimAvailableAt:
-      lastClaimAt && lastClaimAt + 86400000 > Date.now()
+      lastClaimAt && lastClaimAt + 86400000 > serverTime
         ? new Date(lastClaimAt + 86400000).toISOString()
         : null,
   };

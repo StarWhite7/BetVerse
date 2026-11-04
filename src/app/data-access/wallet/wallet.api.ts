@@ -12,6 +12,7 @@ export interface WalletEntity {
   createdAt: string;
   updatedAt: string;
   nextClaimAvailableAt?: string | null;
+  serverTime?: string;
 }
 
 export interface WalletTransaction {
