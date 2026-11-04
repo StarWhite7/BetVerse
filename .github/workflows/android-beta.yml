@@ -2,7 +2,7 @@ name: Android - private Firebase beta
 on:
   workflow_dispatch:
   push:
-    branches: [beta]
+    branches: [beta, codex/private-beta]
 permissions:
   contents: read
 concurrency:
@@ -73,6 +73,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --console=plain
       - name: Keep APK for manual download
+        # Public-repository artifacts can be downloaded outside our Firebase tester group.
+        if: github.event.repository.private == true
         uses: actions/upload-artifact@v4
         with:
           name: betverse-beta-apk

@@ -9,7 +9,7 @@ Ce guide prépare une bêta privée, pas une publication sur Google Play. Fireba
 - API HTTPS via le transport natif Capacitor ; cookies de session gérés par le transport Android, contrôles JSON et CSRF conservés. Aucun jeton ajouté à localStorage. Le backend web ne change pas.
 - Workflow `.github/workflows/android-beta.yml` prêt, désactivé tant que `ANDROID_BETA_ENABLED` ne vaut pas `true`.
 - Application Firebase enregistrée : projet `betverse-f89bf`, ID `1:472242612609:android:35986b1689d8864d5ba080`. Groupe privé créé avec un testeur d’après la console partagée.
-- Java 21 installé et clé de signature créée localement dans `.private/betverse-beta.p12`. Aucun hébergement ni APK compilé/distribué pour le moment. Les parcours de session doivent encore être vérifiés sur un vrai Android.
+- Java 21 installé et clé de signature créée localement dans `.private/betverse-beta.p12`. Backend déployé sur `https://betverse-beta.onrender.com` ; inscription, email, connexion, bonus et prise de pari vérifiés dans le navigateur. Aucun APK encore compilé/distribué. Les parcours de session doivent encore être vérifiés sur un vrai Android.
 
 ## 1. Créer le projet Firebase
 
@@ -79,7 +79,7 @@ Référence CLI : <https://firebase.google.com/docs/app-distribution/android/dis
 
 ## 6. Configurer GitHub
 
-Dans le dépôt GitHub, **Settings → Environments**, créer **`android-beta`**. Limiter les branches de déploiement à `beta` ; garder les modifications de cette branche et des workflows sous contrôle, puisqu’ils utilisent les secrets. L’application restera distribuée aux testeurs invités ; le serveur est protégé par l’authentification BetVerse, pas par Firebase.
+Dans le dépôt GitHub, **Settings → Environments**, créer **`android-beta`**. Limiter les branches de déploiement à `codex/private-beta` et éventuellement `beta` ; garder les modifications de ces branches et des workflows sous contrôle, puisqu’ils utilisent les secrets. L’application restera distribuée aux testeurs invités ; le serveur est protégé par l’authentification BetVerse, pas par Firebase.
 
 Créer ces **Environment secrets** :
 
@@ -91,21 +91,21 @@ Créer ces **Environment secrets** :
 
 Dans **Settings → Secrets and variables → Actions → Variables**, créer ces **Repository variables** :
 
-| Variable               | Valeur                                                                                         |
-| ---------------------- | ---------------------------------------------------------------------------------------------- |
-| `BETVERSE_BETA_ORIGIN` | Origine exacte du serveur : par exemple `https://beta.betverse.fr`, sans slash final ni `/api` |
-| `FIREBASE_APP_ID`      | ID Firebase de l’app `1:…:android:…`                                                           |
-| `ANDROID_BETA_ENABLED` | `true`, à mettre seulement lorsque tout est prêt                                               |
+| Variable               | Valeur                                                           |
+| ---------------------- | ---------------------------------------------------------------- |
+| `BETVERSE_BETA_ORIGIN` | `https://betverse-beta.onrender.com`, sans slash final ni `/api` |
+| `FIREBASE_APP_ID`      | `1:472242612609:android:35986b1689d8864d5ba080`                  |
+| `ANDROID_BETA_ENABLED` | `true`, à mettre seulement lorsque tout est prêt                 |
 
-Le code doit être poussé sur GitHub avec la branche `beta`. Le dépôt local contient aussi les modifications V1 précédentes : les examiner avant le commit, puis les publier ensemble pour que l’APK dispose du backend et du frontend attendus. Aucune commande de commit/push n’a été exécutée par cette préparation.
+Le code V1 et Android est publié sur `codex/private-beta`, qui est également utilisée par Render. Aucun changement de branche par défaut ni fusion dans `master` n’est nécessaire pour déclencher le workflow par un push sur cette branche.
 
 ## 7. Générer et distribuer
 
-Un push sur `beta` lance **Android - private Firebase beta** dans l’onglet **Actions**. On peut aussi le lancer manuellement sur cette branche avec **Run workflow**.
+Un push sur `codex/private-beta` ou `beta` lance **Android - private Firebase beta** dans l’onglet **Actions**, uniquement si `ANDROID_BETA_ENABLED=true`. Le bouton **Run workflow** exige aussi que le fichier de workflow existe sur la branche par défaut : ne pas compter dessus tant que `master` contient l’ancien projet. Après configuration, un nouveau push déclenchera la première compilation.
 
 Le workflow vérifie la configuration et le backend, lance les tests, compile Angular, synchronise Capacitor, construit l’APK signé, puis le distribue au groupe `betverse-private`. La première compilation télécharge les outils Android et peut prendre plusieurs minutes. Les minutes GitHub Actions dépendent des quotas de votre compte ; Firebase App Distribution est gratuit.
 
-L’APK est aussi disponible pendant 7 jours dans les artifacts de l’exécution. Seul l’APK est conservé, jamais les clés. Ne pas partager ce fichier si la version doit rester privée. Le numéro de version augmente avec chaque nouvelle exécution ; si une ancienne exécution est relancée après une plus récente, sa version ne permettra pas une mise à jour sur le téléphone.
+Sur un dépôt **privé** seulement, l’APK est aussi disponible pendant 7 jours dans les artifacts de l’exécution. Sur notre dépôt public, aucun artifact APK n’est téléversé : la distribution passe uniquement par le groupe privé Firebase. Les clés ne sont jamais conservées comme artifacts. Le numéro de version augmente avec chaque nouvelle exécution ; si une ancienne exécution est relancée après une plus récente, sa version ne permettra pas une mise à jour sur le téléphone.
 
 ## 8. Installer sur Android sans câble
 
