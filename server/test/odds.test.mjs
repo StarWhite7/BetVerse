@@ -310,3 +310,149 @@ test('an older cached preview cannot restore games omitted by a newer empty snap
   assert.throws(() => f.publish(first.fixtures[0]), /absentes/);
   assert.equal(f.requests.length, 2);
 });
+
+test('one explicit batch loads five competitions exactly once and its receipt survives a restart', async (t) => {
+  const f = setup(t, {
+    fetcher: async (event, url) => {
+      const competition = new URL(url).pathname.split('/')[3];
+      const home = `Home ${competition}`;
+      event.bookmakers[0].markets[0].outcomes[0].name = home;
+      return Response.json([
+        { ...event, id: competition, sport_key: competition, home_team: home },
+      ]);
+    },
+  });
+  const competitions = [
+    'soccer_france_ligue_one',
+    'soccer_epl',
+    'soccer_spain_la_liga',
+    'soccer_italy_serie_a',
+    'soccer_germany_bundesliga',
+  ];
+  const input = { competitions, date: f.input.date, consent: true },
+    key = randomUUID();
+  const result = await f.service.previewBatch(input, key, f.actor);
+  assert.equal(f.requests.length, 5);
+  assert.equal(result.fixtures.length, 5);
+  assert.equal(result.usage.dailyUsed, 5);
+  assert.ok(result.batchResults.every((row) => row.status === 'LOADED'));
+  const restarted = manualOdds({ db: f.db, config: f.config });
+  assert.ok(
+    (await restarted.previewBatch(input, key, f.actor)).batchResults.every(
+      (row) => row.status === 'CACHED',
+    ),
+  );
+  assert.equal(f.requests.length, 5);
+  await assert.rejects(
+    restarted.previewBatch({ ...input, competitions: ['soccer_epl'] }, key, f.actor),
+    /autre sélection/,
+  );
+  const selected = result.fixtures.map((row) => ({
+    eventId: row.externalId,
+    bookmaker: 'betclic_fr',
+    snapshotId: row.snapshotId,
+  }));
+  assert.equal(restarted.publishBatch({ fixtures: selected }, f.actor).publishedCount, 5);
+  assert.equal(f.requests.length, 5);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM matches').get().n, 5);
+  assert.ok(restarted.state().fixtures.every((row) => row.current.home === 180));
+});
+
+test('batch preflight rejects duplicate selections and insufficient quota without spending anything', async (t) => {
+  const f = setup(t, { config: { oddsDailyLimit: 1 } });
+  const input = {
+    competitions: ['soccer_france_ligue_one', 'soccer_epl'],
+    date: f.input.date,
+    consent: true,
+  };
+  await assert.rejects(f.service.previewBatch(input, randomUUID(), f.actor), /insuffisant/);
+  await assert.rejects(
+    f.service.previewBatch(
+      { ...input, competitions: ['soccer_epl', 'soccer_epl'] },
+      randomUUID(),
+      f.actor,
+    ),
+    /distinctes/,
+  );
+  await assert.rejects(
+    f.service.previewBatch(
+      { ...input, competitions: ['soccer_epl'], consent: false },
+      randomUUID(),
+      f.actor,
+    ),
+  );
+  assert.equal(f.requests.length, 0);
+});
+
+test('a batch stops at its first failure and concurrent batches or single previews cannot interleave', async (t) => {
+  let release;
+  const f = setup(t, {
+    fetcher: () =>
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+  });
+  const input = {
+      competitions: ['soccer_france_ligue_one', 'soccer_epl'],
+      date: f.input.date,
+      consent: true,
+    },
+    key = randomUUID();
+  const pending = f.service.previewBatch(input, key, f.actor);
+  await assert.rejects(f.service.previewBatch(input, randomUUID(), f.actor), /en cours/);
+  await assert.rejects(f.preview(), /groupé/);
+  release(Response.json({ message: 'fake-test-key' }, { status: 429 }));
+  const result = await pending;
+  assert.deepEqual(
+    result.batchResults.map((row) => row.status),
+    ['FAILED', 'SKIPPED'],
+  );
+  assert.equal(JSON.stringify(result).includes('fake-test-key'), false);
+  await f.service.previewBatch(input, key, f.actor);
+  assert.equal(f.requests.length, 1);
+});
+
+test('bulk publication rolls every row and audit back on a late conflict; valid replay does not duplicate matches', async (t) => {
+  const f = setup(t, {
+    fetcher: async (event) =>
+      Response.json([
+        event,
+        {
+          ...event,
+          id: 'event-2',
+          home_team: 'Other FC',
+          bookmakers: [
+            {
+              ...event.bookmakers[0],
+              markets: [
+                {
+                  key: 'h2h',
+                  outcomes: [
+                    { name: 'Other FC', price: 2.1 },
+                    { name: 'Draw', price: 3.1 },
+                    { name: 'Away FC', price: 2.4 },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ]),
+  });
+  const result = await f.preview();
+  const fixtures = result.fixtures.map((row) => ({
+    eventId: row.externalId,
+    bookmaker: 'betclic_fr',
+    snapshotId: row.snapshotId,
+  }));
+  const beforeAudit = f.db.prepare('SELECT COUNT(*) n FROM audit_log').get().n;
+  f.db.prepare("UPDATE odds_fixtures SET fetchedAt=0 WHERE externalId='event-2'").run();
+  assert.throws(() => f.service.publishBatch({ fixtures }, f.actor), /expirées/);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM matches').get().n, 0);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM audit_log').get().n, beforeAudit);
+  f.db.prepare('UPDATE odds_fixtures SET fetchedAt=?').run(Date.now());
+  assert.equal(f.service.publishBatch({ fixtures }, f.actor).publishedCount, 2);
+  f.service.publishBatch({ fixtures }, f.actor);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM matches').get().n, 2);
+  assert.equal(f.requests.length, 1);
+});

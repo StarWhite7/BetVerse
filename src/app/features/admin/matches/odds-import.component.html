@@ -1,0 +1,250 @@
+<section aria-labelledby="odds-title" [attr.aria-busy]="busy()">
+  <header class="heading">
+    <div>
+      <p class="eyebrow">IMPORT DU CATALOGUE</p>
+      <h2 id="odds-title">Matchs et cotes 1N2</h2>
+    </div>
+    <span class="manual">The Odds API · Manuel</span>
+  </header>
+  @if (state(); as data) {
+    <div class="quota">
+      <span
+        >24 h : <strong>{{ data.usage.dailyUsed }} / {{ data.usage.dailyLimit }}</strong></span
+      ><span
+        >31 jours :
+        <strong>{{ data.usage.monthlyUsed }} / {{ data.usage.monthlyLimit }}</strong></span
+      >
+      @if (data.usage.providerRemaining !== null) {
+        <span
+          >Fournisseur : <strong>{{ data.usage.providerRemaining }} crédits restants</strong>
+          <small>au {{ data.usage.providerCheckedAt | date: 'dd/MM HH:mm' }}</small></span
+        >
+      }
+    </div>
+    @if (!data.usage.configured) {
+      <p>Import désactivé : activer le mode manuel dans Render.</p>
+    }
+    <fieldset [disabled]="busy() || !data.usage.configured">
+      <legend>1. Choisir les championnats</legend>
+      <div class="leagues">
+        @for (league of majorLeagues; track league.key) {
+          <label class="league" [class.checked]="selectedCompetitions().includes(league.key)"
+            ><input
+              type="checkbox"
+              [checked]="selectedCompetitions().includes(league.key)"
+              (change)="toggleCompetition(league.key, $any($event.target).checked)"
+            /><span
+              ><strong>{{ league.label }}</strong
+              ><small>{{ league.country }}</small></span
+            ></label
+          >
+        }
+      </div>
+      <details>
+        <summary>Autres compétitions</summary>
+        <div class="extras">
+          @for (entry of extraCompetitions(); track entry[0]) {
+            <label
+              ><input
+                type="checkbox"
+                [checked]="selectedCompetitions().includes(entry[0])"
+                (change)="toggleCompetition(entry[0], $any($event.target).checked)"
+              />{{ entry[1] }}</label
+            >
+          }
+        </div>
+      </details>
+      <div class="load-controls">
+        <label class="date"
+          >Premier jour (UTC)<input
+            type="date"
+            [(ngModel)]="date"
+            (ngModelChange)="resetConsent()"
+            [min]="minDate"
+            [max]="maxDate"
+        /></label>
+        <p>
+          Sept jours de rencontres ·
+          <strong
+            >{{ selectedCompetitions().length }} compétition(s) ·
+            {{ selectedCompetitions().length }} crédit(s) maximum</strong
+          >
+        </p>
+      </div>
+      @if (selectedCompetitions().length > 5) {
+        <p role="alert">Choisissez cinq compétitions au maximum par chargement.</p>
+      }
+      <label class="consent"
+        ><input type="checkbox" [(ngModel)]="accepted" />J’autorise ce chargement manuel, jusqu’à
+        {{ selectedCompetitions().length }} crédit(s). Le cache peut réduire ce coût.</label
+      >
+      <button
+        type="button"
+        class="primary"
+        [disabled]="
+          !accepted || !date || !selectedCompetitions().length || selectedCompetitions().length > 5
+        "
+        (click)="preview()"
+      >
+        Charger l’aperçu · ≤ {{ selectedCompetitions().length }} crédit(s)
+      </button>
+    </fieldset>
+    @if (batchResults().length) {
+      <ul class="batch-results" aria-label="Bilan du chargement">
+        @for (result of batchResults(); track result.competition) {
+          <li>
+            <strong>{{ data.competitions[result.competition] }}</strong> :
+            {{
+              result.status === 'LOADED'
+                ? 'chargé (1 appel)'
+                : result.status === 'CACHED'
+                  ? 'cache (0 crédit)'
+                  : result.status === 'FAILED'
+                    ? 'échec'
+                    : 'non appelé'
+            }}
+            @if (result.message) {
+              — {{ result.message }}
+            }
+          </li>
+        }
+      </ul>
+    }
+    <div class="review-heading">
+      <h3>2. Vérifier et valider les modifications</h3>
+      <button type="button" [disabled]="busy()" (click)="read()">Relire les données locales</button>
+    </div>
+    <div class="review-controls">
+      <label
+        >Bookmaker<select
+          [(ngModel)]="bookmaker"
+          (ngModelChange)="selectedRows.set([])"
+          [disabled]="busy()"
+        >
+          @for (entry of data.bookmakers | keyvalue; track entry.key) {
+            <option [value]="entry.key">{{ entry.value }}</option>
+          }
+        </select></label
+      ><span
+        >{{ visibleFixtures().length }} rencontre(s) · {{ eligibleRows().length }} modification(s)
+        disponible(s)</span
+      ><button
+        type="button"
+        class="primary"
+        [disabled]="busy() || !selectedFixtures().length"
+        (click)="publishSelected()"
+      >
+        Valider la sélection ({{ selectedFixtures().length }}) · 0 crédit
+      </button>
+    </div>
+    <div class="table-wrap" role="region" aria-label="Modifications des matchs" tabindex="0">
+      <table>
+        <caption class="sr-only">
+          Aperçu des rencontres et des modifications avant publication. Heures locales.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">
+              <input
+                type="checkbox"
+                aria-label="Sélectionner toutes les modifications disponibles"
+                [checked]="allSelected()"
+                [indeterminate]="!!selectedFixtures().length && !allSelected()"
+                [disabled]="busy() || !eligibleRows().length"
+                (change)="toggleAll($any($event.target).checked)"
+              />
+            </th>
+            <th scope="col">Date locale</th>
+            <th scope="col">Compétition</th>
+            <th scope="col">Match</th>
+            <th scope="col">1</th>
+            <th scope="col">N</th>
+            <th scope="col">2</th>
+            <th scope="col">Modification</th>
+            <th scope="col">Cotes actualisées</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fixture of visibleFixtures(); track fixture.externalId) {
+            <tr [class.selected]="selectedRows().includes(fixture.externalId)">
+              <td>
+                <input
+                  type="checkbox"
+                  [attr.aria-label]="
+                    'Sélectionner ' + fixture.homeTeam + ' contre ' + fixture.awayTeam
+                  "
+                  [checked]="selectedRows().includes(fixture.externalId) && canPublish(fixture)"
+                  [disabled]="busy() || !canPublish(fixture)"
+                  (change)="toggleRow(fixture.externalId, $any($event.target).checked)"
+                />
+              </td>
+              <td class="nowrap">{{ fixture.startDate | date: 'dd/MM HH:mm' }}</td>
+              <td>{{ fixture.competition }}</td>
+              <td class="teams">{{ fixture.homeTeam }} <span>—</span> {{ fixture.awayTeam }}</td>
+              @if (quote(fixture); as price) {
+                <td class="price">
+                  @if (fixture.current && fixture.current.home !== price.home) {
+                    <del>{{ fixture.current.home / 100 | number: '1.2-2' }}</del>
+                  }
+                  {{ price.home / 100 | number: '1.2-2' }}
+                </td>
+                <td class="price">
+                  @if (
+                    fixture.current &&
+                    fixture.current.draw !== null &&
+                    fixture.current.draw !== price.draw
+                  ) {
+                    <del>{{ fixture.current.draw / 100 | number: '1.2-2' }}</del>
+                  }
+                  {{ price.draw / 100 | number: '1.2-2' }}
+                </td>
+                <td class="price">
+                  @if (fixture.current && fixture.current.away !== price.away) {
+                    <del>{{ fixture.current.away / 100 | number: '1.2-2' }}</del>
+                  }
+                  {{ price.away / 100 | number: '1.2-2' }}
+                </td>
+              } @else {
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              }
+              <td>
+                <span class="change" [class.actionable]="canPublish(fixture)">{{
+                  change(fixture)
+                }}</span>
+                @if (fixture.current && fixture.current.startDate !== fixture.startDate) {
+                  <small>Avant : {{ fixture.current.startDate | date: 'dd/MM HH:mm' }}</small>
+                }
+              </td>
+              <td class="nowrap">{{ quote(fixture)?.updatedAt | date: 'dd/MM HH:mm' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9" class="empty">
+                Choisissez les championnats, puis chargez leur aperçu.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">
+      Les modifications disponibles sont présélectionnées après chargement. Décochez celles à
+      exclure, ou cochez l’en-tête pour tout sélectionner (200 maximum). Si une ligne devient
+      invalide, aucun match de la sélection n’est modifié.
+    </p>
+    <details class="help">
+      <summary>Quota, fraîcheur et résultats</summary>
+      <p>
+        Un appel maximum par compétition, aucun appel au déploiement ni à l’ouverture de cette page.
+        Cache persistant d’une heure ; arrêt au premier échec, sans relance. Les cotes absentes ou
+        expirées sont exclues. Les résultats restent à saisir manuellement.
+      </p>
+      @if (data.usage.lastError) {
+        <p>Dernier échec enregistré : {{ data.usage.lastError }}</p>
+      }
+    </details>
+  }
+  <p class="status" role="status" aria-live="polite">{{ message() }}</p>
+</section>

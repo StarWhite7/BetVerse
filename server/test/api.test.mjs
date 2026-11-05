@@ -881,3 +881,112 @@ test('The Odds API routes enforce admin, CSRF, consent and schema before any pro
   );
   assert.equal(calls, 1);
 });
+
+test('grouped preview and publication enforce authorization, expose changes and update the player catalogue together', async (t) => {
+  let calls = 0;
+  const f = await fixture(t, {
+    football: {
+      oddsMode: 'manual',
+      oddsKey: 'fake-only',
+      oddsDailyLimit: 10,
+      oddsMonthlyLimit: 400,
+      oddsFetch: async (url) => {
+        calls++;
+        const sport = new URL(url).pathname.split('/')[3],
+          home = `Home ${sport}`;
+        return Response.json([
+          {
+            id: sport,
+            sport_key: sport,
+            home_team: home,
+            away_team: 'Away FC',
+            commence_time: new Date(Date.now() + 86400000).toISOString(),
+            bookmakers: [
+              {
+                key: 'winamax_fr',
+                last_update: new Date().toISOString(),
+                markets: [
+                  {
+                    key: 'h2h',
+                    outcomes: [
+                      { name: home, price: 1.8 },
+                      { name: 'Draw', price: 3.1 },
+                      { name: 'Away FC', price: 2.4 },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      },
+    },
+  });
+  const action = {
+    method: 'POST',
+    session: f.adminSession,
+    headers: { 'Idempotency-Key': randomUUID() },
+    body: {
+      competitions: ['soccer_france_ligue_one', 'soccer_epl'],
+      date: new Date().toISOString().slice(0, 10),
+      consent: true,
+    },
+  };
+  assert.equal(
+    (await f.request('/admin/odds/preview-batch', { ...action, session: f.aliceSession })).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.request('/admin/odds/preview-batch', {
+        ...action,
+        headers: { ...action.headers, 'X-CSRF-Token': 'bad' },
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.request('/admin/odds/preview-batch', {
+        ...action,
+        body: { ...action.body, competitions: ['soccer_epl', 'soccer_epl'] },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(calls, 0);
+  const preview = await f.request('/admin/odds/preview-batch', action);
+  assert.equal(preview.status, 200);
+  assert.equal(calls, 2);
+  assert.ok(preview.body.fixtures.every((row) => row.current === null));
+  const fixtures = preview.body.fixtures.map((row) => ({
+    eventId: row.externalId,
+    snapshotId: row.snapshotId,
+    bookmaker: 'winamax_fr',
+  }));
+  const publish = { method: 'POST', session: f.adminSession, body: { fixtures } };
+  assert.equal(
+    (await f.request('/admin/odds/publish-batch', { ...publish, session: f.aliceSession })).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.request('/admin/odds/publish-batch', {
+        ...publish,
+        body: { fixtures: [fixtures[0], { ...fixtures[1], snapshotId: randomUUID() }] },
+      })
+    ).status,
+    409,
+  );
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM matches').get().n, 0);
+  const result = await f.request('/admin/odds/publish-batch', publish);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.publishedCount, 2);
+  assert.ok(result.body.fixtures.every((row) => row.current.home === 180));
+  assert.equal(
+    (await f.request('/matches?status=UPCOMING', { session: f.aliceSession })).body.length,
+    2,
+  );
+  assert.equal((await f.request('/admin/odds/preview-batch', action)).status, 200);
+  assert.equal(calls, 2);
+});

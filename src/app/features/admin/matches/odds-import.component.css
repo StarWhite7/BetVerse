@@ -1,0 +1,285 @@
+:host {
+  display: block;
+  margin-block: 1.5rem;
+}
+section {
+  padding: 1.25rem;
+  border: 1px solid #38485d;
+  border-radius: 1rem;
+  background: #111827;
+  color: #f8fafc;
+}
+.heading,
+.review-heading,
+.review-controls,
+.load-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.heading h2 {
+  margin: 0.25rem 0 1rem;
+}
+.eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: #b6c4d8;
+  margin: 0;
+}
+.manual,
+.change {
+  display: inline-block;
+  border-radius: 0.3rem;
+  background: #263247;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.quota {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding: 0.8rem 0 1.2rem;
+  color: #b6c4d8;
+  font-size: 0.85rem;
+}
+.quota strong {
+  color: #f8fafc;
+}
+fieldset {
+  border: 0;
+  border-top: 1px solid #38485d;
+  padding: 1rem 0;
+  min-width: 0;
+}
+legend,
+h3 {
+  font-weight: 600;
+  font-size: 1rem;
+}
+legend {
+  padding-right: 1rem;
+}
+.leagues {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0.6rem 0 1rem;
+}
+.league {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 0.6rem;
+  border: 1px solid #46546b;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  background: #182233;
+}
+.league.checked {
+  border-color: #86aaff;
+  background: #20365e;
+}
+.league strong {
+  font-size: 0.85rem;
+}
+.league small {
+  display: block;
+  font-size: 0.75rem;
+  color: #b6c4d8;
+  margin-top: 0.25rem;
+}
+input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: #7098ff;
+  cursor: pointer;
+}
+label {
+  font-size: 0.85rem;
+}
+label.date,
+.review-controls > label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.load-controls {
+  justify-content: flex-start;
+  margin: 1rem 0;
+}
+.consent {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.8rem 0;
+}
+.extras label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+select,
+input[type='date'],
+button {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #53647f;
+  border-radius: 0.4rem;
+  background: #1c293c;
+  color: #f8fafc;
+  max-width: 100%;
+  font: inherit;
+}
+button {
+  min-height: 42px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+button.primary {
+  background: #2458e8;
+  border-color: #2458e8;
+  font-weight: 600;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.review-heading {
+  border-top: 1px solid #38485d;
+  padding-top: 0.8rem;
+  margin-top: 0.8rem;
+}
+.review-controls {
+  margin: 1rem 0;
+  justify-content: flex-start;
+}
+.review-controls > span {
+  font-size: 0.85rem;
+  color: #b6c4d8;
+}
+.review-controls > .primary {
+  margin-left: auto;
+}
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #38485d;
+  border-radius: 0.5rem;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8rem;
+  text-align: left;
+  min-width: 850px;
+}
+th {
+  background: #192437;
+  color: #b6c4d8;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+th,
+td {
+  padding: 0.75rem 0.55rem;
+  border-bottom: 1px solid #2b384e;
+  vertical-align: middle;
+}
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+tr.selected {
+  background: #162642;
+}
+.teams {
+  min-width: 180px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.teams span {
+  color: #94a3b8;
+}
+.price {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.price del {
+  color: #a7b3c6;
+  font-weight: 400;
+  font-size: 0.7rem;
+  margin-right: 0.35rem;
+}
+.nowrap {
+  white-space: nowrap;
+}
+.change.actionable {
+  background: #233d64;
+  color: #b9d3ff;
+}
+td small {
+  display: block;
+  color: #b6c4d8;
+  margin-top: 0.3rem;
+}
+.empty {
+  text-align: center;
+  padding: 2rem;
+}
+.hint,
+.help,
+.load-controls p {
+  font-size: 0.8rem;
+  color: #b6c4d8;
+  line-height: 1.6;
+}
+summary {
+  cursor: pointer;
+}
+.batch-results {
+  font-size: 0.8rem;
+  line-height: 1.8;
+  padding-left: 1.25rem;
+}
+.status {
+  line-height: 1.6;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+:focus-visible {
+  outline: 2px solid #a3c3ff;
+  outline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .leagues {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .leagues {
+    grid-template-columns: 1fr 1fr;
+  }
+  section {
+    padding: 0.8rem;
+  }
+  .review-controls > .primary {
+    margin-left: 0;
+    width: 100%;
+  }
+  .manual {
+    margin-bottom: 1rem;
+  }
+}

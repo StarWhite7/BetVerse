@@ -68,10 +68,36 @@ export function manualOdds({ db, config }) {
         'SELECT * FROM odds_fixtures WHERE startDate>? ORDER BY startDate,externalId LIMIT 500',
       )
       .all(now())
-      .map((row) => ({ ...row, quotes: JSON.parse(row.quotes) })),
+      .map((row) => {
+        const current = row.matchId
+          ? db.prepare('SELECT * FROM matches WHERE id=?').get(row.matchId)
+          : db
+              .prepare(
+                "SELECT * FROM matches WHERE sportKey='football' AND homeTeam=? COLLATE NOCASE AND awayTeam=? COLLATE NOCASE AND startDate=? LIMIT 1",
+              )
+              .get(row.homeTeam, row.awayTeam, row.startDate);
+        return {
+          ...row,
+          quotes: JSON.parse(row.quotes),
+          current: current
+            ? {
+                homeTeam: current.homeTeam,
+                awayTeam: current.awayTeam,
+                startDate: current.startDate,
+                status: current.status,
+                home: current.oddsHome,
+                draw: current.oddsDraw,
+                away: current.oddsAway,
+                hasBets: Boolean(
+                  db.prepare('SELECT 1 FROM bets WHERE matchId=? LIMIT 1').get(current.id),
+                ),
+              }
+            : null,
+        };
+      }),
   });
 
-  async function request(competition, date, requestId, actorId) {
+  async function request(competition, date, requestId, actorId, batchId = null) {
     ensure(
       ready(),
       409,
@@ -95,6 +121,13 @@ export function manualOdds({ db, config }) {
       timestamp - DAY,
     );
     const receipt = transaction(db, () => {
+      ensure(
+        !db
+          .prepare("SELECT 1 FROM odds_batches WHERE state='PENDING' AND id!=? LIMIT 1")
+          .get(batchId || ''),
+        409,
+        'Un chargement groupé est en cours ou interrompu. Relire les données locales.',
+      );
       const previous = db.prepare('SELECT * FROM odds_calls WHERE id=?').get(requestId);
       if (previous) {
         ensure(previous.cacheKey === cacheKey, 409, 'Clé déjà utilisée pour une autre action.');
@@ -137,7 +170,7 @@ export function manualOdds({ db, config }) {
         'Quota fournisseur épuisé au dernier appel. Import bloqué par précaution pendant 31 jours au maximum ; consulter son tableau de bord.',
       );
       ensure(
-        !current.lastCallAt || timestamp - current.lastCallAt >= 60000,
+        batchId || !current.lastCallAt || timestamp - current.lastCallAt >= 60000,
         429,
         'Attendre une minute entre deux appels The Odds API.',
       );
@@ -279,9 +312,9 @@ export function manualOdds({ db, config }) {
     }
   }
 
-  async function preview(input, requestId, actorId) {
+  async function preview(input, requestId, actorId, batchId = null) {
     ensure(input.consent === true, 400, 'Autoriser explicitement la consommation d’un crédit.');
-    const receipt = await request(input.competition, input.date, requestId, actorId);
+    const receipt = await request(input.competition, input.date, requestId, actorId, batchId);
     transaction(db, () => {
       const newer = db
         .prepare(
@@ -313,85 +346,229 @@ export function manualOdds({ db, config }) {
     return { ...state(), cached: receipt.cached };
   }
 
-  function publish({ eventId, bookmaker, snapshotId }, actorId) {
-    const matchId = transaction(db, () => {
-      const fixture = db.prepare('SELECT * FROM odds_fixtures WHERE externalId=?').get(eventId);
+  function publishOne({ eventId, bookmaker, snapshotId }, actorId) {
+    const fixture = db.prepare('SELECT * FROM odds_fixtures WHERE externalId=?').get(eventId);
+    ensure(
+      fixture && fixture.snapshotId === snapshotId,
+      409,
+      'Aperçu modifié ou introuvable. Relire la liste avant de publier.',
+    );
+    ensure(Date.parse(fixture.startDate) > Date.now(), 409, 'Ce match a déjà commencé.');
+    const quote = JSON.parse(fixture.quotes).find((q) => q.bookmaker === bookmaker);
+    ensure(
+      quote && fixture.fetchedAt > Date.now() - HOUR && quote.updatedAt > Date.now() - HOUR,
+      409,
+      'Cotes 1N2 absentes ou expirées. Charger volontairement un nouvel aperçu.',
+    );
+    let current = fixture.matchId
+      ? db.prepare('SELECT * FROM matches WHERE id=?').get(fixture.matchId)
+      : null;
+    if (!current) {
+      const candidates = db
+        .prepare(
+          "SELECT * FROM matches WHERE sportKey='football' AND homeTeam=? COLLATE NOCASE AND awayTeam=? COLLATE NOCASE AND startDate=?",
+        )
+        .all(fixture.homeTeam, fixture.awayTeam, fixture.startDate);
       ensure(
-        fixture && fixture.snapshotId === snapshotId,
+        candidates.length <= 1,
         409,
-        'Aperçu modifié ou introuvable. Relire la liste avant de publier.',
+        'Plusieurs matchs identiques existent. Résoudre le doublon dans l’administration.',
       );
-      ensure(Date.parse(fixture.startDate) > Date.now(), 409, 'Ce match a déjà commencé.');
-      const quote = JSON.parse(fixture.quotes).find((q) => q.bookmaker === bookmaker);
+      current = candidates[0];
+    }
+    if (current) {
       ensure(
-        quote && fixture.fetchedAt > Date.now() - HOUR && quote.updatedAt > Date.now() - HOUR,
+        current.status === 'UPCOMING' && Date.parse(current.startDate) > Date.now(),
         409,
-        'Cotes 1N2 absentes ou expirées. Charger volontairement un nouvel aperçu.',
+        'Ce match ne peut plus être modifié.',
       );
-      let current = fixture.matchId
-        ? db.prepare('SELECT * FROM matches WHERE id=?').get(fixture.matchId)
-        : null;
-      if (!current) {
-        const candidates = db
-          .prepare(
-            "SELECT * FROM matches WHERE sportKey='football' AND homeTeam=? COLLATE NOCASE AND awayTeam=? COLLATE NOCASE AND startDate=?",
-          )
-          .all(fixture.homeTeam, fixture.awayTeam, fixture.startDate);
-        ensure(
-          candidates.length <= 1,
-          409,
-          'Plusieurs matchs identiques existent. Résoudre le doublon dans l’administration.',
-        );
-        current = candidates[0];
-      }
-      if (current) {
-        ensure(
-          current.status === 'UPCOMING' && Date.parse(current.startDate) > Date.now(),
-          409,
-          'Ce match ne peut plus être modifié.',
-        );
-        ensure(
-          !db.prepare('SELECT 1 FROM bets WHERE matchId=? LIMIT 1').get(current.id) ||
-            (current.homeTeam === fixture.homeTeam &&
-              current.awayTeam === fixture.awayTeam &&
-              current.startDate === fixture.startDate),
-          409,
-          'Des paris existent : équipes et date sont verrouillées. Traiter ce changement manuellement.',
-        );
-      }
-      const id = current?.id || randomUUID();
-      if (current)
-        db.prepare(
-          'UPDATE matches SET homeTeam=?,awayTeam=?,startDate=?,competition=?,oddsHome=?,oddsDraw=?,oddsAway=? WHERE id=?',
-        ).run(
-          fixture.homeTeam,
-          fixture.awayTeam,
-          fixture.startDate,
-          fixture.competition,
-          quote.home,
-          quote.draw,
-          quote.away,
-          id,
-        );
-      else
-        db.prepare(
-          'INSERT INTO matches (id,homeTeam,awayTeam,startDate,competition,oddsHome,oddsDraw,oddsAway,createdAt) VALUES (?,?,?,?,?,?,?,?,?)',
-        ).run(
-          id,
-          fixture.homeTeam,
-          fixture.awayTeam,
-          fixture.startDate,
-          fixture.competition,
-          quote.home,
-          quote.draw,
-          quote.away,
-          now(),
-        );
-      db.prepare('UPDATE odds_fixtures SET matchId=? WHERE externalId=?').run(id, eventId);
-      audit(db, actorId, 'ODDS_MATCH_PUBLISHED', id, { eventId, bookmaker, snapshotId, quote });
-      return id;
-    });
+      ensure(
+        !db.prepare('SELECT 1 FROM bets WHERE matchId=? LIMIT 1').get(current.id) ||
+          (current.homeTeam === fixture.homeTeam &&
+            current.awayTeam === fixture.awayTeam &&
+            current.startDate === fixture.startDate),
+        409,
+        'Des paris existent : équipes et date sont verrouillées. Traiter ce changement manuellement.',
+      );
+    }
+    const id = current?.id || randomUUID();
+    if (current)
+      db.prepare(
+        'UPDATE matches SET homeTeam=?,awayTeam=?,startDate=?,competition=?,oddsHome=?,oddsDraw=?,oddsAway=? WHERE id=?',
+      ).run(
+        fixture.homeTeam,
+        fixture.awayTeam,
+        fixture.startDate,
+        fixture.competition,
+        quote.home,
+        quote.draw,
+        quote.away,
+        id,
+      );
+    else
+      db.prepare(
+        'INSERT INTO matches (id,homeTeam,awayTeam,startDate,competition,oddsHome,oddsDraw,oddsAway,createdAt) VALUES (?,?,?,?,?,?,?,?,?)',
+      ).run(
+        id,
+        fixture.homeTeam,
+        fixture.awayTeam,
+        fixture.startDate,
+        fixture.competition,
+        quote.home,
+        quote.draw,
+        quote.away,
+        now(),
+      );
+    db.prepare('UPDATE odds_fixtures SET matchId=? WHERE externalId=?').run(id, eventId);
+    audit(db, actorId, 'ODDS_MATCH_PUBLISHED', id, { eventId, bookmaker, snapshotId, quote });
+    return id;
+  }
+
+  function publish(input, actorId) {
+    const matchId = transaction(db, () => publishOne(input, actorId));
     return { ...state(), matchId };
   }
-  return { state, preview, publish };
+
+  function publishBatch({ fixtures }, actorId) {
+    ensure(
+      Array.isArray(fixtures) &&
+        fixtures.length > 0 &&
+        fixtures.length <= 200 &&
+        new Set(fixtures.map((f) => f.eventId)).size === fixtures.length,
+      400,
+      'Choisir entre 1 et 200 rencontres distinctes.',
+    );
+    // Entire selection commits together; one expired/conflicting row rolls everything back.
+    const matchIds = transaction(db, () => fixtures.map((input) => publishOne(input, actorId)));
+    return { ...state(), publishedCount: matchIds.length };
+  }
+
+  async function previewBatch(input, batchId, actorId) {
+    const { competitions, date, consent } = input;
+    ensure(
+      consent === true &&
+        Array.isArray(competitions) &&
+        competitions.length >= 1 &&
+        competitions.length <= 5 &&
+        new Set(competitions).size === competitions.length &&
+        competitions.every((key) => has(COMPETITIONS, key)),
+      400,
+      'Choisir entre 1 et 5 compétitions distinctes et autoriser le coût maximal.',
+    );
+    const day = Date.parse(`${date}T00:00:00Z`);
+    const today = Date.parse(new Date(Date.now()).toISOString().slice(0, 10));
+    ensure(
+      /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+        Number.isFinite(day) &&
+        new Date(day).toISOString().slice(0, 10) === date &&
+        day >= today &&
+        day <= today + 7 * DAY,
+      400,
+      'Date invalide : choisir aujourd’hui à J+7 (UTC).',
+    );
+    const serialized = JSON.stringify({ competitions: [...competitions].sort(), date });
+    const replay = transaction(db, () => {
+      const previous = db.prepare('SELECT * FROM odds_batches WHERE id=?').get(batchId);
+      if (previous) {
+        ensure(previous.input === serialized, 409, 'Clé déjà utilisée pour une autre sélection.');
+        ensure(
+          previous.state === 'COMPLETE',
+          409,
+          'Ce chargement a déjà été lancé. Relire les données locales, sans relance automatique.',
+        );
+        return JSON.parse(previous.results);
+      }
+      ensure(ready(), 409, 'Import désactivé : activer le mode manuel dans Render.');
+      ensure(
+        !db.prepare("SELECT 1 FROM odds_batches WHERE state='PENDING'").get() &&
+          !db.prepare("SELECT 1 FROM odds_calls WHERE state='PENDING'").get(),
+        409,
+        'Un chargement est en cours ou interrompu.',
+      );
+      const required = competitions.filter(
+        (key) =>
+          !db
+            .prepare(
+              "SELECT 1 FROM odds_calls WHERE cacheKey=? AND state='SUCCESS' AND createdAt>? LIMIT 1",
+            )
+            .get(`${key}/${date}`, Date.now() - HOUR),
+      ).length;
+      const current = usage();
+      ensure(
+        current.dailyUsed + required <= current.dailyLimit &&
+          current.monthlyUsed + required <= current.monthlyLimit,
+        429,
+        'Quota local insuffisant pour cette sélection. Réduire le nombre de championnats. Aucun appel envoyé.',
+      );
+      ensure(
+        !required || !current.lastCallAt || Date.now() - current.lastCallAt >= 60000,
+        429,
+        'Attendre une minute entre deux chargements.',
+      );
+      ensure(
+        !required ||
+          current.providerRemaining === null ||
+          Date.now() - current.providerCheckedAt > 31 * DAY ||
+          current.providerRemaining >= required,
+        429,
+        'Crédits fournisseur insuffisants pour la sélection au dernier relevé. Aucun appel envoyé.',
+      );
+      db.prepare(
+        "INSERT INTO odds_batches (id,input,createdAt,state) VALUES (?,?,?,'PENDING')",
+      ).run(batchId, serialized, Date.now());
+      audit(db, actorId, 'ODDS_BATCH_RESERVED', batchId, {
+        competitions,
+        date,
+        maximumCredits: competitions.length,
+        required,
+      });
+      return null;
+    });
+    if (replay)
+      return {
+        ...state(),
+        batchResults: replay.map((row) => ({
+          ...row,
+          status: row.status === 'LOADED' ? 'CACHED' : row.status,
+        })),
+        replayed: true,
+      };
+    const results = [];
+    let stopped = false;
+    for (const competition of competitions) {
+      if (stopped) {
+        results.push({
+          competition,
+          status: 'SKIPPED',
+          message: 'Non appelé : chargement arrêté après un échec.',
+        });
+        continue;
+      }
+      try {
+        const result = await preview(
+          { competition, date, consent: true },
+          randomUUID(),
+          actorId,
+          batchId,
+        );
+        results.push({ competition, status: result.cached ? 'CACHED' : 'LOADED' });
+      } catch (error) {
+        results.push({
+          competition,
+          status: 'FAILED',
+          message:
+            error instanceof AppError
+              ? error.message
+              : 'Chargement interrompu. Aucune relance automatique.',
+        });
+        stopped = true;
+      }
+    }
+    db.prepare("UPDATE odds_batches SET state='COMPLETE',results=? WHERE id=?").run(
+      JSON.stringify(results),
+      batchId,
+    );
+    return { ...state(), batchResults: results };
+  }
+  return { state, preview, publish, previewBatch, publishBatch };
 }
