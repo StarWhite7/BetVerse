@@ -15,6 +15,12 @@ server/.env.*
 *.sqlite*
 *.backup
 .private
+.local-tools
+mobile
+**/.gradle
+**/build
+**/local.properties
+docs/design
 android
 *.p12
 *.pfx

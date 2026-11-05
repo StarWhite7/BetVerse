@@ -1,0 +1,38 @@
+{
+  "status": "design-reference-not-integrated",
+  "direction": "Club",
+  "selectedOn": "2026-11-05",
+  "currency": "Verse (virtual only)",
+  "themes": {
+    "light": {
+      "background": "#F5F3ED",
+      "surface": "#FFFFFF",
+      "surfaceRaised": "#EBEFF7",
+      "text": "#142234",
+      "textSecondary": "#4E5D70",
+      "border": "#CDD2DA",
+      "primary": "#2458E8",
+      "onPrimary": "#FFFFFF",
+      "accentText": "#2458E8",
+      "information": "#A7491C"
+    },
+    "dark": {
+      "background": "#101722",
+      "surface": "#192331",
+      "surfaceRaised": "#222F41",
+      "text": "#F3F6FC",
+      "textSecondary": "#B4C0D0",
+      "border": "#35445A",
+      "primary": "#2458E8",
+      "onPrimary": "#FFFFFF",
+      "accentText": "#86AAFF",
+      "information": "#F2A36D"
+    }
+  },
+  "themePreferences": ["system", "light", "dark"],
+  "notes": [
+    "Intended default: follow OS; persist explicit user choice when implemented.",
+    "Raster mockups are illustrative; these role-based colors are the design reference.",
+    "Validate all actual component states and touch targets during implementation."
+  ]
+}

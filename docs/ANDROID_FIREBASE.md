@@ -1,5 +1,7 @@
 # Tester BetVerse sur Android sans câble
 
+**Client actuel : Kotlin/Compose dans `mobile/android`.** Le workflow Firebase réutilise l’identifiant, la signature et le groupe privé existants. Voir [ANDROID_NATIVE.md](ANDROID_NATIVE.md) pour le développement et la recette actuels. Les sections Capacitor ci-dessous sont historiques ; ne pas lancer `android:prepare` pour le client Kotlin.
+
 Ce guide prépare une bêta privée, pas une publication sur Google Play. Firebase App Distribution distribue un APK (le fichier d’installation Android) aux comptes invités. Le backend Node.js et sa base restent hébergés séparément.
 
 ## État de la préparation

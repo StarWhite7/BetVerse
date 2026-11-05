@@ -2,6 +2,8 @@
 
 Application de pronostics **gratuite en monnaie virtuelle**, avec un frontend Angular 22 et un backend Node intégré. Un même serveur sert le site et l'API ; la base SQLite est persistante.
 
+**Android natif** : le nouveau client Kotlin / Jetpack Compose se trouve dans `mobile/android`. Il réutilise cette API et l’identité Club, avec thèmes Système / Clair / Sombre. Voir [la configuration et la recette](docs/ANDROID_NATIVE.md). Le répertoire racine `android/` conserve l’ancienne enveloppe Capacitor ; la distribution Firebase utilise désormais `mobile/android`. Le web Angular reste en place. La future application iPhone sera distincte, en Swift / SwiftUI.
+
 ## Démarrer en développement
 
 Prérequis : **Node 24.15+ (branche 24 LTS) ou Node 26**, npm. Depuis ce dossier :

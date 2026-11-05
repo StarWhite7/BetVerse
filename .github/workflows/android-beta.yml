@@ -1,4 +1,4 @@
-name: Android - private Firebase beta
+name: Android Kotlin - private Firebase beta
 on:
   workflow_dispatch:
   push:
@@ -57,7 +57,11 @@ jobs:
       - run: npm --prefix server ci --ignore-scripts
       - run: npm run test:api
       - run: npm run test:web
-      - run: npm run android:prepare
+      - name: Verify native client and backend contract
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest lintDebug --no-daemon --console=plain
       - name: Restore beta signing key
         env:
           KEY_BASE64: ${{ secrets.BETA_KEYSTORE_BASE64 }}
@@ -67,12 +71,12 @@ jobs:
           writeFileSync(`${process.env.RUNNER_TEMP}/betverse-beta.p12`, Buffer.from(process.env.KEY_BASE64, 'base64'), { mode: 0o600 });
           JS
       - name: Build signed APK
-        working-directory: android
+        working-directory: mobile/android
         env:
           BETA_KEYSTORE_PATH: ${{ runner.temp }}/betverse-beta.p12
           BETA_KEYSTORE_PASSWORD: ${{ secrets.BETA_KEYSTORE_PASSWORD }}
           BETVERSE_ANDROID_VERSION_CODE: ${{ github.run_number }}
-          BETVERSE_ANDROID_VERSION_NAME: 1.0.0-beta.${{ github.run_number }}
+          BETVERSE_ANDROID_VERSION_NAME: 1.1.0-native-beta.${{ github.run_number }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --console=plain
@@ -82,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: betverse-beta-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
           retention-days: 7
       - name: Authenticate Firebase
         uses: google-github-actions/auth@v3
@@ -91,9 +95,9 @@ jobs:
       - name: Distribute to the private tester group
         run: |
           npx --yes firebase-tools@15.34.2 appdistribution:distribute \
-            android/app/build/outputs/apk/release/app-release.apk \
+            mobile/android/app/build/outputs/apk/release/app-release.apk \
             --app "$FIREBASE_APP_ID" --groups "$FIREBASE_TESTER_GROUP" \
-            --release-notes "BetVerse beta ${GITHUB_RUN_NUMBER} - ${GITHUB_SHA}" --non-interactive
+            --release-notes "BetVerse Android natif Kotlin - Club clair/sombre - ${GITHUB_RUN_NUMBER} - ${GITHUB_SHA}" --non-interactive
       - name: Remove runner signing key
         if: always()
         run: rm -f -- "$RUNNER_TEMP/betverse-beta.p12"

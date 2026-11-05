@@ -55,6 +55,12 @@ __screenshots__/
 Thumbs.db
 
 # Android signing keys and Firebase service account credentials
+# Local Android toolchain, native outputs and machine-specific settings
+/.local-tools/
+**/.gradle/
+**/.kotlin/
+**/build/
+**/local.properties
 /.private/
 *.jks
 *.keystore
