@@ -71,10 +71,10 @@ export function userRoutes({ db, config, requireAdmin }) {
     const user = publicUser(db, id.parse(req.params.id));
     const rows = db
       .prepare(
-        'SELECT id,match,betType,amount,odds,status,createdAt,matchId FROM bets WHERE userId=? ORDER BY createdAt DESC LIMIT 50',
+        'SELECT id,match,betType,amount,odds,status,createdAt,matchId,kind FROM bets WHERE userId=? ORDER BY createdAt DESC LIMIT 50',
       )
       .all(user.id)
-      .map(betDto);
+      .map((row) => betDto(row, db));
     res.json({
       user: {
         id: user.id,

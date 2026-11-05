@@ -21,7 +21,7 @@ import fr.betverse.mobile.UiState
     val draft = state.draft ?: return
     val uncertain = state.pending != null
     val valid = draft.stake != null && (uncertain ||
-        ((draft.stake ?: Long.MAX_VALUE) <= (state.wallet?.balance ?: 0) && draft.fixture.available(state.now)))
+        ((draft.stake ?: Long.MAX_VALUE) <= (state.wallet?.balance ?: 0) && draft.potential != null && draft.selections.all { it.fixture.available(state.now) }))
     ModalBottomSheet(onDismissRequest = { if (!state.busy) onDismiss() },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surface,
@@ -34,11 +34,15 @@ import fr.betverse.mobile.UiState
             }
             if (uncertain) Notice("Une demande est en attente de vérification. Le même identifiant sera réutilisé pour éviter tout doublon. La mise et la sélection sont verrouillées.", false)
             state.message?.let { Notice(it, state.error) }
-            Text("Pari simple", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(draft.fixture.home + " — " + draft.fixture.away, style = MaterialTheme.typography.titleMedium)
-            Text(matchDate(draft.fixture.start), style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            ClubCard { StatLine(draft.fixture.label(draft.choice), quote(draft.quote)) }
+            Text(if (draft.selections.size > 1) "Combiné · ${draft.selections.size} rencontres" else "Pari simple", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            draft.selections.forEach { leg ->
+                ClubCard(Modifier.fillMaxWidth()) {
+                    Text(leg.fixture.home + " — " + leg.fixture.away, style = MaterialTheme.typography.titleMedium)
+                    Text(matchDate(leg.fixture.start), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    StatLine(leg.fixture.label(leg.choice), quote(requireNotNull(leg.fixture.odds(leg.choice))))
+                }
+            }
+            if (draft.selections.size > 1) StatLine("Cote totale", quote(draft.quote), true)
             OutlinedTextField(value = draft.amount, onValueChange = onStake,
                 label = { Text("Mise en Verse") }, singleLine = true,
                 enabled = !state.busy && !uncertain, isError = draft.amount.isNotEmpty() && !valid,

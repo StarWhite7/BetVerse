@@ -37,6 +37,18 @@ db.prepare(
   timestamp,
 );
 const app = await createApp({ db, config });
+db.prepare(
+  'INSERT INTO matches (id,homeTeam,awayTeam,startDate,oddsHome,oddsAway,oddsDraw,createdAt) VALUES (?,?,?,?,?,?,?,?)',
+).run(
+  randomUUID(),
+  'Inter',
+  'Dortmund',
+  new Date(Date.now() + 7200000).toISOString(),
+  180,
+  420,
+  360,
+  timestamp,
+);
 const server = app.listen(0, '127.0.0.1');
 await once(server, 'listening');
 config.origin = 'http://localhost:' + server.address().port;

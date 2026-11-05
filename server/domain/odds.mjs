@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { ensure, AppError, transaction } from '../lib/errors.mjs';
 import { audit, now } from './accounts.mjs';
+import { hasMatchBets } from './matches.mjs';
 
 export const COMPETITIONS = Object.freeze({
   soccer_france_ligue_one: 'Ligue 1',
@@ -88,9 +89,7 @@ export function manualOdds({ db, config }) {
                 home: current.oddsHome,
                 draw: current.oddsDraw,
                 away: current.oddsAway,
-                hasBets: Boolean(
-                  db.prepare('SELECT 1 FROM bets WHERE matchId=? LIMIT 1').get(current.id),
-                ),
+                hasBets: Boolean(hasMatchBets(db, current.id)),
               }
             : null,
         };
@@ -383,7 +382,7 @@ export function manualOdds({ db, config }) {
         'Ce match ne peut plus être modifié.',
       );
       ensure(
-        !db.prepare('SELECT 1 FROM bets WHERE matchId=? LIMIT 1').get(current.id) ||
+        !hasMatchBets(db, current.id) ||
           (current.homeTeam === fixture.homeTeam &&
             current.awayTeam === fixture.awayTeam &&
             current.startDate === fixture.startDate),

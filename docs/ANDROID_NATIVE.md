@@ -18,7 +18,11 @@ Organisation :
 
 ## Premier lot fonctionnel
 
-Connexion, inscription, renvoi de confirmation, demande de réinitialisation ; reprise de session ; calendrier existant avec sports et dates filtrés localement ; pari simple avec mise entière, cote et retour potentiel ; historique paginé et filtrable des paris ; portefeuille, 25 derniers mouvements, bonus quotidien ; profil et choix du thème Système / Clair / Sombre persisté.
+Connexion, inscription, renvoi de confirmation, demande de réinitialisation ; reprise de session ; calendrier avec ballons de sport et compétitions défilantes horizontalement, sans filtre de date ; paris simples et combinés de 2 à 10 rencontres avec mise unique, cote totale et retour potentiel ; historique paginé et filtrable ; portefeuille, 25 derniers mouvements, bonus quotidien ; profil et thème Système / Clair / Sombre persisté.
+
+Les cotes sélectionnées sont bleues sans coche. Un deuxième appui retire la sélection ; choisir une autre issue de la même rencontre la remplace. Les choix de plusieurs rencontres forment un combiné dans le même coupon. Initiales et palettes de clubs sont issues du catalogue local `ClubIdentity.kt` (normalisation des accents et alias, fallback neutre pour un club inconnu), sans téléchargement de logo ni appel au fournisseur. Les matchs à venir de toutes les dates restent visibles, filtrés localement par compétition.
+
+Le combiné utilise `POST /api/bet/combined` : cotes de chaque rencontre vérifiées côté serveur, débit unique et idempotence. Les sélections sont chiffrées ensemble pour reprendre une demande interrompue avec exactement la même clé. Le produit des cotes est arrondi à deux décimales une seule fois, puis le retour est arrondi à l’entier (HALF_UP). Cote totale maximale : 1 000 000. Une rencontre perdante perd le ticket ; toutes les autres doivent être gagnantes ou annulées avant paiement. Une annulation neutralise la cote de la rencontre à 1 ; toutes annulées remboursent la mise. Les identités/dates de toutes les rencontres du ticket sont verrouillées après prise de pari.
 
 Agence : consultation du nom, des membres et des points. Gestion complète, invitations et pronostics collectifs restent dans le web, ouvert explicitement dans le navigateur ; session web distincte possible. Les notifications, classements avancés, modifications de compte et tous les parcours d'agence ne sont pas encore portés en Kotlin. Les emails de validation et de reset continuent à ouvrir les routes web existantes.
 

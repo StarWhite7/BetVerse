@@ -27,7 +27,7 @@ data class UiState(
     val tickets: List<Ticket> = emptyList(), val ticketTotal: Int = 0, val ticketSkip: Int = 0,
     val ticketFilter: String? = null, val history: List<LedgerEntry> = emptyList(),
     val destination: Destination = Destination.MATCHES, val sport: String = "football",
-    val day: DayFilter = DayFilter.TODAY, val draft: DraftBet? = null,
+    val day: DayFilter = DayFilter.TODAY, val competition: String? = null, val draft: DraftBet? = null,
     val pending: DraftBet? = null, val showSlip: Boolean = false,
     val message: String? = null, val error: Boolean = false,
     val now: Instant = Instant.now(), val theme: ThemePreference = ThemePreference.SYSTEM,
@@ -139,7 +139,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         preferences.edit().putString("theme", value.name).apply()
         mutable.update { it.copy(theme = value) }
     }
-    fun sport(value: String) { mutable.update { it.copy(sport = value) } }
+    fun sport(value: String) { mutable.update { it.copy(sport = value, competition = null) } }
+    fun competition(value: String?) { mutable.update { it.copy(competition = value) } }
     fun day(value: DayFilter) { mutable.update { it.copy(day = value) } }
     fun select(fixture: Fixture, choice: Choice) {
         if (mutable.value.busy) return
@@ -153,7 +154,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             mutable.update { it.copy(error = true, message = "Cette sélection n’est plus disponible. Actualisez les matchs.") }
             return
         }
-        mutable.update { it.copy(draft = DraftBet(fixture, choice), showSlip = false, message = null) }
+        val draft = mutable.value.draft
+        if (draft != null && draft.selections.size >= 10 && draft.selections.none { it.fixture.id == fixture.id }) {
+            mutable.update { it.copy(error = true, message = "Un combiné contient 10 rencontres maximum.") }
+            return
+        }
+        mutable.update { it.copy(draft = toggleSelection(it.draft, fixture, choice), showSlip = false, message = null) }
     }
     fun showSlip() {
         mutable.update { it.copy(draft = it.pending ?: it.draft, showSlip = true, message = null) }
@@ -173,7 +179,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             mutable.update { it.copy(error = true, message = "Saisissez une mise entière entre 1 et 1 000 000 Verse, dans la limite de votre solde.") }
             return@operation
         }
-        if (previous == null && !draft.fixture.available(serverNow())) {
+        if (previous == null && draft.potential == null) {
+            mutable.update { it.copy(error = true, message = "La cote totale est trop élevée. Retirez une sélection du combiné.") }
+            return@operation
+        }
+        if (previous == null && draft.selections.any { !it.fixture.available(serverNow()) }) {
             mutable.update { it.copy(error = true, message = "Les paris sont fermés pour cette rencontre.") }
             return@operation
         }

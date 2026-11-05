@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../core/config/environment';
 
 export interface BetEntity {
+  kind?: 'SINGLE' | 'COMBO';
+  selections?: { match: string; betType: string; odds: number; status: string }[];
   id: string;
   match: string;
   betType: string;

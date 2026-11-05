@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { AppError, ensure, transaction } from '../lib/errors.mjs';
 import { audit, now } from './accounts.mjs';
+import { hasMatchBets } from './matches.mjs';
 
 const CACHE_MS = 60 * 60 * 1000;
 const COOLDOWN_MS = 60 * 1000;
@@ -286,7 +287,7 @@ export function manualFootball({ db, config }) {
         409,
         'Ce match ne peut plus être modifié.',
       );
-      const hasBets = db.prepare('SELECT 1 FROM bets WHERE matchId=? LIMIT 1').get(current.id);
+      const hasBets = hasMatchBets(db, current.id);
       ensure(
         !hasBets ||
           (current.homeTeam === fixture.homeTeam &&

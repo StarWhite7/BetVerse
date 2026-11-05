@@ -13,8 +13,167 @@ export function matchDto(row) {
     league: row.competition,
   };
 }
-export function betDto(row) {
-  return { ...row, odds: row.odds / 100 };
+export function betDto(row, db) {
+  return {
+    ...row,
+    odds: row.odds / 100,
+    ...(row.kind === 'COMBO' && db
+      ? {
+          selections: db
+            .prepare(
+              'SELECT matchId,match,betType,odds,status FROM bet_legs WHERE betId=? ORDER BY position',
+            )
+            .all(row.id)
+            .map((leg) => ({ ...leg, odds: leg.odds / 100 })),
+        }
+      : {}),
+  };
+}
+export function hasMatchBets(db, matchId) {
+  return Boolean(
+    db
+      .prepare(
+        'SELECT 1 FROM bets WHERE matchId=? UNION ALL SELECT 1 FROM bet_legs WHERE matchId=? LIMIT 1',
+      )
+      .get(matchId, matchId),
+  );
+}
+function combinedOdds(legs) {
+  const product = legs.reduce((value, leg) => value * BigInt(leg.odds), 1n);
+  const divisor = 100n ** BigInt(Math.max(0, legs.length - 1));
+  return Number((product + divisor / 2n) / divisor);
+}
+export function placeCombinedBet(db, userId, input, requestKey) {
+  return transaction(db, () => {
+    ensure(
+      input.selections.length >= 2 &&
+        input.selections.length <= 10 &&
+        new Set(input.selections.map((s) => s.matchId)).size === input.selections.length,
+      400,
+      'Un combiné comprend 2 à 10 rencontres distinctes.',
+    );
+    const requestHash = digest(
+      JSON.stringify([
+        'COMBO',
+        input.amount,
+        input.selections.map((s) => [s.matchId, s.betType, s.odds]),
+      ]),
+    );
+    const previous = db
+      .prepare('SELECT * FROM bets WHERE userId=? AND requestKey=?')
+      .get(userId, requestKey);
+    if (previous) {
+      ensure(
+        previous.requestHash === requestHash,
+        409,
+        'Cette clé de requête a déjà été utilisée pour un autre pari.',
+      );
+      return betDto(previous, db);
+    }
+    const legs = input.selections.map((selection) => {
+      const match = db.prepare('SELECT * FROM matches WHERE id=?').get(selection.matchId);
+      ensure(
+        match && match.status === 'UPCOMING' && Date.parse(match.startDate) > Date.now(),
+        409,
+        'Une rencontre du combiné est indisponible ou a commencé.',
+      );
+      const odds = { HOME: match.oddsHome, AWAY: match.oddsAway, DRAW: match.oddsDraw }[
+        selection.betType
+      ];
+      ensure(
+        odds != null && Math.round(selection.odds * 100) === odds,
+        409,
+        'Une cote a changé. Actualisez les matchs et vérifiez votre combiné.',
+      );
+      return {
+        matchId: match.id,
+        match: `${match.homeTeam} vs ${match.awayTeam}`,
+        betType: selection.betType,
+        odds,
+      };
+    });
+    const odds = combinedOdds(legs);
+    ensure(
+      Number.isSafeInteger(odds) && odds <= 100000000,
+      400,
+      'La cote totale maximale est de 1 000 000. Réduisez votre combiné.',
+    );
+    const betId = randomUUID();
+    movement(db, userId, input.amount, 'DEBIT', 'BET_STAKE', betId);
+    db.prepare(
+      "INSERT INTO bets (id,userId,matchId,match,betType,amount,odds,createdAt,requestKey,requestHash,kind) VALUES (?,?,?,?,?,?,?,?,?,?,'COMBO')",
+    ).run(
+      betId,
+      userId,
+      legs[0].matchId,
+      `Combiné · ${legs.length} rencontres`,
+      legs[0].betType,
+      input.amount,
+      odds,
+      now(),
+      requestKey,
+      requestHash,
+    );
+    const insert = db.prepare(
+      'INSERT INTO bet_legs (betId,matchId,match,betType,odds,position) VALUES (?,?,?,?,?,?)',
+    );
+    legs.forEach((leg, index) =>
+      insert.run(betId, leg.matchId, leg.match, leg.betType, leg.odds, index),
+    );
+    db.prepare('UPDATE users SET xp=xp+10 WHERE id=?').run(userId);
+    return betDto(db.prepare('SELECT * FROM bets WHERE id=?').get(betId), db);
+  });
+}
+function settleCombined(db, matchId, result) {
+  const timestamp = now();
+  db.prepare(
+    "UPDATE bet_legs SET status=CASE WHEN ? IS NULL THEN 'VOID' WHEN betType=? THEN 'WON' ELSE 'LOST' END WHERE matchId=? AND status='PENDING'",
+  ).run(result, result, matchId);
+  const tickets = db
+    .prepare(
+      "SELECT b.* FROM bets b JOIN bet_legs l ON l.betId=b.id WHERE l.matchId=? AND b.status='PENDING'",
+    )
+    .all(matchId);
+  for (const bet of tickets) {
+    const legs = db.prepare('SELECT * FROM bet_legs WHERE betId=? ORDER BY position').all(bet.id);
+    let status;
+    if (legs.some((leg) => leg.status === 'LOST')) status = 'LOST';
+    else if (legs.some((leg) => leg.status === 'PENDING')) continue;
+    else status = legs.every((leg) => leg.status === 'VOID') ? 'VOID' : 'WON';
+    const effective = legs.filter((leg) => leg.status !== 'VOID');
+    const effectiveOdds = effective.length ? combinedOdds(effective) : 100;
+    const payout =
+      status === 'LOST'
+        ? 0
+        : status === 'VOID'
+          ? bet.amount
+          : Number((BigInt(bet.amount) * BigInt(effectiveOdds) + 50n) / 100n);
+    db.prepare('UPDATE bets SET status=?,payout=?,resolvedAt=? WHERE id=?').run(
+      status,
+      payout,
+      timestamp,
+      bet.id,
+    );
+    if (payout) {
+      movement(
+        db,
+        bet.userId,
+        payout,
+        'CREDIT',
+        status === 'VOID' ? 'BET_REFUND' : 'BET_PAYOUT',
+        bet.id,
+      );
+      if (status === 'WON') db.prepare('UPDATE users SET xp=xp+50 WHERE id=?').run(bet.userId);
+      notify(
+        db,
+        bet.userId,
+        status === 'VOID' ? 'BET_REFUNDED' : 'BET_WON',
+        status === 'VOID' ? 'Combiné remboursé' : 'Combiné gagnant',
+        `Votre ticket "${bet.match}" : +${payout} Verse.`,
+        { amount: bet.amount, payout, effectiveOdds: effectiveOdds / 100 },
+      );
+    }
+  }
 }
 export function placeBet(db, userId, input, requestKey) {
   return transaction(db, () => {
@@ -92,7 +251,7 @@ export function finishMatch(db, actorId, matchId, { result, homeScore, awayScore
       "UPDATE matches SET status='FINISHED',result=?,homeScore=?,awayScore=? WHERE id=?",
     ).run(result, homeScore, awayScore, matchId);
     for (const bet of db
-      .prepare("SELECT * FROM bets WHERE matchId=? AND status='PENDING'")
+      .prepare("SELECT * FROM bets WHERE matchId=? AND status='PENDING' AND kind='SINGLE'")
       .all(matchId)) {
       const won = bet.betType === result;
       const payout = won ? Math.floor((bet.amount * bet.odds + 50) / 100) : 0;
@@ -121,6 +280,7 @@ export function finishMatch(db, actorId, matchId, { result, homeScore, awayScore
         );
       }
     }
+    settleCombined(db, matchId, result);
     for (const vote of db
       .prepare('SELECT * FROM votes WHERE matchId=? AND resolvedAt IS NULL')
       .all(matchId)) {
@@ -201,7 +361,7 @@ export function cancelMatch(db, actorId, matchId, reason) {
       matchId,
     );
     for (const bet of db
-      .prepare("SELECT * FROM bets WHERE matchId=? AND status='PENDING'")
+      .prepare("SELECT * FROM bets WHERE matchId=? AND status='PENDING' AND kind='SINGLE'")
       .all(matchId)) {
       movement(db, bet.userId, bet.amount, 'CREDIT', 'BET_REFUND', bet.id);
       db.prepare("UPDATE bets SET status='VOID',payout=amount,resolvedAt=? WHERE id=?").run(
@@ -217,6 +377,7 @@ export function cancelMatch(db, actorId, matchId, reason) {
         { match: bet.match, amount: bet.amount, payout: bet.amount },
       );
     }
+    settleCombined(db, matchId, null);
     db.prepare('UPDATE votes SET resolvedAt=? WHERE matchId=? AND resolvedAt IS NULL').run(
       timestamp,
       matchId,

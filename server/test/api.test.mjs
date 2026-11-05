@@ -990,3 +990,60 @@ test('grouped preview and publication enforce authorization, expose changes and 
   assert.equal((await f.request('/admin/odds/preview-batch', action)).status, 200);
   assert.equal(calls, 2);
 });
+
+test('combined API uses authoritative leg quotes, one debit and protects non-leading fixtures', async (t) => {
+  const f = await fixture(t);
+  const first = await f.makeMatch(),
+    second = await f.makeMatch({ homeTeam: 'Second FC' });
+  await f.request('/wallet/claim', { method: 'POST', session: f.aliceSession, body: {} });
+  const body = {
+    amount: 100,
+    selections: [first, second].map((match) => ({
+      matchId: match.id,
+      betType: 'HOME',
+      odds: match.oddsHome,
+    })),
+  };
+  const action = {
+    method: 'POST',
+    session: f.aliceSession,
+    headers: { 'Idempotency-Key': randomUUID() },
+    body,
+  };
+  assert.equal(
+    (
+      await f.request('/bet/combined', {
+        ...action,
+        body: { ...body, selections: [body.selections[0], body.selections[0]] },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await f.request('/bet/combined', {
+        ...action,
+        body: { ...body, selections: [body.selections[0], { ...body.selections[1], odds: 9 }] },
+      })
+    ).status,
+    409,
+  );
+  const result = await f.request('/bet/combined', action);
+  assert.equal(result.status, 201);
+  assert.equal(result.body.selections.length, 2);
+  assert.equal((await f.request('/bet/combined', action)).body.id, result.body.id);
+  assert.equal((await f.request('/wallet', { session: f.aliceSession })).body.balance, 400);
+  const history = await f.request('/bet/my-bets', { session: f.aliceSession });
+  assert.equal(history.body[0].kind, 'COMBO');
+  assert.equal(history.body[0].selections.length, 2);
+  assert.equal(
+    (
+      await f.request(`/matches/${second.id}`, {
+        method: 'PATCH',
+        session: f.adminSession,
+        body: { homeTeam: 'Changed FC' },
+      })
+    ).status,
+    409,
+  );
+});

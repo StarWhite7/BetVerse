@@ -45,7 +45,15 @@
         <tr *ngFor="let bet of filteredBets(); trackBy: trackByBet">
           <td>{{ bet.id }}</td>
           <td>{{ bet.match }}</td>
-          <td>{{ bet.betType }}</td>
+          <td>
+            @if (bet.kind === 'COMBO') {
+              @for (leg of bet.selections; track leg.match) {
+                <div>{{ leg.match }} · {{ leg.betType }} · {{ leg.status }}</div>
+              }
+            } @else {
+              {{ bet.betType }}
+            }
+          </td>
           <td>{{ bet.amount }} V</td>
           <td>{{ bet.odds }}</td>
           <td>{{ bet.status }}</td>

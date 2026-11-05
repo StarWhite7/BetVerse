@@ -3,7 +3,15 @@ import { randomUUID } from 'node:crypto';
 import { z, amount, choice, id, queryPage } from '../lib/validation.mjs';
 import { ensure, transaction } from '../lib/errors.mjs';
 import { now, audit } from '../domain/accounts.mjs';
-import { matchDto, betDto, placeBet, finishMatch, cancelMatch } from '../domain/matches.mjs';
+import {
+  matchDto,
+  betDto,
+  placeBet,
+  placeCombinedBet,
+  hasMatchBets,
+  finishMatch,
+  cancelMatch,
+} from '../domain/matches.mjs';
 import { manualFootball } from '../domain/football.mjs';
 const odds = z
   .number()
@@ -109,7 +117,7 @@ export function matchRoutes({ db, requireAdmin, config }) {
         'Date ou équipes invalides.',
       );
       // Do not allow rewriting the identity or kickoff after accepting stakes.
-      const hasBets = db.prepare('SELECT 1 FROM bets WHERE matchId=? LIMIT 1').get(matchId);
+      const hasBets = hasMatchBets(db, matchId);
       ensure(
         !hasBets ||
           (merged.homeTeam === current.homeTeam &&
@@ -158,6 +166,22 @@ export function matchRoutes({ db, requireAdmin, config }) {
 }
 export function betRoutes({ db, requireAdmin }) {
   const router = Router();
+  router.post('/combined', (req, res) => {
+    const input = z
+      .object({
+        amount,
+        selections: z
+          .array(z.object({ matchId: id, betType: choice, odds }).strict())
+          .min(2)
+          .max(10)
+          .refine((rows) => new Set(rows.map((row) => row.matchId)).size === rows.length),
+      })
+      .strict()
+      .parse(req.body);
+    res
+      .status(201)
+      .json(placeCombinedBet(db, req.user.id, input, id.parse(req.get('Idempotency-Key'))));
+  });
   router.post('/', (req, res) => {
     const input = z
       .object({
@@ -190,10 +214,10 @@ export function betRoutes({ db, requireAdmin }) {
     res.set('X-Total-Count', String(count)).json(
       db
         .prepare(
-          `SELECT id,matchId,match,betType,amount,odds,status,payout,createdAt FROM bets ${where} ORDER BY createdAt ${sort},id ${sort} LIMIT ? OFFSET ?`,
+          `SELECT id,matchId,match,betType,amount,odds,status,payout,createdAt,kind FROM bets ${where} ORDER BY createdAt ${sort},id ${sort} LIMIT ? OFFSET ?`,
         )
         .all(...params, page.limit, page.skip)
-        .map(betDto),
+        .map((row) => betDto(row, db)),
     );
   };
   router.get('/my-bets', list(false));

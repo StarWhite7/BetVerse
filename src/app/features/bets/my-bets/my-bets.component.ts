@@ -55,7 +55,19 @@ export class MyBetsComponent implements OnInit {
     return match;
   }
 
-  betLabel(bet: { betType: string; match?: string | null }): string {
+  betLabel(bet: {
+    betType: string;
+    match?: string | null;
+    kind?: string;
+    selections?: { match: string; betType: string }[];
+  }): string {
+    if (bet.kind === 'COMBO')
+      return (bet.selections || [])
+        .map(
+          (leg) =>
+            `${leg.match} : ${leg.betType === 'DRAW' ? 'N' : leg.betType === 'HOME' ? '1' : '2'}`,
+        )
+        .join(' · ');
     if (bet.betType === 'DRAW') {
       return 'Match nul';
     }

@@ -60,7 +60,7 @@ import fr.betverse.mobile.*
                                                 Icon(Icons.Outlined.Close, "Retirer la sélection")
                                             }
                                             Column(Modifier.weight(1f)) {
-                                                Text(state.draft.fixture.label(state.draft.choice), style = MaterialTheme.typography.labelLarge)
+                                                Text(if (state.draft.selections.size > 1) "Combiné · ${state.draft.selections.size} sélections" else state.draft.fixture.label(state.draft.choice), style = MaterialTheme.typography.labelLarge)
                                                 Text("Cote " + quote(state.draft.quote), style = MaterialTheme.typography.bodySmall)
                                             }
                                             Button(onClick = model::showSlip, enabled = !state.busy, colors = clubButtonColors()) { Text("Mon pari") }
@@ -94,7 +94,7 @@ import fr.betverse.mobile.*
                             }
                             Box(Modifier.weight(1f)) {
                                 when (state.destination) {
-                                    Destination.MATCHES -> MatchesScreen(state, model::sport, model::day, model::select)
+                                    Destination.MATCHES -> MatchesScreen(state, model::sport, model::competition, model::select)
                                     Destination.BETS -> TicketsScreen(state, model::ticketFilter, model::ticketPage)
                                     Destination.HOME -> HomeScreen(state, model::claim) { model.navigate(Destination.MATCHES) }
                                     Destination.PROFILE -> ProfileScreen(state, model::setTheme, model::logout) { openWeb("/profile") }

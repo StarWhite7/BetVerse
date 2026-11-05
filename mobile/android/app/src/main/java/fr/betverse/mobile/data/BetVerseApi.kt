@@ -129,6 +129,13 @@ class BetVerseApi(
         }
     suspend fun place(draft: DraftBet): Ticket {
         requireNotNull(draft.requestKey)
+        if (draft.selections.size > 1) {
+            val selections = JSONArray()
+            draft.selections.forEach { leg -> selections.put(JSONObject().put("matchId", leg.fixture.id)
+                .put("betType", leg.choice.name).put("odds", requireNotNull(leg.fixture.odds(leg.choice)))) }
+            return JSONObject(request("/api/bet/combined", JSONObject().put("amount", requireNotNull(draft.stake))
+                .put("selections", selections), draft.requestKey).first).ticket()
+        }
         val data = JSONObject().put("matchId", draft.fixture.id).put("betType", draft.choice.name)
             .put("amount", requireNotNull(draft.stake)).put("odds", draft.quote)
         return JSONObject(request("/api/bet", data, draft.requestKey).first).ticket()
@@ -136,7 +143,8 @@ class BetVerseApi(
     fun pending(owner: String): DraftBet? = vault.get("pending:" + base + ":" + owner)?.let { value ->
         val item = JSONObject(value)
         DraftBet(item.getJSONObject("fixture").fixture(), Choice.valueOf(item.getString("choice")),
-            item.getString("amount"), item.getString("requestKey"), owner)
+            item.getString("amount"), item.getString("requestKey"), owner,
+            item.optJSONArray("additional")?.objects()?.map { BetSelection(it.getJSONObject("fixture").fixture(), Choice.valueOf(it.getString("choice"))) }.orEmpty())
     }
     fun savePending(draft: DraftBet) {
         val fixture = draft.fixture
@@ -147,6 +155,9 @@ class BetVerseApi(
             .put("oddsHome", fixture.homeOdds).put("oddsDraw", fixture.drawOdds ?: JSONObject.NULL)
             .put("oddsAway", fixture.awayOdds))
             .put("choice", draft.choice.name).put("amount", draft.amount).put("requestKey", draft.requestKey)
+        val additional = JSONArray()
+        draft.additional.forEach { leg -> additional.put(JSONObject().put("fixture", leg.fixture.json()).put("choice", leg.choice.name)) }
+        json.put("additional", additional)
         vault.put("pending:" + base + ":" + requireNotNull(draft.owner), json.toString())
     }
     fun clearPending(owner: String) = vault.put("pending:" + base + ":" + owner, null)
@@ -178,5 +189,9 @@ private fun JSONObject.wallet() = Wallet(getLong("balance"), getLong("shards"),
 private fun JSONObject.ticket() = Ticket(
     getString("id"), getString("match"), Choice.valueOf(getString("betType")),
     getLong("amount"), decimal("odds"), getString("status"),
-    if (isNull("payout")) null else getLong("payout"), Instant.parse(getString("createdAt"))
+    if (isNull("payout")) null else getLong("payout"), Instant.parse(getString("createdAt")),
+    optJSONArray("selections")?.objects()?.map { TicketLeg(it.getString("match"), Choice.valueOf(it.getString("betType")), it.decimal("odds"), it.getString("status")) }.orEmpty()
 )
+private fun Fixture.json() = JSONObject().put("id", id).put("homeTeam", home).put("awayTeam", away)
+    .put("startDate", start.toString()).put("status", status).put("competition", competition).put("sportKey", sport)
+    .put("oddsHome", homeOdds).put("oddsDraw", drawOdds ?: JSONObject.NULL).put("oddsAway", awayOdds)

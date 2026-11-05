@@ -100,15 +100,19 @@ fun bonusCountdown(state: UiState): String? {
                     else -> "En attente"
                 }, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 Text(ticket.match, style = MaterialTheme.typography.titleMedium)
-                Text("Choix : " + when (ticket.choice) {
+                if (ticket.selections.isNotEmpty()) ticket.selections.forEach { leg ->
+                    Text(leg.match, style = MaterialTheme.typography.bodyMedium)
+                    Text("${leg.choice.short} · ${quote(leg.odds)} · " + when (leg.status) { "WON" -> "Gagné"; "LOST" -> "Perdu"; "VOID" -> "Annulé (cote 1)"; else -> "En attente" }, style = MaterialTheme.typography.bodySmall)
+                } else Text("Choix : " + when (ticket.choice) {
                     Choice.HOME -> ticket.match.substringBefore(" vs ")
                     Choice.DRAW -> "Match nul"
                     Choice.AWAY -> ticket.match.substringAfter(" vs ")
                 })
                 StatLine("Mise", verse(ticket.amount))
                 StatLine("Cote confirmée", quote(ticket.odds))
+                if (ticket.selections.any { it.status == "VOID" }) StatLine("Cote après annulation", quote(ticket.activeOdds))
                 StatLine(if (ticket.status == "PENDING") "Gain potentiel, mise incluse" else "Retour crédité",
-                    verse(if (ticket.status == "PENDING") potentialReturn(ticket.amount, ticket.odds) else ticket.payout ?: 0), true)
+                    verse(if (ticket.status == "PENDING") potentialReturn(ticket.amount, ticket.activeOdds) else ticket.payout ?: 0), true)
                 Text(matchDate(ticket.created), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("Ticket " + ticket.id.take(8), style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)

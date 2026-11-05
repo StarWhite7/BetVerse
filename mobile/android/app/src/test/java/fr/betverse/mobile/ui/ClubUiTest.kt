@@ -77,6 +77,23 @@ class ClubUiTest {
         compose.onNodeWithText("Sombre").performScrollTo().performClick()
         assertEquals(ThemePreference.DARK, theme)
     }
+    @Test fun competitionFiltersReplaceDatesAndSelectionsCanBeToggled() {
+        var current by mutableStateOf(state())
+        compose.setContent { ClubTheme(ThemePreference.LIGHT) {
+            MatchesScreen(current, { sport -> current=current.copy(sport=sport, competition=null) },
+                { competition -> current=current.copy(competition=competition) },
+                { fixture, choice -> current=current.copy(draft=toggleSelection(current.draft, fixture, choice)) })
+        } }
+        compose.onNodeWithText("Demain").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Football").assertExists()
+        compose.onNodeWithContentDescription("Tennis").assertExists()
+        compose.onNodeWithContentDescription("Basket").assertExists()
+        compose.onNodeWithContentDescription("Paris SG, cote 2,10").performClick().assertIsSelected()
+        compose.onNodeWithContentDescription("Paris SG, cote 2,10").performClick().assertIsNotSelected()
+        assertNull(current.draft)
+        assertEquals("PSG", clubIdentity("Paris Saint-Germain")?.initials)
+        assertEquals("RCS", clubIdentity("RC Strasbourg Alsace")?.initials)
+    }
     @Test fun renderLightAndDarkForVisualReview() {
         var dark by mutableStateOf(false)
         compose.setContent {

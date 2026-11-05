@@ -1,0 +1,9 @@
+ALTER TABLE bets ADD COLUMN kind TEXT NOT NULL DEFAULT 'SINGLE' CHECK(kind IN ('SINGLE','COMBO'));
+CREATE TABLE bet_legs (
+ betId TEXT NOT NULL REFERENCES bets(id), matchId TEXT NOT NULL REFERENCES matches(id),
+ match TEXT NOT NULL, betType TEXT NOT NULL CHECK(betType IN ('HOME','AWAY','DRAW')),
+ odds INTEGER NOT NULL CHECK(odds BETWEEN 100 AND 100000),
+ status TEXT NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING','WON','LOST','VOID')),
+ position INTEGER NOT NULL, PRIMARY KEY(betId,matchId), UNIQUE(betId,position)
+);
+CREATE INDEX bet_legs_match ON bet_legs(matchId,betId);
