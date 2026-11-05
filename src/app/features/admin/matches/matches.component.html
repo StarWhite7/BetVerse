@@ -20,7 +20,11 @@
     {{ error() }}
   </p>
 
-  <admin-football-import (imported)="loadMatches()" />
+  <admin-odds-import (imported)="loadMatches()" />
+  <details>
+    <summary>Ancien fournisseur : API Football (facultatif)</summary>
+    <admin-football-import (imported)="loadMatches()" />
+  </details>
 
   <div class="admin-matches__layout">
     <section class="matches-table">

@@ -808,3 +808,76 @@ test('startup, health, admin reads and unauthorized actions never call API Footb
   );
   assert.equal(calls, 1);
 });
+
+test('The Odds API routes enforce admin, CSRF, consent and schema before any provider call', async (t) => {
+  let calls = 0;
+  const f = await fixture(t, {
+    football: {
+      oddsMode: 'manual',
+      oddsKey: 'fake-only',
+      oddsDailyLimit: 10,
+      oddsMonthlyLimit: 400,
+      oddsFetch: async () => {
+        calls++;
+        return Response.json([]);
+      },
+    },
+  });
+  assert.equal(calls, 0);
+  const read = await f.request('/admin/odds', { session: f.adminSession });
+  assert.equal(read.status, 200);
+  assert.equal(read.body.usage.configured, true);
+  assert.equal(JSON.stringify(read.body).includes('fake-only'), false);
+  assert.equal((await f.request('/health')).status, 200);
+  assert.equal((await f.request('/matches', { session: f.aliceSession })).status, 200);
+  assert.equal((await f.request('/admin/odds', { session: f.aliceSession })).status, 403);
+  const action = {
+    method: 'POST',
+    headers: { 'Idempotency-Key': randomUUID() },
+    body: {
+      competition: 'soccer_france_ligue_one',
+      date: new Date().toISOString().slice(0, 10),
+      consent: true,
+    },
+  };
+  assert.equal((await f.request('/admin/odds/preview', action)).status, 401);
+  assert.equal(
+    (await f.request('/admin/odds/preview', { ...action, session: f.aliceSession })).status,
+    403,
+  );
+  assert.equal(
+    (
+      await f.request('/admin/odds/preview', {
+        ...action,
+        session: f.adminSession,
+        headers: { ...action.headers, 'X-CSRF-Token': 'invalid' },
+      })
+    ).status,
+    403,
+  );
+  for (const body of [
+    { ...action.body, consent: false },
+    { ...action.body, competition: '../evil' },
+    { ...action.body, apiKey: 'injected' },
+  ])
+    assert.equal(
+      (await f.request('/admin/odds/preview', { ...action, session: f.adminSession, body })).status,
+      400,
+    );
+  assert.equal(
+    (await f.request('/admin/odds/publish', { method: 'POST', session: f.aliceSession, body: {} }))
+      .status,
+    403,
+  );
+  assert.equal(calls, 0);
+  assert.equal(
+    (await f.request('/admin/odds/preview', { ...action, session: f.adminSession })).status,
+    200,
+  );
+  assert.equal(calls, 1);
+  assert.equal(
+    (await f.request('/admin/odds/preview', { ...action, session: f.adminSession })).body.cached,
+    true,
+  );
+  assert.equal(calls, 1);
+});

@@ -63,7 +63,7 @@ Demande utilisateur du 4 novembre 2026 : configurer un sous-domaine personnalis�
 
 ## Recette
 
-Pour les vraies rencontres, voir [API Football : imports manuels et protection du quota](API_FOOTBALL.md). Les appels fournisseur sont désactivés par défaut et ne sont jamais liés aux déploiements.
+Pour les vraies rencontres, voir [The Odds API : aperçu et publication manuels](THE_ODDS_API.md). L’ancien [import API Football](API_FOOTBALL.md) reste disponible séparément. Les appels fournisseur sont désactivés par défaut et ne sont jamais liés aux déploiements.
 
 Après un premier déploiement réussi, ouvrir l’URL Render et `/api/health`, créer un compte de test, recevoir le mail, confirmer puis se connecter. Vérifier la persistance après redémarrage et redéploiement. Tester le bonus et les pronostics avant de distribuer l’APK.
 

@@ -2,6 +2,15 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 export const root = fileURLToPath(new URL('../../', import.meta.url));
 export function configFromEnv(env = process.env) {
+  const oddsMode = env.THE_ODDS_API_MODE || 'disabled';
+  if (!['disabled', 'manual'].includes(oddsMode))
+    throw new Error('THE_ODDS_API_MODE accepte uniquement disabled ou manual.');
+  const oddsDailyLimit = Number(env.THE_ODDS_API_DAILY_LIMIT || 10);
+  const oddsMonthlyLimit = Number(env.THE_ODDS_API_MONTHLY_LIMIT || 400);
+  if (!Number.isInteger(oddsDailyLimit) || oddsDailyLimit < 1 || oddsDailyLimit > 100)
+    throw new Error('THE_ODDS_API_DAILY_LIMIT doit être un entier entre 1 et 100.');
+  if (!Number.isInteger(oddsMonthlyLimit) || oddsMonthlyLimit < 1 || oddsMonthlyLimit > 500)
+    throw new Error('THE_ODDS_API_MONTHLY_LIMIT doit être un entier entre 1 et 500.');
   const footballMode = env.API_FOOTBALL_MODE || 'disabled';
   if (!['disabled', 'manual'].includes(footballMode))
     throw new Error('API_FOOTBALL_MODE accepte uniquement disabled ou manual.');
@@ -21,6 +30,10 @@ export function configFromEnv(env = process.env) {
   if (env.SMTP_URL && !['smtp:', 'smtps:'].includes(new URL(env.SMTP_URL).protocol))
     throw new Error('SMTP_URL doit utiliser smtp:// ou smtps://.');
   return {
+    oddsMode,
+    oddsKey: env.THE_ODDS_API_KEY,
+    oddsDailyLimit,
+    oddsMonthlyLimit,
     production,
     footballMode,
     footballKey: env.API_FOOTBALL_KEY,
