@@ -1,0 +1,125 @@
+import { Router } from 'express';
+import { z } from '../lib/validation.mjs';
+import { manualOdds } from '../domain/odds.mjs';
+import { randomUUID } from 'node:crypto';
+import { ensure, transaction } from '../lib/errors.mjs';
+import { finishMatch } from '../domain/matches.mjs';
+import { audit, now } from '../domain/accounts.mjs';
+export function operationsRoutes({ db, config, requireAdmin }) {
+  const router = Router();
+  router.use(requireAdmin);
+  router.get('/', (_req, res) =>
+    res.json({
+      users: db.prepare("SELECT COUNT(*) total,SUM(status='SUSPENDED') suspended FROM users").get(),
+      tickets: db.prepare("SELECT COUNT(*) total,SUM(status='PENDING') pending FROM bets").get(),
+      toSettle: db
+        .prepare(
+          "SELECT id,homeTeam,awayTeam,startDate FROM matches WHERE status IN ('UPCOMING','LIVE') AND startDate<=? ORDER BY startDate LIMIT 100",
+        )
+        .all(new Date().toISOString()),
+      audit: db
+        .prepare(
+          'SELECT action,targetId,createdAt,details FROM audit_log ORDER BY createdAt DESC,rowid DESC LIMIT 100',
+        )
+        .all(),
+      provider: manualOdds({ db, config }).state().usage,
+      backup: config.backupService?.state || { configured: false },
+      metrics: config.metrics?.snapshot() || null,
+    }),
+  );
+  router.post('/backup', async (req, res) => {
+    z.object({ confirmation: z.literal('SAUVEGARDER') })
+      .strict()
+      .parse(req.body);
+    ensure(config.backupService, 409, 'Sauvegarde distante non configurée.');
+    res.json(await config.backupService.run());
+  });
+  const resultRows = z
+    .array(
+      z
+        .object({
+          matchId: z.uuid(),
+          homeScore: z.number().int().min(0).max(200),
+          awayScore: z.number().int().min(0).max(200),
+        })
+        .strict(),
+    )
+    .min(1)
+    .max(100);
+  router.post('/results/preview', (req, res) => {
+    const { rows } = z.object({ rows: resultRows }).strict().parse(req.body);
+    ensure(
+      new Set(rows.map((r) => r.matchId)).size === rows.length,
+      400,
+      'Une ligne par rencontre.',
+    );
+    const preview = rows.map((row) => {
+      const match = db
+        .prepare('SELECT id,homeTeam,awayTeam,startDate,status FROM matches WHERE id=?')
+        .get(row.matchId);
+      ensure(
+        match &&
+          ['UPCOMING', 'LIVE'].includes(match.status) &&
+          Date.parse(match.startDate) <= Date.now(),
+        409,
+        'Une rencontre est absente, future ou déjà réglée.',
+      );
+      return {
+        ...row,
+        ...match,
+        result:
+          row.homeScore === row.awayScore
+            ? 'DRAW'
+            : row.homeScore > row.awayScore
+              ? 'HOME'
+              : 'AWAY',
+      };
+    });
+    const id = randomUUID();
+    db.prepare('INSERT INTO result_previews(id,actorId,createdAt,rows) VALUES (?,?,?,?)').run(
+      id,
+      req.user.id,
+      now(),
+      JSON.stringify(preview),
+    );
+    res.json({ id, rows: preview, expiresIn: 900, providerCredits: 0 });
+  });
+  router.post('/results/apply', (req, res) => {
+    const { id } = z
+      .object({ id: z.uuid(), confirmation: z.literal('REGLER') })
+      .strict()
+      .parse(req.body);
+    res.json(
+      transaction(db, () => {
+        const preview = db
+          .prepare('SELECT * FROM result_previews WHERE id=? AND actorId=?')
+          .get(id, req.user.id);
+        ensure(preview, 404, 'Aperçu introuvable.');
+        if (preview.appliedAt) return { success: true, replayed: true };
+        ensure(
+          Date.now() - Date.parse(preview.createdAt) < 900000,
+          409,
+          'Aperçu expiré. Refaire une vérification locale.',
+        );
+        const rows = JSON.parse(preview.rows);
+        for (const row of rows) {
+          const match = db.prepare('SELECT * FROM matches WHERE id=?').get(row.matchId);
+          ensure(
+            match &&
+              match.homeTeam === row.homeTeam &&
+              match.awayTeam === row.awayTeam &&
+              match.startDate === row.startDate &&
+              match.status === row.status,
+            409,
+            'Une rencontre a changé. Aucun résultat du lot n’a été appliqué.',
+          );
+          finishMatch(db, req.user.id, row.matchId, row);
+        }
+        db.prepare('UPDATE result_previews SET appliedAt=? WHERE id=?').run(now(), id);
+        audit(db, req.user.id, 'RESULT_BATCH_APPLIED', id, { count: rows.length });
+        return { success: true, count: rows.length };
+      }),
+    );
+  });
+  return router;
+}

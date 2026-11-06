@@ -16,8 +16,12 @@ import { notificationRoutes } from './routes/notifications.mjs';
 import { agencyRoutes } from './routes/agencies.mjs';
 import { footballRoutes } from './routes/football.mjs';
 import { oddsRoutes } from './routes/odds.mjs';
+import { adminSecurityRoutes } from './routes/admin-security.mjs';
+import { operationsRoutes } from './routes/operations.mjs';
+import { metrics } from './lib/metrics.mjs';
 export async function createApp({ db, config }) {
   const app = express();
+  config.metrics ||= metrics();
   app.disable('x-powered-by');
   app.set('trust proxy', config.trustProxy);
   app.use(
@@ -41,9 +45,11 @@ export async function createApp({ db, config }) {
     }),
   );
   app.use((req, res, next) => {
+    const began = performance.now();
     req.requestId = randomUUID();
     res.set('X-Request-ID', req.requestId);
     res.on('finish', () => {
+      config.metrics.observe(res.statusCode, Math.round(performance.now() - began));
       if (!config.test)
         console.log(
           JSON.stringify({
@@ -61,6 +67,17 @@ export async function createApp({ db, config }) {
     db.prepare('SELECT 1').get();
     res.json({ status: 'ok' });
   });
+  app.get('/api/public/legal', (_req, res) =>
+    res.json({
+      publisher: 'StarWhite Interactive',
+      country: 'France',
+      support: 'support@betverse.fr',
+      ready: Boolean(config.legalReady),
+      supportVerified: Boolean(config.supportVerified),
+      address: config.editorAddress || null,
+      status: config.editorStatus || null,
+    }),
+  );
   app.use(
     '/api',
     rateLimit({
@@ -99,10 +116,22 @@ export async function createApp({ db, config }) {
       );
     req.session = session;
     req.user = publicUser(db, session.userId);
+    ensure(req.user.status === 'ACTIVE', 401, 'Ce compte est suspendu. Contactez le support.');
     next();
   };
   const requireAdmin = (req, _res, next) => {
     ensure(req.user?.role === 'ADMIN', 403, 'Accès administrateur requis.');
+    const enrolled = db
+      .prepare('SELECT 1 FROM admin_mfa WHERE userId=? AND secretCipher IS NOT NULL')
+      .get(req.user.id);
+    ensure(
+      !(config.adminMfaRequired || enrolled) ||
+        db
+          .prepare('SELECT 1 FROM session_mfa WHERE tokenHash=? AND expiresAt>?')
+          .get(req.session.tokenHash, Date.now()),
+      403,
+      'Vérifiez la double authentification dans Administration → Sécurité.',
+    );
     next();
   };
   const context = { db, config, requireUser, requireAdmin };
@@ -111,6 +140,8 @@ export async function createApp({ db, config }) {
   app.use('/api/matches', requireUser, matchRoutes(context));
   app.use('/api/admin/football', requireUser, footballRoutes(context));
   app.use('/api/admin/odds', requireUser, oddsRoutes(context));
+  app.use('/api/admin/security', requireUser, adminSecurityRoutes(context));
+  app.use('/api/admin/operations', requireUser, operationsRoutes(context));
   app.use('/api/bet', requireUser, betRoutes(context));
   app.use('/api/users', requireUser, userRoutes(context));
   app.use('/api/leaderboard', requireUser, leaderboardRoutes(context));

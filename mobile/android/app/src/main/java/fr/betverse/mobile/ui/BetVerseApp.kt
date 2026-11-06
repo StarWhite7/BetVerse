@@ -34,7 +34,8 @@ import fr.betverse.mobile.*
                 }
                 state.player == null -> AuthScreen(state, model)
                 else -> {
-                    BackHandler(enabled = state.destination != Destination.HOME && !state.showSlip && !state.busy) {
+                    BackHandler(enabled=state.panel!=null && !state.busy) { model.closePanel() }
+                    BackHandler(enabled = state.panel == null && state.destination != Destination.HOME && !state.showSlip && !state.busy) {
                         model.navigate(Destination.HOME)
                     }
                     Scaffold(containerColor = MaterialTheme.colorScheme.background,
@@ -44,6 +45,7 @@ import fr.betverse.mobile.*
                                     verticalAlignment = Alignment.CenterVertically) {
                                     Brand(Modifier.weight(1f))
                                     Text(state.wallet?.balance?.let(::verse) ?: "— V", fontWeight = FontWeight.Bold)
+                                    IconButton(onClick={model.openPanel("notices")},enabled=!state.busy) { Icon(Icons.Outlined.Notifications,"Notifications") }
                                     IconButton(onClick = model::refresh, enabled = !state.busy) {
                                         Icon(Icons.Outlined.Refresh, "Actualiser les données BetVerse")
                                     }
@@ -93,17 +95,23 @@ import fr.betverse.mobile.*
                                 }
                             }
                             Box(Modifier.weight(1f)) {
-                                when (state.destination) {
+                                if(state.panel!=null) SocialPanel(state,model,openWeb) else when (state.destination) {
                                     Destination.MATCHES -> MatchesScreen(state, model::sport, model::competition, model::select)
                                     Destination.BETS -> TicketsScreen(state, model::ticketFilter, model::ticketPage)
                                     Destination.HOME -> HomeScreen(state, model::claim) { model.navigate(Destination.MATCHES) }
-                                    Destination.PROFILE -> ProfileScreen(state, model::setTheme, model::logout) { openWeb("/profile") }
-                                    Destination.AGENCY -> AgencyScreen(state) { openWeb("/agence") }
+                                    Destination.PROFILE -> Column {
+                                        Row(Modifier.fillMaxWidth().padding(horizontal=16.dp)) {
+                                            TextButton(onClick={model.openPanel("profile")},enabled=!state.busy) {Text("Compte et données")}
+                                            TextButton(onClick={model.openPanel("ranks")},enabled=!state.busy) {Text("Classements")}
+                                        }
+                                        ProfileScreen(state, model::setTheme, model::logout) { model.openPanel("profile") }
+                                    }
+                                    Destination.AGENCY -> NativeAgencyScreen(state,model)
                                 }
                             }
                         }
                     }
-                    if (state.showSlip && state.draft != null) BetSheet(state, model::closeSlip, model::stake, model::confirmBet)
+                    if (state.showSlip && state.draft != null) BetSheet(state, model::closeSlip, model::stake, model::confirmBet,model::removeSelection)
                 }
             }
         }

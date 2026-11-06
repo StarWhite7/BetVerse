@@ -39,6 +39,7 @@
           <th>Email</th>
           <th>Role</th>
           <th>Créé le</th>
+          <th>État</th><th>Modération</th>
         </tr>
       </thead>
       <tbody>
@@ -51,6 +52,7 @@
           <td>{{ user.email }}</td>
           <td>{{ user.role }}</td>
           <td>{{ user.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ user.status==='SUSPENDED'?'Suspendu':'Actif' }}</td><td><button type="button" [disabled]="loading()||user.role==='ADMIN'" (click)="target.set(user);reason=''">{{user.status==='SUSPENDED'?'Réactiver':'Suspendre'}}</button></td>
         </tr>
         <tr *ngIf="!filteredUsers().length && !loading()">
           <td colspan="5">Aucun utilisateur trouve.</td>
@@ -59,3 +61,4 @@
     </table>
   </section>
 </section>
+@if(target();as user){<dialog bvDialog (dialogDismiss)="target.set(null)" class="bv-panel"><h2>{{user.status==='SUSPENDED'?'Réactiver':'Suspendre'}} {{user.username}}</h2><p>Une suspension ferme immédiatement les sessions et bloque la connexion. La décision est journalisée.</p><label>Motif (10 caractères minimum)<textarea [(ngModel)]="reason" maxlength="300"></textarea></label><button (click)="changeStatus()" [disabled]="loading()||reason.trim().length<10">Confirmer</button><button (click)="target.set(null)" [disabled]="loading()">Annuler</button></dialog>}

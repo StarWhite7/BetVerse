@@ -1,15 +1,21 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { UsersApiService, AdminUserSummary } from '../../../data-access/users/users.api';
+import {FormsModule} from '@angular/forms';
+import {HttpClient} from '@angular/common/http';
+import {DialogDirective} from '../../../shared/directives/dialog.directive';
 
 @Component({
   selector: 'admin-users',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,FormsModule,DialogDirective],
   templateUrl: './users.component.html',
   styleUrl: './users.component.css',
 })
 export class UsersComponent implements OnInit {
+  private readonly http=inject(HttpClient);readonly target=signal<AdminUserSummary|null>(null);reason='';
+  changeStatus(){const user=this.target();if(!user||this.reason.trim().length<10||this.loading())return;this.loading.set(true);
+    this.http.patch('/api/users/'+user.id+'/status',{status:user.status==='SUSPENDED'?'ACTIVE':'SUSPENDED',reason:this.reason}).subscribe({next:()=>{this.target.set(null);this.reason='';this.loadUsers();},error:e=>{this.loading.set(false);this.error.set(e?.error?.message||'Action impossible.');}});}
   private readonly usersApi = inject(UsersApiService);
 
   users = signal<AdminUserSummary[]>([]);

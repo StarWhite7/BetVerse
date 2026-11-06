@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from './core/services/notification.service';
 import { AuthService } from './core/services/auth.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -12,6 +13,7 @@ import { AuthService } from './core/services/auth.service';
   styleUrl: './app.css',
 })
 export class App {
+  readonly theme=inject(ThemeService);
   readonly auth = inject(AuthService);
   retryConnection() {
     window.location.reload();

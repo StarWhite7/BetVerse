@@ -69,6 +69,11 @@ Thumbs.db
 gha-creds-*.json
 *-firebase-adminsdk-*.json
 /firebase-service-account.json
+**/.build/
+**/.swiftpm/
+mobile/ios/*.xcodeproj/
+**/xcuserdata/
+*.bvbackup
 /android/app/src/main/assets/public/
 /android/app/src/main/assets/capacitor.config.json
 /android/app/src/main/assets/capacitor.plugins.json

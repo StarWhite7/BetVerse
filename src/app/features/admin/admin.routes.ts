@@ -5,6 +5,8 @@ import { BetsComponent } from './bets/bets.component';
 import { UsersComponent } from './users/users.component';
 
 const routes: Routes = [
+  {path:'operations',loadComponent:()=>import('./operations/operations.component').then(m=>m.OperationsComponent)},
+  {path:'security',loadComponent:()=>import('./security/security.component').then(m=>m.SecurityComponent)},
   {
     path: '',
     component: DashboardComponent,

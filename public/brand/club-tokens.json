@@ -1,0 +1,45 @@
+{
+  "name": "BetVerse Club",
+  "publisher": "StarWhite Interactive",
+  "country": "France",
+  "version": 1,
+  "themes": {
+    "light": {
+      "background": "#F5F3ED",
+      "surface": "#FFFFFF",
+      "raised": "#EBEFF7",
+      "text": "#142234",
+      "muted": "#4E5D70",
+      "border": "#CDD2DA",
+      "primary": "#2458E8",
+      "onPrimary": "#FFFFFF",
+      "accent": "#2458E8",
+      "success": "#17683B",
+      "danger": "#B42318"
+    },
+    "dark": {
+      "background": "#101722",
+      "surface": "#192331",
+      "raised": "#222F41",
+      "text": "#F3F6FC",
+      "muted": "#B4C0D0",
+      "border": "#35445A",
+      "primary": "#2458E8",
+      "onPrimary": "#FFFFFF",
+      "accent": "#86AAFF",
+      "success": "#82D6A5",
+      "danger": "#FFB4AB"
+    }
+  },
+  "radius": {
+    "small": 6,
+    "medium": 10,
+    "large": 14
+  },
+  "minimumTouchTarget": 48,
+  "fonts": {
+    "body": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+    "weightBody": 400,
+    "weightStrong": 600
+  }
+}

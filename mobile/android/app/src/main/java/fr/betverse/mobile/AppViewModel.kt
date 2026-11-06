@@ -33,6 +33,11 @@ data class UiState(
     val now: Instant = Instant.now(), val theme: ThemePreference = ThemePreference.SYSTEM,
     val agencyName: String? = null, val agencyMembers: Int = 0, val agencyPoints: Long = 0,
     val agencyLoaded: Boolean = false
+    ,val panel: String? = null, val agency: Agency? = null, val agencies: List<Agency> = emptyList(),
+    val invites: List<AgencyInvite> = emptyList(), val coordination: JSONObject? = null, val votes: List<JSONObject> = emptyList(),
+    val stats: JSONObject? = null, val ranks: List<PlayerRank> = emptyList(), val rankMetric: String = "verse",
+    val publicProfile: JSONObject? = null, val notices: List<GameNotice> = emptyList(), val noticePreferences: NoticePreferences = NoticePreferences(),
+    val exportPayload: String? = null
 )
 
 class AppViewModel(application: Application) : AndroidViewModel(application) {
@@ -89,7 +94,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun restoreSession() = operation {
         try {
             val player = api.me()
-            mutable.update { it.copy(player = player, pending = api.pending(player.id), booting = false) }
+            mutable.update { it.copy(player = player, pending = api.pending(player.id), draft = api.draft(player.id), booting = false) }
             loadSnapshot()
         } catch (e: ApiFailure) {
             if (e.status != 401) throw e
@@ -98,7 +103,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun login(identifier: String, password: String) = operation {
         val player = api.login(identifier.trim(), password)
-        mutable.update { it.copy(player = player, pending = api.pending(player.id), booting = false) }
+        mutable.update { it.copy(player = player, pending = api.pending(player.id), draft = api.draft(player.id), booting = false) }
         loadSnapshot()
     }
     fun register(email: String, username: String, password: String) = operation {
@@ -130,10 +135,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         if (destination == Destination.BETS) operation { loadTickets() }
     }
     private suspend fun loadAgency() {
-        val agency = api.agency()
-        mutable.update { it.copy(agencyName = agency?.optString("name"),
-            agencyMembers = agency?.optJSONObject("_count")?.optInt("members") ?: 0,
-            agencyPoints = agency?.optLong("clanScore") ?: 0, agencyLoaded = true) }
+        val raw = api.agency()
+        val agency = if (raw == null) null else Agency.from(api.readObject("/api/agence/roster"))
+        val agencies = api.readList("/api/agence").map(Agency::from)
+        val invites = api.readList("/api/agence/invitations").map { AgencyInvite(it.getString("id"),it.getJSONObject("agency").getString("name"),it.optJSONObject("inviter")?.optString("username") ?: "Un joueur") }
+        val coordination = if (agency != null) api.readObject("/api/agence/coordination") else null
+        val votes = if (agency != null) api.readList("/api/agence/match-votes") else emptyList()
+        mutable.update { it.copy(agencyName=agency?.name, agencyMembers=agency?.count ?: 0, agencyPoints=agency?.points ?: 0,
+            agencyLoaded=true, agency=agency, agencies=agencies, invites=invites, coordination=coordination, votes=votes) }
     }
     fun setTheme(value: ThemePreference) {
         preferences.edit().putString("theme", value.name).apply()
@@ -160,16 +169,26 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         mutable.update { it.copy(draft = toggleSelection(it.draft, fixture, choice), showSlip = false, message = null) }
+        saveDraft()
     }
     fun showSlip() {
         mutable.update { it.copy(draft = it.pending ?: it.draft, showSlip = true, message = null) }
     }
     fun closeSlip() { if (!mutable.value.busy) mutable.update { it.copy(showSlip = false) } }
-    fun clearDraft() { if (!mutable.value.busy && mutable.value.pending == null) mutable.update { it.copy(draft = null) } }
+    private fun saveDraft() { mutable.value.player?.id?.let { api.saveDraft(it, mutable.value.draft) } }
+    fun clearDraft() { if (!mutable.value.busy && mutable.value.pending == null) { mutable.update { it.copy(draft = null) }; saveDraft() } }
+    fun removeSelection(id: String) {
+        if (mutable.value.busy || mutable.value.pending != null) return
+        val leg = mutable.value.draft?.selections?.find { it.fixture.id == id } ?: return
+        mutable.update { it.copy(draft = toggleSelection(it.draft, leg.fixture, leg.choice)) }
+        saveDraft()
+        mutable.update { it.copy(showSlip = it.draft != null) }
+    }
     fun stake(value: String) {
         if (mutable.value.pending == null && !mutable.value.busy) mutable.update {
             it.copy(draft = it.draft?.copy(amount = value.filter(Char::isDigit).take(7)))
         }
+        saveDraft()
     }
     fun confirmBet() = operation {
         val player = mutable.value.player ?: return@operation
@@ -197,6 +216,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             // A 4xx from this API is a definitive rejection; timeouts, parsing or server errors are uncertain.
             if (e is ApiFailure && e.status in 400..499 && e.status !in listOf(401, 408, 429)) {
                 api.clearPending(player.id)
+                api.clearDraft(player.id)
                 mutable.update { it.copy(pending = null, draft = null, showSlip = false) }
             } else {
                 mutable.update { it.copy(showSlip = true) }
@@ -204,6 +224,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             throw e
         }
         api.clearPending(player.id)
+        api.clearDraft(player.id)
         mutable.update { it.copy(pending = null, draft = null, showSlip = false,
             destination = Destination.BETS, ticketSkip = 0, ticketFilter = null,
             error = false, message = "Pari confirmé. Vous le retrouverez dans Mes paris.") }
@@ -236,4 +257,58 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         mutable.update { UiState(booting = false, theme = it.theme) }
     }
     fun dismissMessage() { mutable.update { it.copy(message = null) } }
+    fun closePanel() { if (!mutable.value.busy) mutable.update { it.copy(panel=null, exportPayload=null) } }
+    fun openPanel(panel: String) {
+        if (mutable.value.busy) return
+        mutable.update { it.copy(panel=panel, message=null) }
+        operation { when(panel) {
+            "profile" -> { val stats=api.readObject("/api/users/me/stats"); mutable.update { it.copy(stats=stats) }; loadNotices() }
+            "notices" -> loadNotices()
+            "ranks" -> loadRanks()
+        } }
+    }
+    private suspend fun loadRanks() {
+        val rows=api.readList("/api/leaderboard?metric=" + mutable.value.rankMetric).map {
+            PlayerRank(it.getString("id"),it.getString("username"),it.getInt("rank"),it.getInt("level"),it.optLong("versePossessedTotal"),it.optDouble("winRate")) }
+        mutable.update { it.copy(ranks=rows) }
+    }
+    fun rankMetric(value: String) { if (value in listOf("verse","wins","level") && !mutable.value.busy) { mutable.update { it.copy(rankMetric=value) }; operation { loadRanks() } } }
+    fun publicProfile(id: String) = operation {
+        UUID.fromString(id)
+        val profile=api.readObject("/api/users/$id/public")
+        mutable.update { it.copy(publicProfile=profile,panel="public") }
+    }
+    private suspend fun loadNotices() {
+        val notices=api.readList("/api/notifications").map { GameNotice(it.getString("id"),it.getString("title"),it.getString("message"),!it.isNull("readAt"),it.getString("type")) }
+        val preferences=api.readObject("/api/notifications/preferences")
+        mutable.update { it.copy(notices=notices,noticePreferences=NoticePreferences(preferences.getBoolean("bets"),preferences.getBoolean("agencies"),preferences.getBoolean("push"))) }
+    }
+    fun readNotices() = operation { api.mutate("/api/notifications/read-all"); loadNotices() }
+    fun noticePreferences(value: NoticePreferences) = operation {
+        api.mutate("/api/notifications/preferences",JSONObject().put("bets",value.bets).put("agencies",value.agencies).put("push",value.push),"PATCH")
+        mutable.update { it.copy(noticePreferences=value,message="Préférences enregistrées.") }
+    }
+    fun username(value: String) = operation {
+        val player=api.updateUsername(value.trim().lowercase())
+        mutable.update { it.copy(player=player,message="Pseudo mis à jour.") }
+    }
+    fun changePassword(current: String, replacement: String) = operation {
+        api.mutate("/api/users/me/password",JSONObject().put("currentPassword",current).put("newPassword",replacement),"PATCH")
+        mutable.value.player?.id?.let(api::clearLocalSession)
+        mutable.update { UiState(booting=false,theme=it.theme,message="Mot de passe modifié. Reconnectez-vous.") }
+    }
+    fun exportAccount() = operation { val json=api.exportAccount(); mutable.update { it.copy(exportPayload=json) } }
+    fun exportSaved() { mutable.update { it.copy(exportPayload=null) } }
+    fun exportFailed() { mutable.update { it.copy(exportPayload=null,error=true,message="Impossible d’enregistrer le fichier. Choisissez un autre emplacement.") } }
+    fun deleteAccount(password: String) = operation {
+        val owner=mutable.value.player?.id ?: return@operation
+        api.mutate("/api/users/me",JSONObject().put("password",password).put("confirmation","SUPPRIMER"),"DELETE")
+        api.clearLocalSession(owner); serverAnchor=null
+        mutable.update { UiState(booting=false,theme=it.theme,message="Votre compte et ses données ont été supprimés.") }
+    }
+    fun agencyAction(path: String, payload: JSONObject=JSONObject(), method: String="POST") = operation {
+        api.mutate("/api/agence" + path, payload,method)
+        loadAgency(); acceptWallet(api.wallet())
+        mutable.update { it.copy(message="Agence mise à jour.") }
+    }
 }

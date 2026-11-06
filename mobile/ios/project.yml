@@ -1,0 +1,50 @@
+name: BetVerse
+options:
+  minimumXcodeGenVersion: '2.42.0'
+  projectFormat: xcode15_0
+  deploymentTarget:
+    iOS: '17.0'
+  developmentLanguage: fr
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    MARKETING_VERSION: '1.0.0'
+    CURRENT_PROJECT_VERSION: '1'
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    CLANG_ENABLE_MODULES: YES
+packages:
+  BetVerseCore:
+    path: Core
+targets:
+  BetVerseNative:
+    type: application
+    platform: iOS
+    deploymentTarget: '17.0'
+    sources:
+      - path: BetVerse
+    dependencies:
+      - package: BetVerseCore
+        product: BetVerseCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: fr.betverse.app.ios
+        PRODUCT_NAME: BetVerse
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        TARGETED_DEVICE_FAMILY: '1'
+        SUPPORTS_MACCATALYST: NO
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ''
+schemes:
+  BetVerseNative:
+    build:
+      targets:
+        BetVerseNative: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+    management:
+      shared: true

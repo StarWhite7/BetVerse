@@ -97,11 +97,17 @@ export async function authRoutes({ db, config, requireUser }) {
       .get(input.identifier, input.identifier);
     const valid = await verifyPassword(input.password, user?.passwordHash || dummyHash);
     ensure(user && valid, 401, 'Identifiants incorrects.');
+    ensure(user.status === 'ACTIVE', 403, 'Ce compte est suspendu. Contactez le support.');
     ensure(
       db.prepare('SELECT passwordHash FROM users WHERE id=?').get(user.id)?.passwordHash ===
         user.passwordHash,
       401,
       'Identifiants incorrects.',
+    );
+    ensure(
+      db.prepare('SELECT status FROM users WHERE id=?').get(user.id)?.status === 'ACTIVE',
+      403,
+      'Ce compte est suspendu. Contactez le support.',
     );
     ensure(
       user.emailVerified === 1,

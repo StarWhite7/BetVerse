@@ -4,10 +4,10 @@
 }
 section {
   padding: 1.25rem;
-  border: 1px solid #38485d;
+  border: 1px solid var(--bv-border);
   border-radius: 1rem;
-  background: #111827;
-  color: #f8fafc;
+  background: var(--bv-surface);
+  color: var(--bv-text);
 }
 .heading,
 .review-heading,
@@ -25,14 +25,14 @@ section {
 .eyebrow {
   font-size: 0.7rem;
   letter-spacing: 0.12em;
-  color: #b6c4d8;
+  color: var(--bv-muted);
   margin: 0;
 }
 .manual,
 .change {
   display: inline-block;
   border-radius: 0.3rem;
-  background: #263247;
+  background: var(--bv-raised);
   padding: 0.3rem 0.5rem;
   font-size: 0.75rem;
   white-space: nowrap;
@@ -42,15 +42,15 @@ section {
   flex-wrap: wrap;
   gap: 0.5rem 1.5rem;
   padding: 0.8rem 0 1.2rem;
-  color: #b6c4d8;
+  color: var(--bv-muted);
   font-size: 0.85rem;
 }
 .quota strong {
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 fieldset {
   border: 0;
-  border-top: 1px solid #38485d;
+  border-top: 1px solid var(--bv-border);
   padding: 1rem 0;
   min-width: 0;
 }
@@ -73,14 +73,14 @@ legend {
   align-items: center;
   gap: 0.6rem;
   padding: 0.8rem 0.6rem;
-  border: 1px solid #46546b;
+  border: 1px solid var(--bv-border);
   border-radius: 0.5rem;
   cursor: pointer;
-  background: #182233;
+  background: var(--bv-raised);
 }
 .league.checked {
-  border-color: #86aaff;
-  background: #20365e;
+  border-color: var(--bv-accent);
+  background: var(--bv-raised);
 }
 .league strong {
   font-size: 0.85rem;
@@ -88,14 +88,14 @@ legend {
 .league small {
   display: block;
   font-size: 0.75rem;
-  color: #b6c4d8;
+  color: var(--bv-muted);
   margin-top: 0.25rem;
 }
 input[type='checkbox'] {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  accent-color: #7098ff;
+  accent-color: var(--bv-primary);
   cursor: pointer;
 }
 label {
@@ -132,10 +132,10 @@ select,
 input[type='date'],
 button {
   padding: 0.65rem 0.8rem;
-  border: 1px solid #53647f;
+  border: 1px solid var(--bv-border);
   border-radius: 0.4rem;
-  background: #1c293c;
-  color: #f8fafc;
+  background: var(--bv-raised);
+  color: var(--bv-text);
   max-width: 100%;
   font: inherit;
 }
@@ -145,16 +145,17 @@ button {
   font-size: 0.85rem;
 }
 button.primary {
-  background: #2458e8;
-  border-color: #2458e8;
+  background: var(--bv-primary);
+  border-color: var(--bv-border);
   font-weight: 600;
+  color: var(--bv-on-primary);
 }
 button:disabled {
   opacity: 0.45;
   cursor: default;
 }
 .review-heading {
-  border-top: 1px solid #38485d;
+  border-top: 1px solid var(--bv-border);
   padding-top: 0.8rem;
   margin-top: 0.8rem;
 }
@@ -164,14 +165,14 @@ button:disabled {
 }
 .review-controls > span {
   font-size: 0.85rem;
-  color: #b6c4d8;
+  color: var(--bv-muted);
 }
 .review-controls > .primary {
   margin-left: auto;
 }
 .table-wrap {
   overflow-x: auto;
-  border: 1px solid #38485d;
+  border: 1px solid var(--bv-border);
   border-radius: 0.5rem;
 }
 table {
@@ -182,22 +183,22 @@ table {
   min-width: 850px;
 }
 th {
-  background: #192437;
-  color: #b6c4d8;
+  background: var(--bv-raised);
+  color: var(--bv-muted);
   font-size: 0.7rem;
   font-weight: 600;
 }
 th,
 td {
   padding: 0.75rem 0.55rem;
-  border-bottom: 1px solid #2b384e;
+  border-bottom: 1px solid var(--bv-border);
   vertical-align: middle;
 }
 tbody tr:last-child td {
   border-bottom: 0;
 }
 tr.selected {
-  background: #162642;
+  background: var(--bv-raised);
 }
 .teams {
   min-width: 180px;
@@ -205,7 +206,7 @@ tr.selected {
   white-space: nowrap;
 }
 .teams span {
-  color: #94a3b8;
+  color: var(--bv-muted);
 }
 .price {
   font-variant-numeric: tabular-nums;
@@ -213,7 +214,7 @@ tr.selected {
   font-weight: 600;
 }
 .price del {
-  color: #a7b3c6;
+  color: var(--bv-muted);
   font-weight: 400;
   font-size: 0.7rem;
   margin-right: 0.35rem;
@@ -222,12 +223,12 @@ tr.selected {
   white-space: nowrap;
 }
 .change.actionable {
-  background: #233d64;
-  color: #b9d3ff;
+  background: var(--bv-raised);
+  color: var(--bv-accent);
 }
 td small {
   display: block;
-  color: #b6c4d8;
+  color: var(--bv-muted);
   margin-top: 0.3rem;
 }
 .empty {
@@ -238,7 +239,7 @@ td small {
 .help,
 .load-controls p {
   font-size: 0.8rem;
-  color: #b6c4d8;
+  color: var(--bv-muted);
   line-height: 1.6;
 }
 summary {
@@ -260,7 +261,7 @@ summary {
   clip-path: inset(50%);
 }
 :focus-visible {
-  outline: 2px solid #a3c3ff;
+  outline: 2px solid var(--bv-accent);
   outline-offset: 3px;
 }
 @media (max-width: 1100px) {

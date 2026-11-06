@@ -1,0 +1,66 @@
+{
+  "checkedOn": "2026-11-06",
+  "svgFiles": [
+    "app-icon.svg",
+    "betverse-wordmark-dark.svg",
+    "betverse-wordmark-light.svg",
+    "bv-mark-dark.svg",
+    "bv-mark-light.svg",
+    "favicon.svg"
+  ],
+  "contrasts": [
+    {
+      "theme": "light",
+      "pair": "text/background",
+      "ratio": 14.47,
+      "meetsTextAA": true
+    },
+    {
+      "theme": "light",
+      "pair": "muted/surface",
+      "ratio": 6.72,
+      "meetsTextAA": true
+    },
+    {
+      "theme": "light",
+      "pair": "CTA",
+      "ratio": 5.78,
+      "meetsTextAA": true
+    },
+    {
+      "theme": "light",
+      "pair": "accent/surface",
+      "ratio": 5.78,
+      "meetsTextAA": true
+    },
+    {
+      "theme": "dark",
+      "pair": "text/background",
+      "ratio": 16.61,
+      "meetsTextAA": true
+    },
+    {
+      "theme": "dark",
+      "pair": "muted/surface",
+      "ratio": 8.59,
+      "meetsTextAA": true
+    },
+    {
+      "theme": "dark",
+      "pair": "CTA",
+      "ratio": 5.78,
+      "meetsTextAA": true
+    },
+    {
+      "theme": "dark",
+      "pair": "accent/surface",
+      "ratio": 6.94,
+      "meetsTextAA": true
+    }
+  ],
+  "networkCalls": 0,
+  "notes": [
+    "Original vector assets; structural and colour checks only.",
+    "Integration and platform mask checks remain separate."
+  ]
+}

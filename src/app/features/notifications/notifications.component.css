@@ -6,14 +6,11 @@
   position: relative;
   padding: 2.8rem;
   border-radius: 1.8rem;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid var(--bv-border);
   background:
-    radial-gradient(circle at 20% 0%, rgba(59, 130, 246, 0.2), transparent 45%),
-    radial-gradient(circle at 85% 15%, rgba(236, 72, 153, 0.18), transparent 45%),
-    radial-gradient(circle at 50% 100%, rgba(34, 211, 238, 0.16), transparent 55%),
-    rgba(5, 10, 20, 0.7);
-  box-shadow: 0 32px 60px rgba(5, 10, 20, 0.55);
-  color: #e2e8f0;
+    var(--bv-surface);
+  box-shadow: none;
+  color: var(--bv-text);
 }
 
 .notifications-page__back {
@@ -25,14 +22,14 @@
   gap: 0.6rem;
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(59, 130, 246, 0.45);
-  color: rgba(226, 232, 240, 0.85);
+  border: 1px solid var(--bv-border);
+  color: var(--bv-muted);
   text-decoration: none;
   font-size: 0.75rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  background: rgba(12, 18, 32, 0.75);
-  box-shadow: 0 0 18px rgba(59, 130, 246, 0.35);
+  background: var(--bv-raised);
+  box-shadow: none;
 }
 
 .notifications-page__back-icon {
@@ -42,15 +39,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(59, 130, 246, 0.55);
-  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid var(--bv-border);
+  background: var(--bv-raised);
 }
 
 .notifications-page__back svg {
   width: 14px;
   height: 14px;
   fill: none;
-  stroke: #93c5fd;
+  stroke: var(--bv-accent);
   stroke-width: 2px;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -66,12 +63,12 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 1.6rem;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .notifications-page__hero p {
   margin: 0;
-  color: rgba(226, 232, 240, 0.7);
+  color: var(--bv-muted);
 }
 
 .notifications-page__section {
@@ -83,7 +80,7 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.95rem;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .notifications-page__header {
@@ -101,9 +98,9 @@
 .notifications-page__clear {
   border-radius: 999px;
   padding: 0.45rem 1rem;
-  border: 1px solid rgba(248, 113, 113, 0.6);
-  background: rgba(248, 113, 113, 0.12);
-  color: #f87171;
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-accent);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.7rem;
@@ -118,8 +115,8 @@
 .notifications-page__empty {
   padding: 1rem;
   border-radius: 0.9rem;
-  border: 1px dashed rgba(148, 163, 184, 0.3);
-  color: rgba(226, 232, 240, 0.6);
+  border: 1px dashed var(--bv-border);
+  color: var(--bv-muted);
 }
 
 .invite-card,
@@ -130,13 +127,13 @@
   align-items: flex-start;
   padding: 1rem 1.2rem;
   border-radius: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  background: rgba(10, 16, 28, 0.85);
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
   margin-bottom: 0.8rem;
 }
 
 .notification-card--expanded {
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--bv-surface);
 }
 
 .invite-card__actions {
@@ -147,9 +144,9 @@
 .invite-card__button {
   border-radius: 999px;
   padding: 0.45rem 1rem;
-  border: 1px solid rgba(34, 211, 238, 0.6);
-  background: rgba(34, 211, 238, 0.2);
-  color: #67e8f9;
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-accent);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.7rem;
@@ -157,14 +154,14 @@
 }
 
 .invite-card__button--ghost {
-  border-color: rgba(148, 163, 184, 0.4);
+  border-color: var(--bv-border);
   background: transparent;
-  color: rgba(226, 232, 240, 0.7);
+  color: var(--bv-muted);
 }
 
 .notification-card.unread {
-  border-color: rgba(59, 130, 246, 0.5);
-  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--bv-border);
+  background: var(--bv-surface);
 }
 
 .notification-card__title {
@@ -174,13 +171,13 @@
   border: none;
   padding: 0;
   font-size: 0.9rem;
-  color: #f8fafc;
+  color: var(--bv-text);
   cursor: pointer;
 }
 
 .notification-card__message {
   font-size: 0.75rem;
-  color: rgba(226, 232, 240, 0.65);
+  color: var(--bv-muted);
 }
 
 .notification-card__details {
@@ -201,9 +198,9 @@
 .notification-card__status {
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(59, 130, 246, 0.45);
-  background: rgba(59, 130, 246, 0.12);
-  color: rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-muted);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -212,7 +209,7 @@
 .notification-card__divider {
   width: 100%;
   height: 1px;
-  background: rgba(148, 163, 184, 0.2);
+  background: var(--bv-surface);
   margin: 0.5rem 0 0.8rem;
 }
 

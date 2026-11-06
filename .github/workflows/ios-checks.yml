@@ -1,0 +1,53 @@
+name: iOS Swift - unsigned simulator checks
+on:
+  workflow_dispatch:
+  push:
+    branches: [beta, codex/private-beta]
+    paths:
+      - 'mobile/ios/**'
+      - 'server/**'
+      - '.github/workflows/ios-checks.yml'
+permissions:
+  contents: read
+concurrency:
+  group: ios-checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  simulator:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Apple toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          xcodebuild -showsdks
+      - name: Install XcodeGen if needed
+        run: |
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+          xcodegen --version
+      - name: Validate source and property list
+        run: |
+          test -f mobile/ios/Core/Package.swift
+          test -n "$(find mobile/ios/BetVerse -name '*.swift' -print -quit)"
+          plutil -lint mobile/ios/Info.plist
+      - name: Test shared Swift core
+        run: swift test --package-path mobile/ios/Core
+      - name: Generate Xcode project
+        working-directory: mobile/ios
+        run: xcodegen generate --spec project.yml
+      - name: Compile unsigned iPhone Simulator app
+        working-directory: mobile/ios
+        run: |
+          xcodebuild \
+            -project BetVerse.xcodeproj \
+            -scheme BetVerseNative \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build

@@ -1,9 +1,25 @@
 import { Router } from 'express';
-import { id } from '../lib/validation.mjs';
+import { id, z } from '../lib/validation.mjs';
 import { ensure } from '../lib/errors.mjs';
 import { now } from '../domain/accounts.mjs';
 export function notificationRoutes({ db }) {
   const router = Router();
+  router.get('/preferences', (req, res) => {
+    const row = db
+      .prepare('SELECT bets,agencies,push FROM user_preferences WHERE userId=?')
+      .get(req.user.id) || { bets: 1, agencies: 1, push: 0 };
+    res.json({ bets: Boolean(row.bets), agencies: Boolean(row.agencies), push: Boolean(row.push) });
+  });
+  router.patch('/preferences', (req, res) => {
+    const input = z
+      .object({ bets: z.boolean(), agencies: z.boolean(), push: z.boolean() })
+      .strict()
+      .parse(req.body);
+    db.prepare(
+      'INSERT INTO user_preferences (userId,bets,agencies,push) VALUES (?,?,?,?) ON CONFLICT(userId) DO UPDATE SET bets=excluded.bets,agencies=excluded.agencies,push=excluded.push',
+    ).run(req.user.id, Number(input.bets), Number(input.agencies), Number(input.push));
+    res.json(input);
+  });
   router.get('/', (req, res) =>
     res.json(
       db

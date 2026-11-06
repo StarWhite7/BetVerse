@@ -52,6 +52,7 @@ export interface PublicProfile {
 }
 
 export interface AdminUserSummary {
+  status?:'ACTIVE'|'SUSPENDED';
   id: string;
   username: string | null;
   email: string;

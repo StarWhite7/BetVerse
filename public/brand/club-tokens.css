@@ -1,0 +1,50 @@
+/* BetVerse Club: semantic tokens, no layout overrides. */
+:root {
+  --bv-background: #F5F3ED;
+  --bv-surface: #FFFFFF;
+  --bv-raised: #EBEFF7;
+  --bv-text: #142234;
+  --bv-muted: #4E5D70;
+  --bv-border: #CDD2DA;
+  --bv-primary: #2458E8;
+  --bv-on-primary: #FFFFFF;
+  --bv-accent: #2458E8;
+  --bv-success: #17683B;
+  --bv-danger: #B42318;
+  --bv-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bv-radius-sm: 6px;
+  --bv-radius: 10px;
+  --bv-radius-lg: 14px;
+  --bv-touch: 48px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  --bv-background: #101722;
+  --bv-surface: #192331;
+  --bv-raised: #222F41;
+  --bv-text: #F3F6FC;
+  --bv-muted: #B4C0D0;
+  --bv-border: #35445A;
+  --bv-primary: #2458E8;
+  --bv-on-primary: #FFFFFF;
+  --bv-accent: #86AAFF;
+  --bv-success: #82D6A5;
+  --bv-danger: #FFB4AB;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bv-background: #101722;
+  --bv-surface: #192331;
+  --bv-raised: #222F41;
+  --bv-text: #F3F6FC;
+  --bv-muted: #B4C0D0;
+  --bv-border: #35445A;
+  --bv-primary: #2458E8;
+  --bv-on-primary: #FFFFFF;
+  --bv-accent: #86AAFF;
+  --bv-success: #82D6A5;
+  --bv-danger: #FFB4AB;
+  color-scheme: dark;
+}

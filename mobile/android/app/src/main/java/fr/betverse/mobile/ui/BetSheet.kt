@@ -16,7 +16,7 @@ import fr.betverse.mobile.UiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun BetSheet(
-    state: UiState, onDismiss: () -> Unit, onStake: (String) -> Unit, onConfirm: () -> Unit
+    state: UiState, onDismiss: () -> Unit, onStake: (String) -> Unit, onConfirm: () -> Unit, onRemove: ((String)->Unit)? = null
 ) {
     val draft = state.draft ?: return
     val uncertain = state.pending != null
@@ -37,6 +37,9 @@ import fr.betverse.mobile.UiState
             Text(if (draft.selections.size > 1) "Combiné · ${draft.selections.size} rencontres" else "Pari simple", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             draft.selections.forEach { leg ->
                 ClubCard(Modifier.fillMaxWidth()) {
+                    if(onRemove!=null) Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End) {
+                        IconButton(onClick={onRemove(leg.fixture.id)},enabled=!state.busy && !uncertain) {Icon(Icons.Outlined.Close,"Retirer ${leg.fixture.home} contre ${leg.fixture.away}")}
+                    }
                     Text(leg.fixture.home + " — " + leg.fixture.away, style = MaterialTheme.typography.titleMedium)
                     Text(matchDate(leg.fixture.start), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     StatLine(leg.fixture.label(leg.choice), quote(requireNotNull(leg.fixture.odds(leg.choice))))

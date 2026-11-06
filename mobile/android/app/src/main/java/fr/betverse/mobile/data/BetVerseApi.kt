@@ -59,7 +59,7 @@ class BetVerseApi(
             .followSslRedirects(false).retryOnConnectionFailure(false)
             .callTimeout(20, TimeUnit.SECONDS).build()
     }
-    private suspend fun request(path: String, payload: JSONObject? = null, key: String? = null): Pair<String, Response> {
+    private suspend fun request(path: String, payload: JSONObject? = null, key: String? = null, method: String = if (payload == null) "GET" else "POST"): Pair<String, Response> {
         require(path.startsWith("/api/") && !path.contains("..") && !path.contains("://"))
         val url = base.resolve(path)!!
         require(url.host == base.host && url.scheme == base.scheme && url.port == base.port)
@@ -68,7 +68,8 @@ class BetVerseApi(
         if (payload != null) {
             csrf?.let { builder.header("X-CSRF-Token", it) }
             key?.let { builder.header("Idempotency-Key", it) }
-            builder.post(payload.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
+            require(method in listOf("POST", "PATCH", "DELETE"))
+            builder.method(method, payload.toString().toRequestBody("application/json; charset=utf-8".toMediaType()))
         }
         val response = client.newCall(builder.build()).await()
         response.use {
@@ -116,6 +117,26 @@ class BetVerseApi(
     suspend fun agency(): JSONObject? = request("/api/agence/me").first.let {
         if (it.trim() == "null") null else JSONObject(it)
     }
+    suspend fun readObject(path: String): JSONObject = JSONObject(request(path).first)
+    suspend fun readList(path: String): List<JSONObject> = JSONArray(request(path).first).objects()
+    suspend fun mutate(path: String, payload: JSONObject = JSONObject(), method: String = "POST"): String = request(path, payload, method = method).first
+    suspend fun updateUsername(username: String): Player = JSONObject(mutate("/api/users/me", JSONObject().put("username", username), "PATCH")).player()
+    suspend fun exportAccount(): String = request("/api/users/me/export").first
+    fun clearLocalSession(owner: String) { clearPending(owner); clearDraft(owner); csrf = null; jar.clear() }
+    fun saveDraft(owner: String, draft: DraftBet?) {
+        if (draft == null) { clearDraft(owner); return }
+        val rows = JSONArray()
+        draft.selections.forEach { rows.put(JSONObject().put("fixture", it.fixture.json()).put("choice", it.choice.name)) }
+        vault.put("draft:" + base + ":" + owner, JSONObject().put("amount", draft.amount).put("selections", rows).toString())
+    }
+    fun draft(owner: String): DraftBet? = runCatching {
+        val value = vault.get("draft:" + base + ":" + owner) ?: return null
+        val json = JSONObject(value)
+        val rows = json.getJSONArray("selections").objects().map { BetSelection(it.getJSONObject("fixture").fixture(), Choice.valueOf(it.getString("choice"))) }
+        require(rows.size in 1..10 && rows.map { it.fixture.id }.distinct().size == rows.size)
+        DraftBet(rows.first().fixture, rows.first().choice, json.getString("amount"), additional=rows.drop(1))
+    }.getOrNull()
+    fun clearDraft(owner: String) = vault.put("draft:" + base + ":" + owner, null)
     suspend fun tickets(status: String? = null, skip: Int = 0): TicketPage {
         require(status == null || status in listOf("PENDING", "WON", "LOST", "VOID"))
         val (body, response) = request("/api/bet/my-bets?limit=25&skip=" + skip + (status?.let { "&status=" + it } ?: ""))

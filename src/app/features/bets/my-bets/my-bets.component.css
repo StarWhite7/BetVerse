@@ -27,9 +27,9 @@
 .bets-header__test {
   padding: 0.55rem 1.1rem;
   border-radius: 999px;
-  border: 1px solid rgba(34, 211, 238, 0.5);
-  background: rgba(34, 211, 238, 0.12);
-  color: #67e8f9;
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-accent);
   cursor: pointer;
   font-weight: 600;
 }
@@ -37,21 +37,22 @@
 .bets-header__filters button {
   padding: 0.5rem 1.2rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid var(--bv-border);
   background: transparent;
-  color: #f8fafc;
+  color: var(--bv-text);
   cursor: pointer;
 }
 
 .bets-header__filters button.active {
-  background: linear-gradient(120deg, #6366f1, #ec4899);
+  background: var(--bv-primary);
   border: none;
+  color: var(--bv-on-primary);
 }
 
 .bets-table {
   border-radius: 1.2rem;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(5, 8, 18, 0.85);
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
   overflow: hidden;
 }
 
@@ -65,49 +66,49 @@
 .bets-table td {
   padding: 1rem 1.4rem;
   text-align: left;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+  border-bottom: 1px solid var(--bv-border);
 }
 
 .bets-table th {
   font-size: 0.85rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(226, 232, 240, 0.6);
+  color: var(--bv-muted);
 }
 
 .badge {
   padding: 0.35rem 0.9rem;
   border-radius: 999px;
   font-size: 0.8rem;
-  background: rgba(148, 163, 184, 0.2);
+  background: var(--bv-raised);
 }
 
 .badge.pending {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
+  background: var(--bv-raised);
+  color: var(--bv-accent);
 }
 
 .badge.won {
-  background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
+  background: color-mix(in srgb, var(--bv-success) 10%, var(--bv-surface));
+  color: var(--bv-success);
 }
 
 .badge.lost {
-  background: rgba(248, 113, 113, 0.2);
-  color: #f87171;
+  background: color-mix(in srgb, var(--bv-danger) 10%, var(--bv-surface));
+  color: var(--bv-danger);
 }
 
 .bets-error {
-  color: #f87171;
-  background: rgba(127, 29, 29, 0.2);
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--bv-danger);
+  background: color-mix(in srgb, var(--bv-danger) 10%, var(--bv-surface));
+  border: 1px solid var(--bv-danger);
   padding: 0.8rem 1rem;
   border-radius: 0.9rem;
 }
 
 .bets-table td[colspan] {
   text-align: center;
-  color: rgba(226, 232, 240, 0.75);
+  color: var(--bv-muted);
 }
 .bets-table {
   overflow-x: auto;
@@ -122,10 +123,10 @@
 .pagination button {
   padding: 0.6rem 1rem;
   cursor: pointer;
-  border: 1px solid #475569;
+  border: 1px solid var(--bv-border);
   border-radius: 999px;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--bv-surface);
+  color: var(--bv-text);
 }
 .pagination button:disabled {
   opacity: 0.5;

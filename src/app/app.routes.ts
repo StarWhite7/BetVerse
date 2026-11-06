@@ -6,6 +6,7 @@ import { AuthLayout } from './core/layout/auth-layout/auth-layout';
 import { AdminLayout } from './core/layout/admin-layout/admin-layout';
 
 export const routes: Routes = [
+  {path:'legal/:page',loadComponent:()=>import('./features/legal/legal.component').then(m=>m.LegalComponent)},
   {
     path: '',
     component: MainLayout,

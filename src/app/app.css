@@ -4,8 +4,8 @@
 }
 .service-error {
   padding: 1rem;
-  background: #7f1d1d;
-  color: white;
+  background: color-mix(in srgb, var(--bv-danger) 10%, var(--bv-surface));
+  color: var(--bv-danger);
   text-align: center;
 }
 .service-error button {

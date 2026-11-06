@@ -5,12 +5,15 @@ import { AuthService } from '../../services/auth.service';
 import { WalletStatusComponent } from '../../../features/wallet/components/wallet-status';
 import { NotificationCenterComponent } from '../../../features/notifications/components/notification-center';
 import { xpForLevel } from '../../../shared/utils/progression';
+import {FormsModule} from '@angular/forms';
+import {ThemeService} from '../../services/theme.service';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
@@ -21,6 +24,7 @@ import { xpForLevel } from '../../../shared/utils/progression';
   styleUrl: './main-layout.css',
 })
 export class MainLayout {
+  readonly theme=inject(ThemeService);
   private readonly auth = inject(AuthService);
   user = computed(() => this.auth.currentUser());
   adminMenuOpen = signal(false);

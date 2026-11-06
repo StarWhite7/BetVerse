@@ -17,13 +17,13 @@
   text-transform: uppercase;
   letter-spacing: 0.2em;
   font-size: 0.7rem;
-  color: rgba(226, 232, 240, 0.6);
+  color: var(--bv-muted);
 }
 
 .admin-dashboard__header h1 {
   margin: 0.25rem 0 0;
   font-size: 2rem;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .admin-dashboard__grid {
@@ -33,9 +33,9 @@
 }
 
 .admin-dashboard__card {
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--bv-border);
   border-radius: 1rem;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bv-surface);
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -55,13 +55,13 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   font-size: 0.7rem;
-  color: rgba(248, 250, 252, 0.6);
+  color: var(--bv-muted);
 }
 
 .admin-dashboard__card header h2 {
   margin: 0.3rem 0 0;
   font-size: 1.4rem;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .admin-dashboard__card button {
@@ -69,15 +69,15 @@
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid var(--bv-border);
   background: transparent;
-  color: #e2e8f0;
+  color: var(--bv-text);
 }
 
 .admin-dashboard__card button.danger {
-  border-color: rgba(248, 113, 113, 0.7);
-  background: rgba(239, 68, 68, 0.2);
-  color: #fee2e2;
+  border-color: var(--bv-danger);
+  background: color-mix(in srgb, var(--bv-danger) 10%, var(--bv-surface));
+  color: var(--bv-danger);
 }
 
 .admin-dashboard__card button:disabled {
@@ -87,13 +87,13 @@
 
 .admin-dashboard__hint {
   margin: 0;
-  color: rgba(226, 232, 240, 0.7);
+  color: var(--bv-muted);
 }
 
 .admin-dashboard__list {
   margin: 0;
   padding-left: 1.1rem;
-  color: #e2e8f0;
+  color: var(--bv-text);
   display: grid;
   gap: 0.35rem;
 }
@@ -110,8 +110,8 @@
 .admin-reset-modal__backdrop {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.3), rgba(2, 6, 23, 0.85));
-  backdrop-filter: blur(6px);
+  background: rgba(8, 16, 30, 0.58);
+  backdrop-filter: none;
 }
 
 .admin-reset-modal__content {
@@ -120,10 +120,10 @@
   width: min(520px, 100%);
   border-radius: 1.25rem;
   padding: 1.6rem;
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
-  color: #e2e8f0;
+  background: var(--bv-surface);
+  border: 1px solid var(--bv-border);
+  box-shadow: none;
+  color: var(--bv-text);
   display: grid;
   gap: 1rem;
 }
@@ -133,18 +133,18 @@
   text-transform: uppercase;
   letter-spacing: 0.2em;
   font-size: 0.7rem;
-  color: rgba(248, 250, 252, 0.6);
+  color: var(--bv-muted);
 }
 
 .admin-reset-modal__content header h3 {
   margin: 0.35rem 0 0;
   font-size: 1.4rem;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .admin-reset-modal__content p {
   margin: 0;
-  color: rgba(226, 232, 240, 0.8);
+  color: var(--bv-muted);
 }
 
 .admin-reset-modal__list {
@@ -152,15 +152,15 @@
   gap: 0.5rem;
   padding: 0.9rem;
   border-radius: 0.9rem;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: var(--bv-surface);
+  border: 1px solid var(--bv-border);
 }
 
 .admin-reset-modal__list span {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(248, 250, 252, 0.6);
+  color: var(--bv-muted);
 }
 
 .admin-reset-modal__list ul {
@@ -182,20 +182,20 @@
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid var(--bv-border);
   background: transparent;
-  color: #e2e8f0;
+  color: var(--bv-text);
 }
 
 .admin-reset-modal__actions button.ghost {
-  border-color: rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.6);
+  border-color: var(--bv-border);
+  background: var(--bv-surface);
 }
 
 .admin-reset-modal__actions button.danger {
-  border-color: rgba(248, 113, 113, 0.7);
-  background: rgba(239, 68, 68, 0.2);
-  color: #fee2e2;
+  border-color: var(--bv-danger);
+  background: color-mix(in srgb, var(--bv-danger) 10%, var(--bv-surface));
+  color: var(--bv-danger);
 }
 
 .admin-reset-modal__actions button:disabled {

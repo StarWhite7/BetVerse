@@ -156,9 +156,9 @@ fun bonusCountdown(state: UiState): String? {
         item {
             ClubCard(Modifier.fillMaxWidth()) {
                 Text("Votre compte", style = MaterialTheme.typography.titleMedium)
-                Text("La gestion complète reste disponible sur le web pendant cette première bêta native. Une connexion web distincte peut être nécessaire.",
+                Text("Modifiez votre compte, vos préférences et consultez vos données directement dans l’application.",
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                OutlinedButton(onClick = onWeb, modifier = Modifier.fillMaxWidth()) { Text("Ouvrir mon profil web") }
+                OutlinedButton(onClick = onWeb, modifier = Modifier.fillMaxWidth()) { Text("Gérer mon compte") }
                 Button(onClick = { confirmLogout = true }, enabled = !state.busy, modifier = Modifier.fillMaxWidth(),
                     colors = clubButtonColors()) { Text("Se déconnecter") }
             }

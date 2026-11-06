@@ -2,6 +2,31 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 export const root = fileURLToPath(new URL('../../', import.meta.url));
 export function configFromEnv(env = process.env) {
+  if (env.BACKUP_ENCRYPTION_KEY && !/^[a-fA-F0-9]{64}$/.test(env.BACKUP_ENCRYPTION_KEY))
+    throw new Error('BACKUP_ENCRYPTION_KEY doit contenir 64 caractères hexadécimaux.');
+  if (env.BACKUP_UPLOAD_BASE) {
+    const url = new URL(env.BACKUP_UPLOAD_BASE);
+    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash)
+      throw new Error(
+        'BACKUP_UPLOAD_BASE doit être une URL HTTPS sans identifiants ni paramètres.',
+      );
+  }
+  if (
+    env.BACKUP_ENABLED === '1' &&
+    (!env.BACKUP_ENCRYPTION_KEY || !env.BACKUP_DIRECTORY || !env.BACKUP_UPLOAD_BASE)
+  )
+    throw new Error('Configurer clé, dossier et stockage distant avant BACKUP_ENABLED=1.');
+  if (
+    env.LEGAL_READY === '1' &&
+    (!env.EDITOR_ADDRESS || !env.EDITOR_STATUS || env.SUPPORT_VERIFIED !== '1')
+  )
+    throw new Error(
+      'Compléter EDITOR_ADDRESS, EDITOR_STATUS et SUPPORT_VERIFIED avant LEGAL_READY=1.',
+    );
+  if (env.ADMIN_MFA_KEY && !/^[a-fA-F0-9]{64}$/.test(env.ADMIN_MFA_KEY))
+    throw new Error('ADMIN_MFA_KEY doit contenir 64 caractères hexadécimaux.');
+  if (env.ADMIN_MFA_REQUIRED === '1' && !env.ADMIN_MFA_KEY)
+    throw new Error('ADMIN_MFA_KEY est requis avec ADMIN_MFA_REQUIRED=1.');
   const oddsMode = env.THE_ODDS_API_MODE || 'disabled';
   if (!['disabled', 'manual'].includes(oddsMode))
     throw new Error('THE_ODDS_API_MODE accepte uniquement disabled ou manual.');
@@ -30,6 +55,17 @@ export function configFromEnv(env = process.env) {
   if (env.SMTP_URL && !['smtp:', 'smtps:'].includes(new URL(env.SMTP_URL).protocol))
     throw new Error('SMTP_URL doit utiliser smtp:// ou smtps://.');
   return {
+    backupKey: env.BACKUP_ENCRYPTION_KEY,
+    backupDirectory: env.BACKUP_DIRECTORY,
+    backupUploadBase: env.BACKUP_UPLOAD_BASE,
+    backupUploadAuth: env.BACKUP_UPLOAD_AUTH,
+    backupEnabled: env.BACKUP_ENABLED === '1',
+    legalReady: env.LEGAL_READY === '1',
+    supportVerified: env.SUPPORT_VERIFIED === '1',
+    editorAddress: env.EDITOR_ADDRESS,
+    editorStatus: env.EDITOR_STATUS,
+    adminMfaKey: env.ADMIN_MFA_KEY,
+    adminMfaRequired: env.ADMIN_MFA_REQUIRED === '1',
     oddsMode,
     oddsKey: env.THE_ODDS_API_KEY,
     oddsDailyLimit,

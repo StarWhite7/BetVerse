@@ -1,12 +1,100 @@
 @import '@fontsource/space-grotesk/400.css';
 @import '@fontsource/space-grotesk/600.css';
 @import '@fontsource/audiowide/400.css';
+@import '../public/brand/club-tokens.css';
 
 :root {
-  color-scheme: dark;
+  font-family: var(--bv-font);
 }
 
 body {
   margin: 0;
-  background: #020617;
+  background: var(--bv-background);
+  color: var(--bv-text);
+}
+* {
+  box-sizing: border-box;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+button:disabled {
+  cursor: default;
+}
+:focus-visible {
+  outline: 3px solid var(--bv-accent);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+.bv-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.bv-logo {
+  width: 180px;
+  max-width: 100%;
+  height: auto;
+}
+.bv-panel {
+  background: var(--bv-surface);
+  color: var(--bv-text);
+  padding: 1.25rem;
+  border: 1px solid var(--bv-border);
+  border-radius: var(--bv-radius);
+  margin-block: 1rem;
+}
+.bv-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-block: 0.75rem;
+}
+.bv-panel input,
+.bv-panel select,
+.bv-panel textarea {
+  padding: 0.7rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--bv-border);
+  background: var(--bv-background);
+  color: var(--bv-text);
+  max-width: 100%;
+}
+.bv-panel button,
+.bv-action {
+  padding: 0.7rem 1rem;
+  min-height: 44px;
+  background: var(--bv-primary);
+  color: white;
+  border: 0;
+  border-radius: 0.4rem;
+  cursor: pointer;
+}
+.bv-panel button:disabled {
+  opacity: 0.5;
+}
+.bv-error {
+  color: var(--bv-danger);
+}
+.bv-muted {
+  color: var(--bv-muted);
 }

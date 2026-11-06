@@ -10,6 +10,7 @@ import { openDatabase } from '../db/database.mjs';
 import { configFromEnv } from '../lib/config.mjs';
 import { hashPassword } from '../lib/security.mjs';
 import { createUser } from '../domain/accounts.mjs';
+import {totp} from '../lib/totp.mjs';
 const credentials = { identifier: 'alice', password: 'StrongPassword123' };
 async function fixture(t, { disk = false, mail = false, production = false, football = {} } = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'betverse-test-'));
@@ -1046,4 +1047,83 @@ test('combined API uses authoritative leg quotes, one debit and protects non-lea
     ).status,
     409,
   );
+});
+
+test('account export excludes credentials and deletion erases the account without clearing cookies on a wrong password',async(t)=>{
+  const f=await fixture(t);
+  await f.request('/wallet/claim',{method:'POST',session:f.aliceSession,body:{}});
+  const match=await f.makeMatch();await f.bet(match);
+  const exported=await f.request('/users/me/export',{session:f.aliceSession});
+  assert.equal(exported.status,200);assert.equal(exported.body.account.id,f.alice.id);
+  assert.equal(JSON.stringify(exported.body).includes('passwordHash'),false);
+  const wrong=await f.request('/users/me',{method:'DELETE',session:f.aliceSession,body:{password:'wrong',confirmation:'SUPPRIMER'}});
+  assert.equal(wrong.status,403);assert.equal(wrong.headers.get('set-cookie'),null);
+  const erased=await f.request('/users/me',{method:'DELETE',session:f.aliceSession,body:{password:credentials.password,confirmation:'SUPPRIMER'}});
+  assert.equal(erased.status,200);
+  assert.equal(f.db.prepare('SELECT 1 FROM users WHERE id=?').get(f.alice.id),undefined);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM bets WHERE userId=?').get(f.alice.id).n,0);
+  assert.deepEqual(f.db.prepare('PRAGMA foreign_key_check').all(),[]);
+  assert.equal((await f.request('/auth/me',{session:f.aliceSession})).status,401);
+  assert.equal((await f.request('/users/me',{method:'DELETE',session:f.adminSession,body:{password:credentials.password,confirmation:'SUPPRIMER'}})).status,409);
+});
+test('suspension revokes sessions and blocks login; notification preferences are scoped',async(t)=>{
+  const f=await fixture(t);
+  assert.equal((await f.request(`/users/${f.bob.id}/status`,{method:'PATCH',session:f.aliceSession,body:{status:'SUSPENDED',reason:'Motif de test explicite'}})).status,403);
+  assert.equal((await f.request(`/users/${f.alice.id}/status`,{method:'PATCH',session:f.adminSession,body:{status:'SUSPENDED',reason:'Motif de test explicite'}})).status,200);
+  assert.equal((await f.request('/auth/me',{session:f.aliceSession})).status,401);
+  assert.equal((await f.request('/auth/login',{method:'POST',body:credentials})).status,403);
+  assert.equal((await f.request('/notifications/preferences',{method:'PATCH',session:f.adminSession,body:{bets:false,agencies:true,push:false}})).status,200);
+  assert.equal((await f.request('/notifications/preferences',{session:f.adminSession})).body.bets,false);
+});
+test('admin TOTP enrollment, recovery and step-up gate all administrative mutations',async(t)=>{
+  const f=await fixture(t,{football:{adminMfaKey:'ab'.repeat(32)}});
+  const setup=await f.request('/admin/security/setup',{method:'POST',session:f.adminSession,body:{password:credentials.password}});
+  assert.equal(setup.status,200);assert.ok(setup.body.secret);
+  const {decryptSecret}=await import('../lib/totp.mjs');
+  const seed=decryptSecret(f.db.prepare('SELECT pendingCipher FROM admin_mfa WHERE userId=?').get(f.admin.id).pendingCipher,'ab'.repeat(32));
+  const verified=await f.request('/admin/security/verify',{method:'POST',session:f.adminSession,body:{code:totp(seed),setup:true}});
+  assert.equal(verified.status,200);assert.equal(verified.body.recoveryCodes.length,8);
+  assert.equal((await f.request('/admin/odds',{session:f.adminSession})).status,200);
+  f.db.prepare('DELETE FROM session_mfa').run();
+  assert.equal((await f.request('/admin/odds',{session:f.adminSession})).status,403);
+  assert.equal((await f.request('/admin/security/verify',{method:'POST',session:f.adminSession,body:{code:totp(seed)}})).status,403);
+  assert.equal((await f.request('/admin/security/verify',{method:'POST',session:f.adminSession,body:{code:verified.body.recoveryCodes[0]}})).status,200);
+  f.db.prepare('DELETE FROM session_mfa').run();
+  assert.equal((await f.request('/admin/security/verify',{method:'POST',session:f.adminSession,body:{code:verified.body.recoveryCodes[0]}})).status,403);
+});
+
+test('manual result batches preview without provider calls, roll back atomically and replay once', async (t) => {
+  const {db,request,makeMatch,bet,claim,adminSession,aliceSession}=await fixture(t);
+  const a=await makeMatch(),b=await makeMatch({homeTeam:'Second FC'});
+  await claim();assert.equal((await bet(a,100)).status,201);
+  const past=new Date(Date.now()-60000).toISOString();
+  db.prepare('UPDATE matches SET startDate=? WHERE id IN (?,?)').run(past,a.id,b.id);
+  const input={rows:[{matchId:a.id,homeScore:2,awayScore:0},{matchId:b.id,homeScore:0,awayScore:0}]};
+  assert.equal((await request('/admin/operations/results/preview',{method:'POST',session:aliceSession,body:input})).status,403);
+  const preview=await request('/admin/operations/results/preview',{method:'POST',session:adminSession,body:input});
+  assert.equal(preview.status,200,JSON.stringify(preview.body));assert.equal(preview.body.providerCredits,0);
+  db.prepare("UPDATE matches SET homeTeam='Changed' WHERE id=?").run(b.id);
+  const apply=()=>request('/admin/operations/results/apply',{method:'POST',session:adminSession,body:{id:preview.body.id,confirmation:'REGLER'}});
+  assert.equal((await apply()).status,409);assert.equal(db.prepare('SELECT status FROM matches WHERE id=?').get(a.id).status,'UPCOMING');
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM ledger WHERE reason='BET_PAYOUT'").get().n,0);
+  db.prepare('UPDATE matches SET homeTeam=? WHERE id=?').run(b.homeTeam,b.id);
+  assert.equal((await apply()).status,200);assert.equal((await apply()).body.replayed,true);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM ledger WHERE reason='BET_PAYOUT'").get().n,1);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM odds_calls').get().n,0);
+  assert.equal((await request('/admin/operations/backup',{method:'POST',session:adminSession,body:{confirmation:'SAUVEGARDER'}})).status,409);
+});
+
+test('deleting an agency director transfers direction and preserves other members', async(t)=>{
+  const {db,request,alice,bob,aliceSession,login}=await fixture(t);
+  const created=await request('/agence',{method:'POST',session:aliceSession,body:{name:'Privacy Club'}});
+  assert.equal(created.status,201,JSON.stringify(created.body));
+  const invitation=await request('/agence/invitations',{method:'POST',session:aliceSession,body:{username:'bob'}});
+  assert.equal(invitation.status,201);
+  const bobSession=await login('bob');
+  const pending=await request('/agence/invitations',{session:bobSession});
+  assert.equal((await request('/agence/invitations/'+pending.body[0].id+'/accept',{method:'POST',session:bobSession,body:{}})).status,200);
+  assert.equal((await request('/users/me',{method:'DELETE',session:aliceSession,body:{password:credentials.password,confirmation:'SUPPRIMER'}})).status,200);
+  assert.equal(db.prepare('SELECT role FROM memberships WHERE userId=?').get(bob.id).role,'DIRECTEUR');
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM users WHERE id=?').get(alice.id).n,0);
+  assert.equal(db.prepare('PRAGMA foreign_key_check').all().length,0);
 });

@@ -9,10 +9,17 @@ export function levelForXp(xp, base = 500, growth = 250) {
   );
 }
 export function publicUser(db, userId) {
-  const user = db
-    .prepare('SELECT id,email,username,role,xp,createdAt FROM users WHERE id=?')
-    .get(userId);
-  ensure(user, 404, 'Utilisateur introuvable.');
+  const row = db.prepare('SELECT * FROM users WHERE id=?').get(userId);
+  ensure(row, 404, 'Utilisateur introuvable.');
+  const user = {
+    id: row.id,
+    email: row.email,
+    username: row.username,
+    role: row.role,
+    xp: row.xp,
+    createdAt: row.createdAt,
+    status: row.status || 'ACTIVE',
+  };
   return {
     ...user,
     level: levelForXp(user.xp),
@@ -83,6 +90,14 @@ export function notify(
   agencyId = null,
   inviteId = null,
 ) {
+  const preferences = db
+    .prepare('SELECT bets,agencies FROM user_preferences WHERE userId=?')
+    .get(userId);
+  if (
+    (type.startsWith('BET_') && preferences?.bets === 0) ||
+    (type.startsWith('AGENCY_') && preferences?.agencies === 0)
+  )
+    return;
   db.prepare(
     'INSERT INTO notifications (id,userId,type,title,message,metadata,agencyId,inviteId,createdAt) VALUES (?,?,?,?,?,?,?,?,?)',
   ).run(

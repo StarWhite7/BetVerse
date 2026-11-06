@@ -4,8 +4,24 @@ import { ensure, transaction } from '../lib/errors.mjs';
 import { hashPassword, verifyPassword, cookieOptions } from '../lib/security.mjs';
 import { publicUser, playerStats, audit } from '../domain/accounts.mjs';
 import { betDto } from '../domain/matches.mjs';
+import { exportAccount, deleteAccount } from '../domain/privacy.mjs';
 export function userRoutes({ db, config, requireAdmin }) {
   const router = Router();
+  router.get('/me/export', (req, res) =>
+    res
+      .set('Content-Disposition', 'attachment; filename="betverse-account.json"')
+      .json(exportAccount(db, req.user.id)),
+  );
+  router.delete('/me', async (req, res) => {
+    const input = z
+      .object({ password: z.string().min(1).max(128), confirmation: z.literal('SUPPRIMER') })
+      .strict()
+      .parse(req.body);
+    const result = await deleteAccount(db, req.user.id, input.password);
+    res
+      .clearCookie(config.cookieName, { ...cookieOptions(config), maxAge: undefined })
+      .json(result);
+  });
   router.get('/me/stats', (req, res) => res.json(playerStats(db, req.user.id)));
   router.patch('/me', (req, res) => {
     const input = z.object({ username }).strict().parse(req.body);
@@ -62,10 +78,34 @@ export function userRoutes({ db, config, requireAdmin }) {
     res.json(
       db
         .prepare(
-          'SELECT id,email,username,role,createdAt FROM users WHERE instr(lower(email||username||id),lower(?))>0 ORDER BY createdAt DESC LIMIT 100',
+          'SELECT id,email,username,role,createdAt,status FROM users WHERE instr(lower(email||username||id),lower(?))>0 ORDER BY createdAt DESC LIMIT 100',
         )
         .all(q),
     );
+  });
+  router.patch('/:id/status', requireAdmin, (req, res) => {
+    const targetId = id.parse(req.params.id);
+    const input = z
+      .object({
+        status: z.enum(['ACTIVE', 'SUSPENDED']),
+        reason: z.string().trim().min(10).max(300),
+      })
+      .strict()
+      .parse(req.body);
+    ensure(targetId !== req.user.id, 409, 'Vous ne pouvez pas suspendre votre propre compte.');
+    transaction(db, () => {
+      const target = db.prepare('SELECT role FROM users WHERE id=?').get(targetId);
+      ensure(target, 404, 'Compte introuvable.');
+      ensure(
+        target.role !== 'ADMIN',
+        403,
+        'La suspension d’un administrateur nécessite une intervention de l’éditeur.',
+      );
+      db.prepare('UPDATE users SET status=? WHERE id=?').run(input.status, targetId);
+      db.prepare('DELETE FROM sessions WHERE userId=?').run(targetId);
+      audit(db, req.user.id, 'ACCOUNT_STATUS_CHANGED', targetId, input);
+    });
+    res.json({ success: true });
   });
   router.get('/:id/public', (req, res) => {
     const user = publicUser(db, id.parse(req.params.id));

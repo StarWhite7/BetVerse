@@ -17,13 +17,13 @@
   text-transform: uppercase;
   letter-spacing: 0.2em;
   font-size: 0.7rem;
-  color: rgba(226, 232, 240, 0.6);
+  color: var(--bv-muted);
 }
 
 .admin-users__header h1 {
   margin: 0.25rem 0 0;
   font-size: 2rem;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .admin-users__filters {
@@ -38,7 +38,7 @@
   flex-direction: column;
   gap: 0.3rem;
   font-size: 0.75rem;
-  color: rgba(226, 232, 240, 0.7);
+  color: var(--bv-muted);
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
@@ -47,23 +47,23 @@
   min-width: 220px;
   padding: 0.65rem 0.9rem;
   border-radius: 0.75rem;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.7);
-  color: #f8fafc;
+  border: 1px solid var(--bv-border);
+  background: var(--bv-raised);
+  color: var(--bv-text);
 }
 
 .admin-users__filters input:focus {
   outline: none;
-  border-color: rgba(236, 72, 153, 0.7);
-  box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.5);
+  border-color: var(--bv-accent);
+  box-shadow: none;
 }
 
 .admin-users__filters button {
   padding: 0.7rem 1.2rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
+  border: 1px solid var(--bv-border);
   background: transparent;
-  color: #e2e8f0;
+  color: var(--bv-text);
   font-weight: 600;
   cursor: pointer;
 }
@@ -74,14 +74,14 @@
 }
 
 .admin-users__error {
-  color: #f87171;
+  color: var(--bv-danger);
   margin: 0;
 }
 
 .users-table {
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--bv-border);
   border-radius: 1rem;
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bv-surface);
   padding: 1rem;
 }
 
@@ -90,12 +90,12 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  color: rgba(226, 232, 240, 0.7);
+  color: var(--bv-muted);
 }
 
 .users-table h3 {
   margin: 0;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .users-table table {
@@ -108,7 +108,7 @@
 .users-table td {
   text-align: left;
   padding: 0.75rem 0.6rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  border-bottom: 1px solid var(--bv-border);
 }
 
 .users-table tbody tr:last-child td {

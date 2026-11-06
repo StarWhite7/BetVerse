@@ -8,9 +8,9 @@
   gap: 0.4rem;
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.6);
-  color: #e2e8f0;
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-text);
   cursor: pointer;
   font-size: 0.8rem;
 }
@@ -27,8 +27,8 @@
   min-width: 18px;
   height: 18px;
   border-radius: 999px;
-  background: #f43f5e;
-  color: #fff;
+  background: var(--bv-raised);
+  color: var(--bv-text);
   font-size: 0.65rem;
   display: inline-flex;
   align-items: center;
@@ -41,10 +41,10 @@
   right: 0;
   top: calc(100% + 0.6rem);
   width: min(320px, 90vw);
-  background: rgba(10, 14, 28, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: var(--bv-surface);
+  border: 1px solid var(--bv-border);
   border-radius: 1rem;
-  box-shadow: 0 20px 45px rgba(5, 10, 20, 0.6);
+  box-shadow: none;
   z-index: 3000;
   overflow: hidden;
 }
@@ -54,17 +54,17 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.8rem 1rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid var(--bv-border);
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(226, 232, 240, 0.7);
+  color: var(--bv-muted);
 }
 
 .notifications__header button {
   border: none;
   background: transparent;
-  color: rgba(226, 232, 240, 0.7);
+  color: var(--bv-muted);
   cursor: pointer;
   font-size: 0.7rem;
   letter-spacing: 0.12em;
@@ -78,26 +78,26 @@
 
 .notifications__item {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  border-bottom: 1px solid var(--bv-border);
   cursor: pointer;
 }
 
 .notifications__item--expanded {
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--bv-surface);
 }
 
 .notifications__item.unread {
-  background: rgba(59, 130, 246, 0.12);
+  background: var(--bv-surface);
 }
 
 .notifications__title {
   font-size: 0.85rem;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .notifications__message {
   font-size: 0.75rem;
-  color: rgba(226, 232, 240, 0.65);
+  color: var(--bv-muted);
   margin-top: 0.2rem;
 }
 
@@ -120,9 +120,9 @@
   align-self: flex-start;
   padding: 0.35rem 0.8rem;
   border-radius: 999px;
-  border: 1px solid rgba(59, 130, 246, 0.5);
-  background: rgba(59, 130, 246, 0.15);
-  color: rgba(226, 232, 240, 0.9);
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-muted);
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -137,9 +137,9 @@
 .notifications__actions button {
   border-radius: 999px;
   padding: 0.3rem 0.7rem;
-  border: 1px solid rgba(34, 211, 238, 0.6);
-  background: rgba(34, 211, 238, 0.15);
-  color: #67e8f9;
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-accent);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.6rem;
@@ -147,16 +147,16 @@
 }
 
 .notifications__actions-ghost {
-  border-color: rgba(248, 113, 113, 0.6);
-  background: rgba(248, 113, 113, 0.12);
-  color: #f87171;
+  border-color: var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-accent);
 }
 
 .notifications__loading,
 .notifications__empty {
   padding: 1rem;
   text-align: center;
-  color: rgba(226, 232, 240, 0.6);
+  color: var(--bv-muted);
   font-size: 0.8rem;
 }
 
@@ -165,8 +165,8 @@
   padding: 0.8rem 1rem;
   text-align: center;
   text-decoration: none;
-  color: #67e8f9;
-  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  color: var(--bv-accent);
+  border-top: 1px solid var(--bv-border);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.7rem;
@@ -184,8 +184,7 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 45%, rgba(14, 165, 233, 0.2), rgba(5, 8, 15, 0.92) 60%),
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 55%), rgba(3, 6, 12, 0.95);
+    rgba(8, 16, 30, 0.58);
   animation: casinoPulse 2.2s ease-in-out infinite;
 }
 
@@ -195,13 +194,8 @@
   width: 680px;
   height: 820px;
   opacity: 0.55;
-  background: linear-gradient(
-    135deg,
-    rgba(34, 211, 238, 0.55),
-    rgba(99, 102, 241, 0.25),
-    transparent 72%
-  );
-  filter: blur(10px);
+  background: none;
+  filter: none;
   --spot-x: -50%;
   --spot-rotate: 0deg;
   transform-origin: top center;
@@ -225,15 +219,11 @@
   width: min(620px, 92vw);
   padding: 2.6rem 2.8rem 2.4rem;
   border-radius: 1.6rem;
-  border: 1px solid rgba(34, 211, 238, 0.5);
+  border: 1px solid var(--bv-border);
   background:
-    radial-gradient(circle at top, rgba(34, 211, 238, 0.18), transparent 55%),
-    linear-gradient(140deg, rgba(6, 12, 24, 0.98), rgba(8, 13, 24, 0.94));
+    var(--bv-surface);
   box-shadow:
-    0 35px 90px rgba(14, 165, 233, 0.25),
-    0 10px 50px rgba(15, 23, 42, 0.8),
-    inset 0 0 40px rgba(56, 189, 248, 0.18),
-    0 0 0 1px rgba(148, 163, 184, 0.1);
+    none;
   position: relative;
   text-align: center;
   animation: jackpotPop 0.4s ease-out;
@@ -251,7 +241,7 @@
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  background: linear-gradient(120deg, #22d3ee, #a855f7);
+  background: var(--bv-surface);
   animation: confettiRain 2s ease-in-out infinite;
 }
 
@@ -285,19 +275,19 @@
   font-size: 0.7rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: rgba(34, 211, 238, 0.95);
+  color: var(--bv-accent);
 }
 
 .bet-win-popup__title {
   margin: 0.4rem 0 0.5rem;
   font-size: clamp(1.6rem, 3vw, 2.4rem);
-  color: #f8fafc;
-  text-shadow: 0 0 18px rgba(34, 211, 238, 0.6);
+  color: var(--bv-text);
+  text-shadow: none;
 }
 
 .bet-win-popup__message {
   margin: 0;
-  color: rgba(226, 232, 240, 0.85);
+  color: var(--bv-muted);
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -306,9 +296,9 @@
   margin: 1.6rem 0 1rem;
   padding: 1.4rem 1.6rem;
   border-radius: 1rem;
-  background: rgba(6, 12, 24, 0.6);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  box-shadow: inset 0 0 18px rgba(14, 165, 233, 0.18);
+  background: var(--bv-surface);
+  border: 1px solid var(--bv-border);
+  box-shadow: none;
 }
 
 .bet-win-ticket__match {
@@ -319,7 +309,7 @@
   text-transform: uppercase;
   font-size: 0.8rem;
   letter-spacing: 0.12em;
-  color: rgba(226, 232, 240, 0.7);
+  color: var(--bv-muted);
 }
 
 .bet-win-team {
@@ -336,12 +326,12 @@
   height: 82px;
   border-radius: 50%;
   padding: 0.55rem;
-  background: radial-gradient(circle at 35% 25%, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.95));
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: var(--bv-raised);
+  border: 1px solid var(--bv-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.55);
+  box-shadow: none;
   flex-shrink: 0;
 }
 
@@ -365,8 +355,8 @@
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  color: rgba(226, 232, 240, 0.7);
+  border: 1px solid var(--bv-border);
+  color: var(--bv-muted);
 }
 
 .bet-win-ticket__grid {
@@ -382,8 +372,8 @@
   gap: 0.2rem;
   padding: 0.7rem 0.8rem;
   border-radius: 0.8rem;
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: var(--bv-surface);
+  border: 1px solid var(--bv-border);
   text-align: left;
 }
 
@@ -391,23 +381,23 @@
   font-size: 0.65rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(148, 163, 184, 0.75);
+  color: var(--bv-muted);
 }
 
 .bet-win-ticket__item strong {
   font-size: 0.95rem;
-  color: #f8fafc;
+  color: var(--bv-text);
 }
 
 .bet-win-ticket__gain {
-  border-color: rgba(34, 197, 94, 0.6);
-  background: rgba(34, 197, 94, 0.12);
-  color: #4ade80;
+  border-color: var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-success);
   animation: gainPulse 1.4s ease-in-out infinite;
 }
 
 .bet-win-ticket__gain strong {
-  color: #4ade80;
+  color: var(--bv-success);
   font-size: 1.1rem;
 }
 
@@ -422,21 +412,21 @@
   padding: 0.9rem 2rem;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(120deg, #22d3ee, #a855f7);
-  color: #0b0f1c;
+  background: var(--bv-surface);
+  color: var(--bv-text);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 15px 40px rgba(34, 211, 238, 0.35);
+  box-shadow: none;
 }
 
 .bet-win-popup__secondary {
   padding: 0.85rem 1.6rem;
   border-radius: 999px;
-  border: 1px solid rgba(34, 211, 238, 0.5);
+  border: 1px solid var(--bv-border);
   background: transparent;
-  color: #38bdf8;
+  color: var(--bv-accent);
   font-weight: 600;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -459,9 +449,9 @@
   width: 40px;
   height: 36px;
   border-radius: 0.9rem;
-  border: 1px solid rgba(34, 211, 238, 0.45);
-  background: rgba(15, 23, 42, 0.6);
-  color: #f8fafc;
+  border: 1px solid var(--bv-border);
+  background: var(--bv-surface);
+  color: var(--bv-text);
   cursor: pointer;
   font-size: 1.4rem;
 }
@@ -482,12 +472,12 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(148, 163, 184, 0.45);
+  background: var(--bv-surface);
 }
 
 .bet-win-popup__dot.active {
-  background: #22d3ee;
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+  background: var(--bv-surface);
+  box-shadow: none;
 }
 
 @keyframes pulse {
@@ -556,15 +546,15 @@
 
 @keyframes gainPulse {
   0% {
-    box-shadow: 0 0 0 rgba(34, 197, 94, 0.1);
+    box-shadow: none;
     transform: translateY(0);
   }
   50% {
-    box-shadow: 0 0 18px rgba(34, 197, 94, 0.5);
+    box-shadow: none;
     transform: translateY(-2px);
   }
   100% {
-    box-shadow: 0 0 0 rgba(34, 197, 94, 0.1);
+    box-shadow: none;
     transform: translateY(0);
   }
 }
@@ -600,10 +590,10 @@ dialog.bet-win-popup {
   max-width: none;
   max-height: none;
   background: transparent;
-  color: #e2e8f0;
+  color: var(--bv-text);
 }
 dialog.bet-win-popup::backdrop {
-  background: rgba(2, 6, 23, 0.85);
+  background: rgba(8, 16, 30, 0.58);
 }
 .bet-win-popup__card {
   width: min(620px, 100%);

@@ -1,6 +1,6 @@
 <div class="shell">
   <aside class="shell__sidebar">
-    <a class="shell__logo" routerLink="/">BETVERSE</a>
+    <a class="shell__logo" routerLink="/"><img class="bv-logo" [src]="theme.dark()?'/brand/betverse-wordmark-dark.svg':'/brand/betverse-wordmark-light.svg'" alt="BetVerse"></a>
     <nav class="shell__nav">
       <a
         routerLink="/dashboard"
@@ -85,6 +85,7 @@
         <ng-template #guest>Bienvenue</ng-template>
       </div>
       <div class="shell__cta">
+        <label class="bv-muted">Thème <select [ngModel]="theme.mode()" (ngModelChange)="theme.set($event)" aria-label="Thème du site"><option value="system">Système</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label>
         <app-wallet-status />
         <app-notification-center />
         <a class="profile-chip" routerLink="/profile">
