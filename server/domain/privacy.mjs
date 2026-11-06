@@ -1,5 +1,5 @@
 import { transaction, ensure } from '../lib/errors.mjs';
-import { verifyPassword } from '../lib/security.mjs';
+import { verifyPassword, digest } from '../lib/security.mjs';
 import { betDto } from './matches.mjs';
 import { audit, now } from './accounts.mjs';
 
@@ -61,6 +61,18 @@ export async function deleteAccount(db, userId, password) {
           .get(userId).n > 0,
       409,
       'Transmettez l’administration à un autre compte avant de supprimer le dernier administrateur.',
+    );
+    return eraseAccountData(db, userId);
+  });
+}
+// Internal erasure primitive shared by authenticated deletion and offline restore only.
+// A restore must honor committed receipts even if that removes its last historical admin.
+export function eraseAccountData(db, userId) {
+  return transaction(db, () => {
+    if (!db.prepare('SELECT 1 FROM users WHERE id=?').get(userId)) return { success: true };
+    db.prepare('INSERT OR IGNORE INTO erasure_receipts(subjectHash,deletedAt) VALUES (?,?)').run(
+      digest(userId),
+      now(),
     );
     const membership = db.prepare('SELECT * FROM memberships WHERE userId=?').get(userId);
     if (membership?.role === 'DIRECTEUR') {

@@ -91,6 +91,22 @@ export async function createApp({ db, config }) {
   app.use('/api', express.json({ limit: '32kb', strict: true }));
   app.use('/api', (req, res, next) => {
     res.set('Cache-Control', 'no-store');
+    if (
+      config.maintenance &&
+      !['GET', 'HEAD', 'OPTIONS'].includes(req.method) &&
+      ![
+        '/auth/login',
+        '/auth/logout',
+        '/admin/security/verify',
+        '/admin/operations/erasure-journal',
+      ].includes(req.path)
+    ) {
+      res.set('Retry-After', '300');
+      throw new AppError(
+        503,
+        'Maintenance en cours : les écritures du jeu sont temporairement suspendues. Votre compte reste conservé.',
+      );
+    }
     if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
       ensure(req.get('Origin') === config.origin, 403, 'Origine de requête refusée.');
       ensure(

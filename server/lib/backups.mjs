@@ -4,6 +4,7 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 import { mkdir, readFile, writeFile, unlink, stat, readdir } from 'node:fs/promises';
 import { join, resolve, dirname } from 'node:path';
 import { ensure } from './errors.mjs';
+import { installationId, createErasureManifest, applyErasureManifest } from './erasures.mjs';
 const MAGIC = Buffer.from('BVBK01');
 export async function createEncryptedBackup(db, { directory, key, maxBytes = 32 * 1024 * 1024 }) {
   ensure(/^[a-fA-F0-9]{64}$/.test(key || ''), 400, 'Clé de sauvegarde invalide.');
@@ -38,8 +39,16 @@ export async function createEncryptedBackup(db, { directory, key, maxBytes = 32 
     await unlink(temporary).catch(() => {});
   }
 }
-export async function restoreEncryptedBackup({ input, output, key, maxBytes = 32 * 1024 * 1024 }) {
+export async function restoreEncryptedBackup({
+  input,
+  output,
+  key,
+  erasureManifest,
+  erasureKey = key,
+  maxBytes = 32 * 1024 * 1024,
+}) {
   ensure(/^[a-fA-F0-9]{64}$/.test(key || ''), 400, 'Clé de sauvegarde invalide.');
+  ensure((await stat(input)).size <= maxBytes + 1024 * 1024, 400, 'Archive trop volumineuse.');
   const value = await readFile(input);
   ensure(
     value.subarray(0, 6).equals(MAGIC) && value.length > 34,
@@ -56,7 +65,8 @@ export async function restoreEncryptedBackup({ input, output, key, maxBytes = 32
   await writeFile(output, plain, { flag: 'wx', mode: 0o600 });
   let db;
   try {
-    db = new DatabaseSync(output, { readOnly: true });
+    db = new DatabaseSync(output);
+    db.exec('PRAGMA foreign_keys=ON');
     ensure(
       db.prepare('PRAGMA integrity_check').get().integrity_check === 'ok',
       400,
@@ -67,10 +77,30 @@ export async function restoreEncryptedBackup({ input, output, key, maxBytes = 32
       400,
       'Clés étrangères incohérentes.',
     );
+    let reconciliation = null;
+    if (db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='users'").get()) {
+      ensure(
+        erasureManifest,
+        409,
+        'Journal récent des suppressions requis pour restaurer une base BetVerse.',
+      );
+      ensure(
+        (await stat(erasureManifest)).size <= 32 * 1024 * 1024,
+        400,
+        'Journal trop volumineux.',
+      );
+      reconciliation = applyErasureManifest(db, await readFile(erasureManifest), erasureKey);
+      ensure(
+        db.prepare('PRAGMA foreign_key_check').all().length === 0,
+        400,
+        'Réconciliation incohérente.',
+      );
+    }
     return {
       valid: true,
       bytes: plain.length,
       sha256: createHash('sha256').update(plain).digest('hex'),
+      ...(reconciliation ? { reconciliation } : {}),
     };
   } catch (error) {
     db?.close();
@@ -83,12 +113,68 @@ export async function restoreEncryptedBackup({ input, output, key, maxBytes = 32
 }
 export function backupWorker(db, config) {
   let running = false;
+  let journalSync = null,
+    lastJournalSignature = null;
   const state = {
     configured: Boolean(config.backupKey && config.backupDirectory && config.backupUploadBase),
     running: false,
     lastSuccess: null,
     lastError: null,
+    erasureJournal: { lastSuccess: null, lastError: null, pending: true },
   };
+  async function upload(name, body) {
+    const url = new URL(encodeURIComponent(name), config.backupUploadBase.replace(/\/?$/, '/'));
+    const response = await (config.backupFetch || fetch)(url.href, {
+      method: 'PUT',
+      redirect: 'error',
+      signal: AbortSignal.timeout(60000),
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        ...(config.backupUploadAuth ? { Authorization: config.backupUploadAuth } : {}),
+      },
+      body,
+    });
+    await response.body?.cancel();
+    ensure(response.ok, 502, 'Le stockage distant a refusé le transfert.');
+  }
+  async function syncErasures(force = false) {
+    ensure(state.configured, 409, 'Stockage distant non configuré.');
+    if (!installationId(db)) return null; // Generic SQLite fixtures do not contain accounts.
+    if (journalSync) {
+      await journalSync;
+      return syncErasures(force);
+    }
+    const signature = createHash('sha256')
+      .update(
+        JSON.stringify(
+          db
+            .prepare('SELECT subjectHash,deletedAt FROM erasure_receipts ORDER BY subjectHash')
+            .all(),
+        ),
+      )
+      .digest('hex');
+    if (!force && signature === lastJournalSignature) return;
+    journalSync = Promise.resolve().then(async () => {
+      try {
+        state.erasureJournal.pending = true;
+        const bytes = createErasureManifest(db, config.erasureKey || config.backupKey);
+        const name = `erasures-${Date.now()}-${randomUUID()}.bverasures`;
+        await upload(name, bytes);
+        await upload('erasures-latest.bverasures', bytes);
+        lastJournalSignature = signature;
+        state.erasureJournal.lastSuccess = new Date().toISOString();
+        state.erasureJournal.lastError = null;
+        state.erasureJournal.pending = false;
+      } catch (error) {
+        state.erasureJournal.lastError =
+          'Journal des suppressions non confirmé sur le stockage distant.';
+        throw error;
+      } finally {
+        journalSync = null;
+      }
+    });
+    return journalSync;
+  }
   async function run() {
     ensure(
       state.configured,
@@ -99,26 +185,12 @@ export function backupWorker(db, config) {
     running = true;
     state.running = true;
     try {
+      await syncErasures(true);
       const result = await createEncryptedBackup(db, {
         directory: config.backupDirectory,
         key: config.backupKey,
       });
-      const url = new URL(
-        encodeURIComponent(result.file.split(/[\\/]/).at(-1)),
-        config.backupUploadBase.replace(/\/?$/, '/'),
-      );
-      const response = await (config.backupFetch || fetch)(url.href, {
-        method: 'PUT',
-        redirect: 'error',
-        signal: AbortSignal.timeout(60000),
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          ...(config.backupUploadAuth ? { Authorization: config.backupUploadAuth } : {}),
-        },
-        body: await readFile(result.file),
-      });
-      await response.body?.cancel();
-      ensure(response.ok, 502, 'Le stockage distant a refusé la sauvegarde.');
+      await upload(result.file.split(/[\\/]/).at(-1), await readFile(result.file));
       state.lastSuccess = result.createdAt;
       state.lastError = null;
       const files = (await readdir(config.backupDirectory))
@@ -139,11 +211,16 @@ export function backupWorker(db, config) {
     state.configured && config.backupEnabled
       ? setInterval(() => run().catch(() => {}), 24 * 60 * 60 * 1000).unref()
       : null;
+  const journalTimer = state.configured
+    ? setInterval(() => syncErasures().catch(() => {}), 60000).unref()
+    : null;
   return {
     state,
     run,
+    syncErasures,
     stop: () => {
       if (timer) clearInterval(timer);
+      if (journalTimer) clearInterval(journalTimer);
     },
   };
 }

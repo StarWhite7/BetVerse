@@ -1330,3 +1330,70 @@ test('push device registration needs opt-in, encrypts tokens and logout detaches
   assert.equal(db.prepare('SELECT COUNT(*) n FROM push_devices').get().n, 0);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM push_outbox').get().n, 0);
 });
+
+test('maintenance freezes game mutations but keeps reads and admin journal reconciliation available', async (t) => {
+  const { request, aliceSession, adminSession, db } = await fixture(t, {
+    football: { maintenance: true },
+  });
+  assert.equal((await request('/wallet', { session: aliceSession })).status, 200);
+  const denied = await request('/wallet/claim', {
+    method: 'POST',
+    session: aliceSession,
+    body: {},
+  });
+  assert.equal(denied.status, 503);
+  assert.equal(denied.headers.get('retry-after'), '300');
+  assert.equal(
+    (
+      await request('/users/me', {
+        method: 'DELETE',
+        session: aliceSession,
+        body: { password: credentials.password, confirmation: 'SUPPRIMER' },
+      })
+    ).status,
+    503,
+  );
+  assert.equal(
+    (
+      await request('/admin/operations/erasure-journal', {
+        method: 'POST',
+        session: adminSession,
+        body: { confirmation: 'SYNCHRONISER' },
+      })
+    ).status,
+    409,
+  );
+  assert.equal(
+    (await request('/admin/operations', { session: adminSession })).body.maintenance,
+    true,
+  );
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM odds_calls').get().n, 0);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM erasure_receipts').get().n, 0);
+});
+
+test('account deletion stays committed when the off-server erasure journal is temporarily unavailable', async (t) => {
+  let attempts = 0;
+  const { db, request, aliceSession, alice } = await fixture(t, {
+    football: {
+      backupService: {
+        state: { configured: true },
+        syncErasures: async () => {
+          attempts++;
+          throw Error('simulated-storage-outage');
+        },
+      },
+    },
+  });
+  const response = await request('/users/me', {
+    method: 'DELETE',
+    session: aliceSession,
+    body: { password: credentials.password, confirmation: 'SUPPRIMER' },
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.backupJournalPending, true);
+  assert.equal(attempts, 1);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM users WHERE id=?').get(alice.id).n, 0);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM erasure_receipts').get().n, 1);
+  assert.equal((await request('/auth/me', { session: aliceSession })).status, 401);
+});

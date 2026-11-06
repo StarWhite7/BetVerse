@@ -18,6 +18,21 @@ export function userRoutes({ db, config, requireAdmin }) {
       .strict()
       .parse(req.body);
     const result = await deleteAccount(db, req.user.id, input.password);
+    if (config.backupService?.state.configured) {
+      let timeout;
+      try {
+        await Promise.race([
+          config.backupService.syncErasures(),
+          new Promise((_, reject) => {
+            timeout = setTimeout(() => reject(new Error('Journal en attente')), 5000);
+          }),
+        ]);
+      } catch {
+        result.backupJournalPending = true;
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
     res
       .clearCookie(config.cookieName, { ...cookieOptions(config), maxAge: undefined })
       .json(result);

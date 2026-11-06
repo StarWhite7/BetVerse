@@ -16,7 +16,13 @@ interface Summary {
   tickets: { total: number; pending: number };
   toSettle: { id: string; homeTeam: string; awayTeam: string; startDate: string }[];
   audit: { action: string; createdAt: string; targetId: string }[];
-  backup: { configured: boolean; lastSuccess?: string; lastError?: string };
+  backup: {
+    configured: boolean;
+    lastSuccess?: string;
+    lastError?: string;
+    erasureJournal?: { lastSuccess?: string; lastError?: string; pending: boolean };
+  };
+  maintenance: boolean;
   metrics: { requests: number; serverErrors: number; p95Ms: number; uptimeSeconds: number };
 }
 @Component({
@@ -35,6 +41,9 @@ interface Summary {
     }
     <button (click)="load()" [disabled]="busy()">Actualiser les données locales</button>
     @if (summary(); as s) {
+      @if (s.maintenance) {
+        <p role="status">Maintenance active : les écritures du jeu sont suspendues.</p>
+      }
       <p>
         {{ s.users.total }} comptes · {{ s.users.suspended || 0 }} suspendus ·
         {{ s.tickets.pending || 0 }} tickets en attente
@@ -114,6 +123,14 @@ interface Summary {
       <button (click)="backup()" [disabled]="busy() || !s.backup.configured">
         Créer et transférer une sauvegarde
       </button>
+      <h3>Journal des suppressions</h3>
+      <p>Dernier transfert confirmé : {{ s.backup.erasureJournal?.lastSuccess || 'aucun' }}</p>
+      @if (s.backup.erasureJournal?.lastError) {
+        <p role="alert" class="bv-error">{{ s.backup.erasureJournal.lastError }}</p>
+      }
+      <button (click)="syncErasures()" [disabled]="busy() || !s.backup.configured">
+        Synchroniser le journal chiffré
+      </button>
       <h2>Supervision</h2>
       <p>
         {{ s.metrics.requests }} requêtes · {{ s.metrics.serverErrors }} erreurs · p95 :
@@ -189,6 +206,14 @@ export class OperationsComponent {
   confirmed = false;
   constructor() {
     void this.load();
+  }
+  async syncErasures() {
+    await this.work(async () => {
+      await firstValueFrom(
+        this.http.post('/api/admin/operations/erasure-journal', { confirmation: 'SYNCHRONISER' }),
+      );
+      this.summary.set(await firstValueFrom(this.http.get<Summary>('/api/admin/operations')));
+    });
   }
   private async work(action: () => Promise<void>) {
     if (this.busy()) return;

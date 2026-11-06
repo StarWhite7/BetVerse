@@ -26,8 +26,17 @@ export function operationsRoutes({ db, config, requireAdmin }) {
       backup: config.backupService?.state || { configured: false },
       push: config.pushService?.state || { configured: false },
       metrics: config.metrics?.snapshot() || null,
+      maintenance: Boolean(config.maintenance),
     }),
   );
+  router.post('/erasure-journal', async (req, res) => {
+    z.object({ confirmation: z.literal('SYNCHRONISER') })
+      .strict()
+      .parse(req.body);
+    ensure(config.backupService, 409, 'Stockage distant non configuré.');
+    await config.backupService.syncErasures(true);
+    res.json({ success: true, journal: config.backupService.state.erasureJournal });
+  });
   router.post('/backup', async (req, res) => {
     z.object({ confirmation: z.literal('SAUVEGARDER') })
       .strict()

@@ -2,6 +2,8 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 export const root = fileURLToPath(new URL('../../', import.meta.url));
 export function configFromEnv(env = process.env) {
+  if (env.ERASURE_ENCRYPTION_KEY && !/^[a-fA-F0-9]{64}$/.test(env.ERASURE_ENCRYPTION_KEY))
+    throw new Error('ERASURE_ENCRYPTION_KEY doit contenir 64 caractères hexadécimaux.');
   if (env.FCM_TOKEN_KEY && !/^[a-fA-F0-9]{64}$/.test(env.FCM_TOKEN_KEY))
     throw new Error('FCM_TOKEN_KEY doit contenir 64 caractères hexadécimaux.');
   if (env.FCM_PROJECT_ID && !/^[a-z][a-z0-9-]{4,62}$/.test(env.FCM_PROJECT_ID))
@@ -64,6 +66,8 @@ export function configFromEnv(env = process.env) {
   if (env.SMTP_URL && !['smtp:', 'smtps:'].includes(new URL(env.SMTP_URL).protocol))
     throw new Error('SMTP_URL doit utiliser smtp:// ou smtps://.');
   return {
+    maintenance: env.MAINTENANCE_MODE === '1',
+    erasureKey: env.ERASURE_ENCRYPTION_KEY || env.BACKUP_ENCRYPTION_KEY,
     pushEnabled: env.FCM_ENABLED === '1',
     pushAccountFile: env.FCM_SERVICE_ACCOUNT_FILE,
     pushTokenKey: env.FCM_TOKEN_KEY,

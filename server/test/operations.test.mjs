@@ -125,3 +125,25 @@ test('cancellation migration preserves existing matches, bets, memberships and v
   assert.equal(db.prepare('SELECT balance FROM wallets WHERE userId=?').get(user.id).balance, 100);
   db.close();
 });
+
+test('production backup refuses an unconfigured encrypted destination instead of writing plaintext', async (t) => {
+  const folder = await directory(t),
+    path = join(folder, 'production.sqlite'),
+    snapshot = join(folder, 'must-not-exist.sqlite');
+  const result = spawnSync(process.execPath, [cli, 'backup'], {
+    env: {
+      PATH: process.env.PATH,
+      SystemRoot: process.env.SystemRoot,
+      NODE_ENV: 'production',
+      DATABASE_PATH: path,
+      APP_ORIGIN: 'https://example.test',
+      SMTP_URL: 'smtps://example.test:465',
+      MAIL_FROM: 'test@example.test',
+      BACKUP_PATH: snapshot,
+    },
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Configurer/);
+  await assert.rejects(() => readFile(snapshot), { code: 'ENOENT' });
+});

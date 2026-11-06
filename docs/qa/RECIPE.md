@@ -38,3 +38,9 @@ Avant d’appeler la bêta entièrement recettée sur appareil :
 11. iPhone signé : installation, Keychain réel, retour de liens de récupération, partage d’export et mêmes invariants de compte/coupon. Le build simulateur ne prouve pas ces points.
 
 La dernière version n’a pas été installée physiquement sur Android ou iPhone par l’agent. Aucun résultat de cette liste n’est marqué acquis sur la seule base d’une compilation.
+
+## Complément de reprise : restauration et suppression
+
+Suite locale complète : 84 tests backend, 25 tests Angular et build réussis. Un test supplémentaire ciblé a ensuite validé la suppression lors d’une panne du stockage, soit 85 cas backend au total à rejouer en CI. Ajouts : journal authentifié lié à une installation, réconciliation des suppressions, révocation des sessions après restauration, refus des journaux vieux/altérés/incomplets ou étrangers, suppressions simultanées pendant un transfert, rotation indépendante des clés, rollback des reçus et mode maintenance. La commande de sauvegarde de production refuse désormais une destination chiffrée non configurée au lieu d’écrire une copie en clair.
+
+Vérifications externes : la distribution de la bêta 13 précédente a terminé avec succès. Aucun appareil Android n’est appairé dans ADB ; aucun émulateur local n’est installé. Les intégrations Render et Firebase proposées ne sont pas encore confirmées installées/connectées. Aucun secret externe n’a été créé ni réglage de compte modifié lors de cette reprise.

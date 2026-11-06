@@ -7,18 +7,17 @@ import { openDatabase } from './db/database.mjs';
 import { hashPassword } from './lib/security.mjs';
 import { z, username, password } from './lib/validation.mjs';
 import { createUser, now } from './domain/accounts.mjs';
+import { backupWorker } from './lib/backups.mjs';
 const config = configFromEnv(),
   db = openDatabase(config.database);
 try {
   const command = process.argv[2];
   if (command === 'admin') {
-    const input = z
-      .object({ email: z.email(), username, password })
-      .parse({
-        email: process.env.ADMIN_EMAIL,
-        username: process.env.ADMIN_USERNAME,
-        password: process.env.ADMIN_PASSWORD,
-      });
+    const input = z.object({ email: z.email(), username, password }).parse({
+      email: process.env.ADMIN_EMAIL,
+      username: process.env.ADMIN_USERNAME,
+      password: process.env.ADMIN_PASSWORD,
+    });
     if (
       db.prepare('SELECT 1 FROM users WHERE email=? OR username=?').get(input.email, input.username)
     )
@@ -53,11 +52,21 @@ try {
     }
     console.log('Deux rencontres de démonstration ajoutées.');
   } else if (command === 'backup') {
-    const target = resolve(process.env.BACKUP_PATH || `${config.database}.${Date.now()}.backup`);
-    if (target === config.database) throw new Error('La sauvegarde doit avoir un chemin distinct.');
-    mkdirSync(dirname(target), { recursive: true });
-    await backup(db, target);
-    console.log(`Sauvegarde créée : ${target}`);
+    if (config.production) {
+      const worker = backupWorker(db, config);
+      try {
+        console.log(JSON.stringify(await worker.run()));
+      } finally {
+        worker.stop();
+      }
+    } else {
+      const target = resolve(process.env.BACKUP_PATH || `${config.database}.${Date.now()}.backup`);
+      if (target === config.database)
+        throw new Error('La sauvegarde doit avoir un chemin distinct.');
+      mkdirSync(dirname(target), { recursive: true });
+      await backup(db, target);
+      console.log(`Sauvegarde créée : ${target}`);
+    }
   } else throw new Error('Commande attendue : admin, seed-demo, backup.');
 } catch (error) {
   // Zod errors can contain received secret values: never serialize them.
