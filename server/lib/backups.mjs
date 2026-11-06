@@ -8,9 +8,10 @@ const MAGIC = Buffer.from('BVBK01');
 export async function createEncryptedBackup(db, { directory, key, maxBytes = 32 * 1024 * 1024 }) {
   ensure(/^[a-fA-F0-9]{64}$/.test(key || ''), 400, 'Clé de sauvegarde invalide.');
   directory = resolve(directory);
-  await mkdir(directory, { recursive: true });
+  await mkdir(directory, { recursive: true, mode: 0o700 });
   const temporary = join(directory, `${randomUUID()}.snapshot`);
   try {
+    await writeFile(temporary, Buffer.alloc(0), { flag: 'wx', mode: 0o600 });
     await backup(db, temporary);
     ensure(
       (await stat(temporary)).size <= maxBytes,

@@ -2,8 +2,55 @@ import { Router } from 'express';
 import { id, z } from '../lib/validation.mjs';
 import { ensure } from '../lib/errors.mjs';
 import { now } from '../domain/accounts.mjs';
-export function notificationRoutes({ db }) {
+import { sealToken } from '../lib/push.mjs';
+import { digest, readCookie } from '../lib/security.mjs';
+export function notificationRoutes({ db, config }) {
   const router = Router();
+  router.get('/push-status', (_req, res) =>
+    res.json({
+      available: Boolean(config.pushEnabled && config.pushTokenKey && config.pushAccountFile),
+    }),
+  );
+  router.post('/devices', (req, res) => {
+    const { token } = z
+      .object({ token: z.string().regex(/^[a-zA-Z0-9_:\-]{20,4096}$/) })
+      .strict()
+      .parse(req.body);
+    ensure(
+      config.pushEnabled && config.pushTokenKey && config.pushAccountFile,
+      409,
+      'Push non configuré sur le serveur.',
+    );
+    ensure(
+      db.prepare('SELECT push FROM user_preferences WHERE userId=?').get(req.user.id)?.push === 1,
+      409,
+      'Autorisez les notifications avant de connecter cet appareil.',
+    );
+    const hash = digest(token),
+      previous = db.prepare('SELECT userId FROM push_devices WHERE tokenHash=?').get(hash);
+    ensure(
+      !previous || previous.userId === req.user.id,
+      409,
+      'Déconnectez d’abord le compte précédent de cet appareil.',
+    );
+    db.prepare(
+      'INSERT INTO push_devices VALUES (?,?,?,?,?) ON CONFLICT(tokenHash) DO UPDATE SET sessionHash=excluded.sessionHash,cipher=excluded.cipher,updatedAt=excluded.updatedAt',
+    ).run(
+      hash,
+      req.user.id,
+      digest(readCookie(req, config.cookieName) || ''),
+      sealToken(token, config.pushTokenKey),
+      now(),
+    );
+    res.json({ success: true });
+  });
+  router.delete('/devices', (req, res) => {
+    db.prepare('DELETE FROM push_devices WHERE userId=? AND sessionHash=?').run(
+      req.user.id,
+      digest(readCookie(req, config.cookieName) || ''),
+    );
+    res.json({ success: true });
+  });
   router.get('/preferences', (req, res) => {
     const row = db
       .prepare('SELECT bets,agencies,push FROM user_preferences WHERE userId=?')

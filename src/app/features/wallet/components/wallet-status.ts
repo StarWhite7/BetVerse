@@ -32,7 +32,7 @@ import { interval } from 'rxjs';
       border-radius: 2rem;
       border: 0;
       color: white;
-      background: linear-gradient(120deg, #7c3aed, #ec4899);
+      background: var(--bv-primary);
       cursor: pointer;
       font-weight: 600;
     }
@@ -45,18 +45,18 @@ import { interval } from 'rxjs';
       flex-direction: column;
       padding: 0.4rem 0.8rem;
       min-width: 65px;
-      border: 1px solid #334155;
+      border: 1px solid var(--bv-border);
       border-radius: 1rem;
     }
     small {
       font-size: 0.7rem;
-      color: #94a3b8;
+      color: var(--bv-muted);
     }
     strong {
-      color: #67e8f9;
+      color: var(--bv-accent);
     }
     .shards strong {
-      color: #f0abfc;
+      color: var(--bv-text);
     }
   `,
 })

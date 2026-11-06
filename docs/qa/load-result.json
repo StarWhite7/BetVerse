@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-11-06T09:46:23.100Z",
+  "environment": "Windows local, disposable SQLite WAL, synthetic users, 25 concurrent workers; not a Render capacity benchmark",
+  "accounts": 1000,
+  "requests": 6000,
+  "concurrency": 25,
+  "durationMs": 7647,
+  "p50Ms": 13,
+  "p95Ms": 80,
+  "statuses": {
+    "200": 3000,
+    "201": 2000,
+    "409": 1000
+  },
+  "assertions": {
+    "oneBonusPerUser": true,
+    "oneStakePerIdempotencyKey": true,
+    "expectedBalances": true,
+    "foreignKeys": true,
+    "sportsProviderCalls": 0
+  },
+  "rssBytes": 229871616
+}

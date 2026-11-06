@@ -34,7 +34,15 @@ struct PendingTicket: Codable { var owner: String; var path: String; var body: D
     }
     func perform(_ action: @escaping () async throws -> Void) {
         guard !busy else { return }; busy = true; message = nil
-        Task { defer { busy = false }; do { try await action() } catch { message = error.localizedDescription } }
+        Task { defer { busy = false }; do { try await action() }
+            catch APIError.response(401, let text) { resetAccount(); message = text }
+            catch { message = error.localizedDescription }
+        }
+    }
+    func resetAccount() {
+        user = nil; wallet = [:]; matches = []; tickets = []; agency = nil; agencies = []
+        invites = []; notices = []; ranks = []; stats = [:]; preferences = [:]; coordination = [:]
+        rows = []; pending = nil; stake = "100"; slip = false; ticketPage = 0; ticketFilter = ""
     }
     func refresh() async throws {
         wallet = try await object("/api/wallet") as? Object ?? [:]
@@ -55,10 +63,10 @@ struct PendingTicket: Codable { var owner: String; var path: String; var body: D
     }
     func login(_ identifier: String, _ password: String) { perform {
         let response = try await self.object("/api/auth/login",method:"POST",body:["identifier":identifier,"password":password]) as? Object
-        self.user = response?["user"] as? Object; await self.restoreDraft(); try await self.refresh()
+        self.resetAccount(); self.user = response?["user"] as? Object; await self.restoreDraft(); try await self.refresh()
     } }
     func logout() { perform {
-        _ = try await self.object("/api/auth/logout",method:"POST",body:[:]); self.user = nil; self.rows = []; self.pending = nil; self.wallet = [:]; self.tickets = []; self.agency = nil; self.notices = []
+        _ = try await self.object("/api/auth/logout",method:"POST",body:[:]); self.resetAccount()
     } }
     func select(_ match: Object, _ type: String, _ quote: Decimal) {
         guard !busy, pending == nil else { slip = pending != nil; return }
@@ -84,7 +92,7 @@ struct PendingTicket: Codable { var owner: String; var path: String; var body: D
             _ = try await self.api.request(value.path,method:"POST",body:value.body,idempotency:value.key)
             try await self.api.savePrivate("pending:" + owner,data:nil); self.pending = nil; self.rows = []; try await self.persistDraft(); self.slip = false
             try await self.refresh(); self.message = "Pari enregistré."
-        } catch APIError.response(let status, let text) where (400...499).contains(status) && status != 408 && status != 429 {
+        } catch APIError.response(let status, let text) where (400...499).contains(status) && status != 401 && status != 408 && status != 429 {
             try await self.api.savePrivate("pending:" + owner,data:nil); self.pending = nil; throw APIError.response(status,text)
         }
     } }
@@ -234,7 +242,7 @@ struct ProfileView: View {
         Section("Statistiques") { ForEach(model.stats.keys.sorted(),id:\.self) { key in if model.stats[key] is NSNumber { LabeledContent(key,value:string(model.stats,key)) } }; NavigationLink("Classements") { RanksView() } }
         Section("Mot de passe") {
             SecureField("Mot de passe actuel",text:$password); SecureField("Nouveau mot de passe",text:$newPassword)
-            Button("Changer le mot de passe") { let old = password, replacement = newPassword; password = ""; newPassword = ""; model.perform { _ = try await model.object("/api/users/me/password",method:"PATCH",body:["currentPassword":old,"newPassword":replacement]); try await model.api.clearSession(); model.user = nil; model.message = "Mot de passe modifié. Reconnectez-vous." } }.disabled(model.busy)
+            Button("Changer le mot de passe") { let old = password, replacement = newPassword; password = ""; newPassword = ""; model.perform { _ = try await model.object("/api/users/me/password",method:"PATCH",body:["currentPassword":old,"newPassword":replacement]); try await model.api.clearSession(); model.resetAccount(); model.message = "Mot de passe modifié. Reconnectez-vous." } }.disabled(model.busy)
         }
         Section("Notifications") { NavigationLink("Centre de notifications") { NoticesView() }; Toggle("Résultats des paris",isOn:preference("bets")); Toggle("Activité de l’agence",isOn:preference("agencies")); Text("Push système non activé sur cette version iOS.").font(.caption) }
         Section("Données et assistance") {
@@ -245,7 +253,7 @@ struct ProfileView: View {
             Button("Supprimer mon compte",role:.destructive) { deletion = true }
             Button("Se déconnecter",action:model.logout).disabled(model.busy)
         }
-        if deletion { Section("Suppression définitive") { Text("Les paris, le portefeuille et les données du compte seront supprimés. Cette action est irréversible."); SecureField("Mot de passe actuel",text:$password); TextField("Écrivez SUPPRIMER",text:$confirmation); Button("Confirmer la suppression",role:.destructive) { let secret = password; password = ""; model.perform { let owner = model.user.map { string($0,"id") } ?? ""; _ = try await model.object("/api/users/me",method:"DELETE",body:["password":secret,"confirmation":"SUPPRIMER"]); try await model.api.clearSession(); try await model.api.savePrivate("draft:" + owner,data:nil); try await model.api.savePrivate("pending:" + owner,data:nil); model.user = nil; model.rows = []; model.pending = nil } }.disabled(confirmation != "SUPPRIMER" || model.busy); Button("Annuler") { deletion = false; password = ""; confirmation = "" } } }
+        if deletion { Section("Suppression définitive") { Text("Les paris, le portefeuille et les données du compte seront supprimés. Cette action est irréversible."); SecureField("Mot de passe actuel",text:$password); TextField("Écrivez SUPPRIMER",text:$confirmation); Button("Confirmer la suppression",role:.destructive) { let secret = password; password = ""; model.perform { let owner = model.user.map { string($0,"id") } ?? ""; _ = try await model.object("/api/users/me",method:"DELETE",body:["password":secret,"confirmation":"SUPPRIMER"]); try await model.api.clearSession(); try await model.api.savePrivate("draft:" + owner,data:nil); try await model.api.savePrivate("pending:" + owner,data:nil); model.resetAccount() } }.disabled(confirmation != "SUPPRIMER" || model.busy); Button("Annuler") { deletion = false; password = ""; confirmation = "" } } }
     }.navigationTitle("Profil").onAppear { username = model.user.map { string($0,"username") } ?? ""; model.loadProfile() }
     .fileExporter(isPresented:$export,document:file,contentType:.json,defaultFilename:"betverse-mes-donnees") { result in if case .failure = result { model.message = "Le fichier n’a pas été enregistré." } }
     }
@@ -273,4 +281,5 @@ struct PublicProfileView: View {
     @State private var profile: Object = [:]
     var body: some View { List { Text(string(profile["user"] as? Object ?? [:],"username")).font(.title); ForEach((profile["stats"] as? Object ?? [:]).keys.sorted(),id:\.self) { key in Text(key + " : " + string(profile["stats"] as? Object ?? [:],key)) } }.navigationTitle("Profil public").task { do { profile = try await model.object("/api/users/" + id + "/public") as? Object ?? [:] } catch { model.message = error.localizedDescription } } }
 }
+
 

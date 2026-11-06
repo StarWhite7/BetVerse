@@ -6,6 +6,8 @@
     <span class="profile-header__email">Email : {{ user()?.email }}</span>
   </div>
   <div class="profile-header__actions">
+    <a routerLink="/legal/privacy" class="ghost">Mes données et suppression du compte</a>
+    <a routerLink="/legal/support" class="ghost">Assistance</a>
     <button
       type="button"
       (click)="manualRefresh()"

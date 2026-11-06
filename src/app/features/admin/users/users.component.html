@@ -44,7 +44,7 @@
       </thead>
       <tbody>
         <tr *ngIf="loading()">
-          <td colspan="5">Chargement...</td>
+          <td colspan="7">Chargement...</td>
         </tr>
         <tr *ngFor="let user of filteredUsers(); trackBy: trackByUser">
           <td>{{ user.id }}</td>
@@ -55,7 +55,7 @@
           <td>{{ user.status==='SUSPENDED'?'Suspendu':'Actif' }}</td><td><button type="button" [disabled]="loading()||user.role==='ADMIN'" (click)="target.set(user);reason=''">{{user.status==='SUSPENDED'?'Réactiver':'Suspendre'}}</button></td>
         </tr>
         <tr *ngIf="!filteredUsers().length && !loading()">
-          <td colspan="5">Aucun utilisateur trouve.</td>
+          <td colspan="7">Aucun utilisateur trouvé.</td>
         </tr>
       </tbody>
     </table>

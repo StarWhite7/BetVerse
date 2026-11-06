@@ -35,6 +35,9 @@ export function exportAccount(db, userId) {
     preferences: db
       .prepare('SELECT bets,agencies,push FROM user_preferences WHERE userId=?')
       .get(userId) || { bets: 1, agencies: 1, push: 0 },
+    pushDevices: db
+      .prepare('SELECT updatedAt FROM push_devices WHERE userId=? ORDER BY updatedAt')
+      .all(userId),
   };
 }
 export async function deleteAccount(db, userId, password) {

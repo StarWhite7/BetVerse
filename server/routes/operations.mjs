@@ -24,6 +24,7 @@ export function operationsRoutes({ db, config, requireAdmin }) {
         .all(),
       provider: manualOdds({ db, config }).state().usage,
       backup: config.backupService?.state || { configured: false },
+      push: config.pushService?.state || { configured: false },
       metrics: config.metrics?.snapshot() || null,
     }),
   );

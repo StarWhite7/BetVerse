@@ -7,8 +7,10 @@
 | Élément | État |
 | --- | --- |
 | Nom d’éditeur souhaité | StarWhite Interactive |
+| Statut confirmé par le propriétaire | Nom de studio, aucune formalité ou immatriculation effectuée ; tests uniquement |
 | Pays indiqué | France |
 | Contact souhaité | `support@betverse.fr` ; réception et réponse non constatées |
+| Redirection souhaitée | Vers `starwhiteinteractive@gmail.com` ; non créée, accès au gestionnaire non disponible |
 | Domaine | `betverse.fr`, enregistré chez Infomaniak |
 | Forme et identité juridique de l’exploitant | À confirmer : nom commercial ne prouve pas l’existence d’une société |
 | Adresse, immatriculation, représentant/directeur de publication | Non communiqués ; fournir les éléments applicables au statut réel |

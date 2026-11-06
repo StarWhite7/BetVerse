@@ -2,6 +2,15 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 export const root = fileURLToPath(new URL('../../', import.meta.url));
 export function configFromEnv(env = process.env) {
+  if (env.FCM_TOKEN_KEY && !/^[a-fA-F0-9]{64}$/.test(env.FCM_TOKEN_KEY))
+    throw new Error('FCM_TOKEN_KEY doit contenir 64 caractères hexadécimaux.');
+  if (env.FCM_PROJECT_ID && !/^[a-z][a-z0-9-]{4,62}$/.test(env.FCM_PROJECT_ID))
+    throw new Error('FCM_PROJECT_ID invalide.');
+  if (
+    env.FCM_ENABLED === '1' &&
+    (!env.FCM_TOKEN_KEY || !env.FCM_SERVICE_ACCOUNT_FILE || !env.FCM_PROJECT_ID)
+  )
+    throw new Error('Configurer clé, projet et compte de service avant FCM_ENABLED=1.');
   if (env.BACKUP_ENCRYPTION_KEY && !/^[a-fA-F0-9]{64}$/.test(env.BACKUP_ENCRYPTION_KEY))
     throw new Error('BACKUP_ENCRYPTION_KEY doit contenir 64 caractères hexadécimaux.');
   if (env.BACKUP_UPLOAD_BASE) {
@@ -55,6 +64,10 @@ export function configFromEnv(env = process.env) {
   if (env.SMTP_URL && !['smtp:', 'smtps:'].includes(new URL(env.SMTP_URL).protocol))
     throw new Error('SMTP_URL doit utiliser smtp:// ou smtps://.');
   return {
+    pushEnabled: env.FCM_ENABLED === '1',
+    pushAccountFile: env.FCM_SERVICE_ACCOUNT_FILE,
+    pushTokenKey: env.FCM_TOKEN_KEY,
+    pushProject: env.FCM_PROJECT_ID,
     backupKey: env.BACKUP_ENCRYPTION_KEY,
     backupDirectory: env.BACKUP_DIRECTORY,
     backupUploadBase: env.BACKUP_UPLOAD_BASE,

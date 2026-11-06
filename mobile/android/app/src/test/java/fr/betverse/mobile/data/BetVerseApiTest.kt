@@ -149,4 +149,27 @@ class BetVerseApiTest {
         assertTrue(runCatching { BetVerseApi("http://example.test", MemoryVault()) }.isFailure)
         assertTrue(runCatching { BetVerseApi("https://example.test/other", MemoryVault()) }.isFailure)
     }
+    @Test fun unsubmittedDraftIsIsolatedByOriginAndOwnerAndRestoresWithoutNetwork() {
+        val vault = MemoryVault()
+        val client = BetVerseApi("https://one.example.test",vault)
+        val draft = draft().copy(requestKey=null,owner=null,amount="250")
+        client.saveDraft("alice",draft)
+        assertEquals("250",BetVerseApi("https://one.example.test",vault).draft("alice")?.amount)
+        assertNull(client.draft("bob"))
+        assertNull(BetVerseApi("https://two.example.test",vault).draft("alice"))
+        assertNull(client.draft("alice")?.requestKey)
+        client.clearLocalSession("alice")
+        assertNull(client.draft("alice"))
+    }
+    @Test fun profilePatchAndAccountDeletionUseAuthenticatedJsonMethods() = runBlocking {
+        val server = server()
+        try {
+            val client=api(server)
+            server.enqueue(loginResponse());client.login("alice","NotARealPassword123");server.takeRequest()
+            server.enqueue(MockResponse().setBody(player));client.updateUsername("alice-new")
+            val patch=server.takeRequest();assertEquals("PATCH",patch.method);assertEquals("/api/users/me",patch.path);assertEquals("csrf-one",patch.getHeader("X-CSRF-Token"))
+            server.enqueue(MockResponse().setBody("{}"));client.mutate("/api/users/me",org.json.JSONObject().put("password","TestOnly123").put("confirmation","SUPPRIMER"),"DELETE")
+            val delete=server.takeRequest();assertEquals("DELETE",delete.method);assertEquals("/api/users/me",delete.path);assertEquals("csrf-one",delete.getHeader("X-CSRF-Token"));assertNotNull(delete.getHeader("Cookie"))
+        } finally {server.shutdown()}
+    }
 }

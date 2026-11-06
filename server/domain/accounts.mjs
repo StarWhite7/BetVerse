@@ -90,6 +90,7 @@ export function notify(
   agencyId = null,
   inviteId = null,
 ) {
+  const notificationId = randomUUID();
   const preferences = db
     .prepare('SELECT bets,agencies FROM user_preferences WHERE userId=?')
     .get(userId);
@@ -101,7 +102,7 @@ export function notify(
   db.prepare(
     'INSERT INTO notifications (id,userId,type,title,message,metadata,agencyId,inviteId,createdAt) VALUES (?,?,?,?,?,?,?,?,?)',
   ).run(
-    randomUUID(),
+    notificationId,
     userId,
     type,
     title,
@@ -111,6 +112,9 @@ export function notify(
     inviteId,
     now(),
   );
+  db.prepare(
+    'INSERT INTO push_outbox(notificationId,tokenHash,createdAt) SELECT ?,d.tokenHash,? FROM push_devices d JOIN user_preferences p ON p.userId=d.userId WHERE d.userId=? AND p.push=1',
+  ).run(notificationId, now(), userId);
 }
 export function audit(db, actorId, action, targetId = null, details = {}) {
   db.prepare('INSERT INTO audit_log VALUES (?,?,?,?,?,?)').run(

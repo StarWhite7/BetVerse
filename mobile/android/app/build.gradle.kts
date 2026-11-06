@@ -68,6 +68,7 @@ gradle.taskGraph.whenReady {
 }
 
 dependencies {
+    implementation("com.google.firebase:firebase-messaging:25.0.2")
     val composeBom = platform("androidx.compose:compose-bom:2025.10.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)

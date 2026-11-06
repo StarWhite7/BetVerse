@@ -15,7 +15,9 @@ const database = process.env.QA_DATABASE_PATH
   : join(directory, 'qa.sqlite');
 if (!database.startsWith(join(tmpdir(), 'betverse-browser-')) || basename(database) !== 'qa.sqlite')
   throw new Error('Only disposable QA databases are allowed');
-const config = { ...configFromEnv({}), origin: 'http://localhost:3101', database };
+const port = Number(process.env.QA_PORT || 3101);
+if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid QA port');
+const config = { ...configFromEnv({}), origin: `http://localhost:${port}`, database };
 const db = openDatabase(config.database);
 if (!db.prepare("SELECT 1 FROM users WHERE username='qa-admin'").get())
   createUser(db, {
@@ -39,8 +41,8 @@ if (!db.prepare('SELECT 1 FROM matches').get())
     now(),
   );
 const app = await createApp({ db, config });
-const server = app.listen(3101, '127.0.0.1', () =>
-  console.log(`QA http://localhost:3101 ; database ${config.database}`),
+const server = app.listen(port, '127.0.0.1', () =>
+  console.log(`QA http://localhost:${port} ; database ${config.database}`),
 );
 process.on('SIGTERM', () =>
   server.close(() => {

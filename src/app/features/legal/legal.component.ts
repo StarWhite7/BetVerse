@@ -10,10 +10,11 @@ const PAGES: Record<string, { title: string; paragraphs: string[] }> = {
   privacy: {
     title: 'Confidentialité',
     paragraphs: [
-      'BetVerse est édité sous le nom StarWhite Interactive, en France. Contact prévu : support@betverse.fr.',
+      'BetVerse est un projet de test du studio StarWhite Interactive, nom non immatriculé à ce jour, en France. Contact prévu : support@betverse.fr.',
       'Données utilisées : adresse email, pseudo, mot de passe haché, session, paris en monnaie virtuelle, mouvements du portefeuille, progression, agence, pronostics collectifs et notifications. Aucun mot de passe en clair n’est conservé.',
       'Ces données servent à sécuriser le compte, confirmer l’adresse email, faire fonctionner le jeu et les agences, fournir les notifications demandées et prévenir les abus.',
       'Le backend est hébergé sur Render ; Brevo envoie les emails transactionnels. Firebase App Distribution distribue la bêta Android aux testeurs invités. Les fournisseurs sportifs n’ont pas besoin de l’identité des joueurs pour charger les rencontres.',
+      'Le push Android est facultatif : après votre activation et l’autorisation de l’appareil, Firebase traite un identifiant technique d’appareil pour envoyer une alerte générique. Le jeton est chiffré côté backend et détaché à la déconnexion. Le centre interne fonctionne sans push ; aucun SDK publicitaire ou Analytics n’est ajouté.',
       'Vous pouvez exporter vos données et supprimer votre compte dans l’application ou sur la page dédiée. Les données du compte sont conservées tant qu’il reste actif. La suppression efface la base active ; les sauvegardes suivent leur rotation et ne doivent pas réactiver les comptes supprimés.',
       'Le site utilise une session nécessaire au fonctionnement et une préférence locale de thème. Aucune publicité ni achat de monnaie virtuelle n’est actif. Les éventuelles notifications push nécessitent une activation et une autorisation distinctes.',
     ],

@@ -70,6 +70,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private fun failure(error: Exception) {
         if (error is CancellationException) throw error
         if (error is ApiFailure && error.status == 401 && mutable.value.player != null) {
+            (getApplication<Application>() as BetVerseApplication).push.disconnect()
             mutable.update { UiState(booting = false, theme = it.theme,
                 message = "Votre session a expiré. Reconnectez-vous.", error = true) }
             return
@@ -252,6 +253,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         operation { loadTickets() }
     }
     fun logout() = operation {
+        (getApplication<Application>() as BetVerseApplication).push.disconnect()
         api.logout()
         serverAnchor = null
         mutable.update { UiState(booting = false, theme = it.theme) }
@@ -288,12 +290,36 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         api.mutate("/api/notifications/preferences",JSONObject().put("bets",value.bets).put("agencies",value.agencies).put("push",value.push),"PATCH")
         mutable.update { it.copy(noticePreferences=value,message="Préférences enregistrées.") }
     }
+    fun enablePush() = operation {
+        val app = getApplication<Application>() as BetVerseApplication
+        val owner = mutable.value.player?.id ?: return@operation
+        if (!api.readObject("/api/notifications/push-status").getBoolean("available")) {
+            mutable.update { it.copy(message="Les notifications push ne sont pas encore activées sur le serveur.") }
+            return@operation
+        }
+        app.push.channel()
+        val token = app.push.token()
+        val value = mutable.value.noticePreferences.copy(push=true)
+        api.mutate("/api/notifications/preferences",JSONObject().put("bets",value.bets).put("agencies",value.agencies).put("push",true),"PATCH")
+        api.mutate("/api/notifications/devices",JSONObject().put("token",token))
+        app.push.consent(owner)
+        mutable.update { it.copy(noticePreferences=value,message="Notifications activées sur cet appareil.") }
+    }
+    fun disablePush() = operation {
+        val app = getApplication<Application>() as BetVerseApplication
+        app.push.disconnect()
+        api.mutate("/api/notifications/devices",JSONObject(),"DELETE")
+        val value = mutable.value.noticePreferences.copy(push=false)
+        api.mutate("/api/notifications/preferences",JSONObject().put("bets",value.bets).put("agencies",value.agencies).put("push",false),"PATCH")
+        mutable.update { it.copy(noticePreferences=value,message="Notifications push désactivées.") }
+    }
     fun username(value: String) = operation {
         val player=api.updateUsername(value.trim().lowercase())
         mutable.update { it.copy(player=player,message="Pseudo mis à jour.") }
     }
     fun changePassword(current: String, replacement: String) = operation {
         api.mutate("/api/users/me/password",JSONObject().put("currentPassword",current).put("newPassword",replacement),"PATCH")
+        (getApplication<Application>() as BetVerseApplication).push.disconnect()
         mutable.value.player?.id?.let(api::clearLocalSession)
         mutable.update { UiState(booting=false,theme=it.theme,message="Mot de passe modifié. Reconnectez-vous.") }
     }
@@ -303,6 +329,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteAccount(password: String) = operation {
         val owner=mutable.value.player?.id ?: return@operation
         api.mutate("/api/users/me",JSONObject().put("password",password).put("confirmation","SUPPRIMER"),"DELETE")
+        (getApplication<Application>() as BetVerseApplication).push.disconnect()
         api.clearLocalSession(owner); serverAnchor=null
         mutable.update { UiState(booting=false,theme=it.theme,message="Votre compte et ses données ont été supprimés.") }
     }

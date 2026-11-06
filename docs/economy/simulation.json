@@ -1,0 +1,59 @@
+{
+  "seed": 20261106,
+  "assumptions": "1000 synthetic players, 30 days, bonus 500 V/24h, stake 100 V, win probability .5 and quote1.90; virtual currency only. Illustrative behavior, not a revenue forecast.",
+  "scenarios": [
+    {
+      "name": "Modéré",
+      "claimRate": 0.25,
+      "betsPerDay": 1,
+      "players": 1000,
+      "days": 30,
+      "issuedVerse": 3810000,
+      "stakesVerse": 2708300,
+      "payoutsVerse": 2554550,
+      "tickets": 27083,
+      "blockedForBalance": 2917,
+      "circulationVerse": 3656250,
+      "medianBalance": 3580,
+      "p95Balance": 5920,
+      "accountingValid": true
+    },
+    {
+      "name": "Régulier",
+      "claimRate": 0.6,
+      "betsPerDay": 3,
+      "players": 1000,
+      "days": 30,
+      "issuedVerse": 8995000,
+      "stakesVerse": 8783300,
+      "payoutsVerse": 8324470,
+      "tickets": 87833,
+      "blockedForBalance": 738,
+      "circulationVerse": 8536170,
+      "medianBalance": 8550,
+      "p95Balance": 11190,
+      "accountingValid": true
+    },
+    {
+      "name": "Assidu",
+      "claimRate": 0.95,
+      "betsPerDay": 8,
+      "players": 1000,
+      "days": 30,
+      "issuedVerse": 14278000,
+      "stakesVerse": 23916900,
+      "payoutsVerse": 22766180,
+      "tickets": 239169,
+      "blockedForBalance": 203,
+      "circulationVerse": 13127280,
+      "medianBalance": 13110,
+      "p95Balance": 15710,
+      "accountingValid": true
+    }
+  ],
+  "revenue": {
+    "enabled": false,
+    "monthlyEuros": 0,
+    "breakEvenFormula": "monthlyOperatingCost / netMonthlyRevenuePerActivePlayer; undefined while revenue per player is zero"
+  }
+}

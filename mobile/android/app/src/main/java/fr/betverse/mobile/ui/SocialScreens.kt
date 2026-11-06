@@ -25,6 +25,7 @@ import org.json.JSONObject
 @Composable fun SocialPanel(state: UiState, model: AppViewModel, onWeb: (String) -> Unit) {
     val context=LocalContext.current
     val scope=rememberCoroutineScope()
+    val pushPermission=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if(granted) model.enablePush() }
     val export=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         val payload=state.exportPayload
         if(uri!=null && payload!=null) scope.launch(Dispatchers.IO) {
@@ -65,6 +66,12 @@ import org.json.JSONObject
                     Text("Notifications",style=MaterialTheme.typography.titleLarge)
                     PreferenceSwitch("Résultats de mes paris",state.noticePreferences.bets,!state.busy) { model.noticePreferences(state.noticePreferences.copy(bets=it)) }
                     PreferenceSwitch("Événements de mon agence",state.noticePreferences.agencies,!state.busy) { model.noticePreferences(state.noticePreferences.copy(agencies=it)) }
+                    Text("Le push envoie une alerte générique via Firebase. Vous pouvez le désactiver à tout moment.",style=MaterialTheme.typography.bodySmall)
+                    OutlinedButton(onClick={
+                        if(android.os.Build.VERSION.SDK_INT>=33 && androidx.core.content.ContextCompat.checkSelfPermission(context,android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED) pushPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                        else model.enablePush()
+                    },enabled=!state.busy) {Text("Activer sur cet appareil")}
+                    TextButton(onClick=model::disablePush,enabled=!state.busy) {Text("Désactiver le push")}
                 } }
                 item { ClubCard(Modifier.fillMaxWidth()) {
                     Text("Mes données",style=MaterialTheme.typography.titleLarge)

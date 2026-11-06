@@ -6,7 +6,7 @@
 
 BetVerse est un jeu de pronostics sportifs gratuit utilisant des Verse virtuels, sans conversion en argent. Le socle comprend comptes vérifiés par email, portefeuille virtuel, paris simples et combinés, bonus, classement et agences. Android utilise Kotlin/Compose, le web Angular et les deux un backend Node/SQLite. Les imports sportifs sont manuels : ouvrir l’application ou redéployer ne doit pas appeler le fournisseur.
 
-À la rédaction, aucun achat, dépôt, retrait, lot monétaire, publicité, affiliation bookmaker ou SDK analytique n’est intégré. Firebase App Distribution est un canal de bêta privée, pas un SDK de mesure d’audience. Le manifeste Android n’exige que la permission Internet. Les notifications internes, préférences et parcours natifs sociaux sont en cours de livraison ; le push distant n’est pas actif et ne doit pas être annoncé comme disponible.
+À la rédaction, aucun achat, dépôt, retrait, lot monétaire, publicité, affiliation bookmaker ou SDK analytique n’est intégré. Firebase App Distribution est un canal de bêta privée. Le manifeste Android déclare Internet et POST_NOTIFICATIONS ; Firebase Messaging est intégré avec initialisation automatique désactivée et activation explicite. Le centre interne, les préférences et les parcours sociaux natifs sont présents. L’envoi distant reste désactivé côté serveur sans configuration FCM et sa réception réelle n’est pas validée. Ne pas confondre intégration du SDK et service actif.
 
 Les routes d’export et suppression du compte sont présentes dans le chantier V1 ; leur présence dans le dépôt ne démontre pas leur déploiement ni leur recette sur téléphone. Vérifier ces deux points avant toute déclaration dans les consoles.
 
@@ -48,7 +48,7 @@ Ce tableau est une base de travail, pas un formulaire déjà certifié. Les rép
 
 Un traitement par un prestataire ne se classe pas automatiquement comme un partage au sens de Google : examiner les conditions de l’exception « service provider ». Les données envoyées hors appareil doivent être évaluées selon les définitions du formulaire. [Définitions Data safety de Google](https://support.google.com/googleplay/android-developer/answer/10787469?hl=en-EN). Pour Apple, le contenu de jeu et les identifiants liés au compte doivent être examinés ; les informations restant uniquement sur l’appareil ne sont pas déclarées comme collectées selon la même définition. [Déclarations de confidentialité Apple](https://developer.apple.com/app-store/app-privacy-details/).
 
-Prestataires identifiés : Render pour le backend et ses données, Brevo pour les emails transactionnels, The Odds API pour les données sportives, Google/Firebase pour la distribution privée. Vérifier les flux réels, sous-traitants, localisation et transferts. Si FCM, crash reporting, publicité ou achat sont ajoutés, refaire cet inventaire avant livraison.
+Prestataires identifiés : Render pour le backend et ses données, Brevo pour les emails transactionnels, The Odds API pour les données sportives, Google/Firebase pour la distribution privée et, après opt-in et configuration serveur, FCM pour un identifiant technique d’appareil. Déclarer ce dernier dans les formulaires du binaire qui intègre Messaging ; ne pas cocher « aucune collecte » sans analyser son fonctionnement réel. Vérifier les flux réels, sous-traitants, localisation et transferts. Si crash reporting, publicité ou achat sont ajoutés, refaire cet inventaire avant livraison.
 
 ## Pronostics virtuels et classification
 
