@@ -48,7 +48,7 @@ Sources techniques : [FCM Android](https://firebase.google.com/docs/cloud-messag
 
 ## Support et documents
 
-StarWhite Interactive est un nom de studio en phase de test, sans immatriculation déclarée. France. La redirection souhaitée est `support@betverse.fr` vers `starwhiteinteractive@gmail.com`. Il faut vérifier sa création effective chez Infomaniak et tester réception puis réponse ; Brevo configure l’expéditeur des envois et ne crée pas la boîte de réception. Le sous-domaine de marque des liens Brevo reste une amélioration prévue.
+StarWhite Interactive est un nom de studio en phase de test, sans immatriculation déclarée. France. La redirection `support@betverse.fr` vers `starwhiteinteractive@gmail.com` a été enregistrée chez Infomaniak le 6 novembre 2026, sans copie locale. MX, SPF, autoconfig/autodiscover et DKIM sont affichés valides par son diagnostic. Tester encore la réception dans Gmail puis la réponse : la redirection ne suffit pas à configurer l’envoi Gmail avec l’identité support. Les messages classés spam par Infomaniak ne sont pas transférés, et Gmail peut filtrer les messages redirigés. Brevo configure l’expéditeur des envois et ne crée pas la boîte de réception. Le sous-domaine de marque des liens Brevo reste une amélioration prévue.
 
 Les pages `/legal/privacy`, `/legal/rules`, `/legal/terms`, `/legal/support` sont accessibles sans compte. Elles restent provisoires (`LEGAL_READY=0`). L’export et la suppression authentifiée existent dans Android, iOS et le parcours web. Ne pas activer `SUPPORT_VERIFIED` sans test, ni `LEGAL_READY` sans informations légales complètes.
 

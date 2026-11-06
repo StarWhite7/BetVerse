@@ -15,7 +15,7 @@ Les routes d’export et suppression du compte sont présentes dans le chantier 
 | Domaine | Critère de sortie vérifiable |
 | --- | --- |
 | Éditeur | Confirmer l’identité juridique derrière « StarWhite Interactive », le type de compte développeur et les coordonnées demandées ; France est le pays indiqué. |
-| Support | Créer une vraie réception pour `support@betverse.fr`, tester réception et réponse. Son ajout comme expéditeur Brevo ne crée pas une boîte de réception. |
+| Support | Redirection Infomaniak vers le Gmail du studio enregistrée et routage MX corrigé. Tester réception et réponse avant validation ; son ajout comme expéditeur Brevo ne crée pas une boîte de réception. |
 | Backend | URL HTTPS stable, certificat valide, sauvegarde restaurée en recette, surveillance et responsable d’incident identifiés. Aucun écran indispensable ne dépend d’un serveur local. |
 | Android | Produire un AAB signé pour Play ; conserver identifiant d’application, clé et procédure de récupération. Distinguer identité bêta et identité publique avant la première publication. Vérifier les exigences SDK/API cibles affichées dans Play Console au moment de soumettre. |
 | Accès revue | Fournir dans la console un compte de revue dédié, utilisable sans intervention humaine, et des instructions pour les fonctionnalités protégées. Aucun identifiant dans le dépôt. |
