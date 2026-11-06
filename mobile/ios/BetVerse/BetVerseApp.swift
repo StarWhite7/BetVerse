@@ -23,6 +23,7 @@ struct PendingTicket: Codable { var owner: String; var path: String; var body: D
     @Published var busy = false; @Published var message: String?; @Published var slip = false
     @Published var sport = "football"; @Published var competition = ""; @Published var ticketFilter = ""
     @Published var ticketPage = 0
+    private var started = false
     init() {
         origin = Bundle.main.object(forInfoDictionaryKey: "BETVERSE_API_ORIGIN") as? String ?? "https://betverse-beta.onrender.com"
         // A malformed release configuration stops before any request can leave the app.
@@ -58,6 +59,8 @@ struct PendingTicket: Codable { var owner: String; var path: String; var body: D
         try await api.savePrivate("draft:" + owner, data: rows.isEmpty ? nil : JSONEncoder().encode(SavedDraft(owner: owner,rows: rows,stake: stake)))
     }
     func start() async {
+        guard !started else { return }; started = true; busy = true
+        defer { busy = false }
         do { user = try await object("/api/auth/me") as? Object; await restoreDraft(); try await refresh() }
         catch APIError.response(401, _) {} catch { message = error.localizedDescription }
     }
@@ -281,5 +284,3 @@ struct PublicProfileView: View {
     @State private var profile: Object = [:]
     var body: some View { List { Text(string(profile["user"] as? Object ?? [:],"username")).font(.title); ForEach((profile["stats"] as? Object ?? [:]).keys.sorted(),id:\.self) { key in Text(key + " : " + string(profile["stats"] as? Object ?? [:],key)) } }.navigationTitle("Profil public").task { do { profile = try await model.object("/api/users/" + id + "/public") as? Object ?? [:] } catch { model.message = error.localizedDescription } } }
 }
-
-
