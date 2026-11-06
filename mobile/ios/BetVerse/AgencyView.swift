@@ -49,7 +49,7 @@ struct AgencyView: View {
             }
             Section("Invitations reçues") { ForEach(model.invites,id:\.selfID) { invite in
                 VStack(alignment:.leading) { Text(string(invite["agency"] as? Object ?? [:],"name")); HStack { Button("Accepter") { model.agencyAction("/invitations/" + string(invite,"id") + "/accept") }; Button("Refuser") { model.agencyAction("/invitations/" + string(invite,"id") + "/decline") } }
-            } }
+            } } }
         }
         Section("Classement des agences") {
             TextField("Rechercher une agence",text:$search)
