@@ -39,6 +39,10 @@ Avant d’appeler la bêta entièrement recettée sur appareil :
 
 La dernière version n’a pas été installée physiquement sur Android ou iPhone par l’agent. Aucun résultat de cette liste n’est marqué acquis sur la seule base d’une compilation.
 
+## Activation FCM — 7 novembre 2026
+
+Le JSON du compte `betverse-render-fcm` a été enregistré par le propriétaire dans le fichier secret Render. Contrôle serveur sans divulgation des secrets : projet/compte attendus et format de clé de chiffrement valides. Authentification OAuth et requête de validation FCM réelles réussies (HTTP 200 ; `validate_only=true`, aucun message livré). Déploiement d’activation `dep-dbn66ebbc2fs738lavk0` Live, source `adc194f`, santé HTTP `ok`. La nouvelle instance confirme `pushEnabled=true`, fichier valide, clés FCM/MFA valides, `mfaRequired=false`, zéro appareil push enregistré et zéro administrateur MFA enrôlé au moment du contrôle. Consentement, réception Android et enrôlement MFA restent à constater. Aucun appel à une API sportive effectué.
+
 ## Complément de reprise : restauration et suppression
 
 Suite locale complète : 84 tests backend, 25 tests Angular et build réussis, puis un test supplémentaire ciblé sur la panne du stockage. Les 85 cas backend ont ensuite tous réussi en CI, ainsi que les 25 tests Angular, 22 Android et 3 Swift (135 au total). Ajouts : journal authentifié lié à une installation, réconciliation des suppressions, révocation des sessions après restauration, refus des journaux vieux/altérés/incomplets ou étrangers, suppressions simultanées pendant un transfert, rotation indépendante des clés, rollback des reçus et mode maintenance. La commande de sauvegarde de production refuse désormais une destination chiffrée non configurée au lieu d’écrire une copie en clair.
