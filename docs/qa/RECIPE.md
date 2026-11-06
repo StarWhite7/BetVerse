@@ -1,5 +1,9 @@
 # Recette V1 — 6 novembre 2026
 
+## QR d’enrôlement MFA — 7 novembre 2026
+
+Le formulaire affiche maintenant un QR SVG généré localement depuis le secret et le compte renvoyés par le serveur. Aucun générateur distant, stockage navigateur ou assouplissement de CSP. La saisie manuelle reste disponible. Le QR et la clé sont retirés après vérification et à la destruction du composant. Tests Angular : 29 réussis, dont un décodage indépendant du QR avec un secret synthétique, vérifiant le compte, l’émetteur, SHA1, six chiffres et période de trente secondes. Build de production réussi ; seul l’avertissement CSS Bureau déjà connu subsiste. Cette vérification ne remplace pas le scan par le propriétaire dans son authentificateur.
+
 ## Vérifications effectuées
 
 - CI `b6e6cac` : 85 tests backend, 25 tests Angular et compilation de production réussis (workflow `42271930058`). Avertissement connu : feuille CSS Bureau d’agence de 13,22 ko pour un seuil d’avertissement de 12 ko ; le seuil bloquant est de 20 ko.

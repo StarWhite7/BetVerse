@@ -1,7 +1,8 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { authenticatorQr, AuthenticatorQr } from './authenticator-qr';
 @Component({
   standalone: true,
   imports: [FormsModule, RouterLink],
@@ -35,12 +36,28 @@ import { HttpClient } from '@angular/common/http';
           </button>
         }
         @if (secret()) {
-          <p>
-            Ajouter manuellement dans votre application d’authentification : émetteur BetVerse, type
-            TOTP, 6 chiffres, période 30 secondes.
-          </p>
-          <p>Clé privée à enregistrer dans l’application, jamais dans un message :</p>
-          <code style="overflow-wrap:anywhere">{{ secret() }}</code>
+          @if (qr(); as image) {
+            <p>
+              Scannez ce QR code avec votre application d’authentification, puis saisissez son code
+              ci-dessous.
+            </p>
+            <svg
+              class="authenticator-qr"
+              role="img"
+              aria-label="QR code de configuration du second facteur BetVerse"
+              [attr.viewBox]="'0 0 ' + image.size + ' ' + image.size"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect width="100%" height="100%" fill="#ffffff" />
+              <path [attr.d]="image.path" fill="#000000" />
+            </svg>
+            <p>QR code généré sur cet appareil. Ne partagez ni ce code ni la clé privée.</p>
+          }
+          <details>
+            <summary>Saisir la clé manuellement</summary>
+            <p>Émetteur BetVerse · TOTP · 6 chiffres · période 30 secondes.</p>
+            <code style="overflow-wrap:anywhere">{{ secret() }}</code>
+          </details>
         }
         @if (data.enrolled || secret()) {
           <label
@@ -70,13 +87,31 @@ import { HttpClient } from '@angular/common/http';
     </section>
     <p role="status" [class.bv-error]="error()">{{ message() }}</p>
     <a routerLink="/admin">Retour à l’administration</a>`,
+  styles: [
+    `
+      .authenticator-qr {
+        display: block;
+        width: 320px;
+        max-width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+        background: #fff;
+        shape-rendering: crispEdges;
+        margin: 1rem 0;
+      }
+      summary {
+        cursor: pointer;
+      }
+    `,
+  ],
 })
-export class SecurityComponent implements OnInit {
+export class SecurityComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   readonly status = signal<{ configured: boolean; enrolled: boolean; verified: boolean } | null>(
     null,
   );
   readonly secret = signal('');
+  readonly qr = signal<AuthenticatorQr | null>(null);
   readonly recovery = signal<string[]>([]);
   readonly message = signal('');
   readonly error = signal(false);
@@ -86,19 +121,39 @@ export class SecurityComponent implements OnInit {
   ngOnInit() {
     this.read();
   }
+  ngOnDestroy() {
+    this.secret.set('');
+    this.qr.set(null);
+    this.recovery.set([]);
+    this.password = '';
+    this.code = '';
+  }
   read() {
     this.http
       .get<{ configured: boolean; enrolled: boolean; verified: boolean }>('/api/admin/security')
       .subscribe({ next: (v) => this.status.set(v), error: (e) => this.failed(e) });
   }
   setup() {
+    if (this.busy()) return;
     this.busy.set(true);
+    this.secret.set('');
+    this.qr.set(null);
+    this.recovery.set([]);
+    this.message.set('');
+    this.error.set(false);
     this.http
-      .post<{ secret: string }>('/api/admin/security/setup', { password: this.password })
+      .post<{ secret: string; account: string }>('/api/admin/security/setup', {
+        password: this.password,
+      })
       .subscribe({
         next: (v) => {
           this.password = '';
           this.secret.set(v.secret);
+          try {
+            this.qr.set(authenticatorQr(v.secret, v.account));
+          } catch {
+            this.message.set('QR code indisponible. Utilisez la saisie manuelle.');
+          }
           this.busy.set(false);
         },
         error: (e) => {
@@ -108,6 +163,7 @@ export class SecurityComponent implements OnInit {
       });
   }
   verify() {
+    if (this.busy()) return;
     this.busy.set(true);
     this.http
       .post<{ recoveryCodes?: string[] }>('/api/admin/security/verify', {
@@ -118,6 +174,7 @@ export class SecurityComponent implements OnInit {
         next: (v) => {
           this.code = '';
           this.secret.set('');
+          this.qr.set(null);
           this.recovery.set(v.recoveryCodes || []);
           this.busy.set(false);
           this.error.set(false);
