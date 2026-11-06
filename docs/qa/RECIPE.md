@@ -4,11 +4,18 @@
 
 - `npm run check` : 77 tests backend, 25 tests Angular et compilation de production réussis. Avertissement connu : feuille CSS Bureau d’agence de 13,22 ko pour un seuil d’avertissement de 12 ko ; le seuil bloquant est de 20 ko.
 - Android : `testDebugUnitTest lintDebug assembleDebug` réussis, 22 tests. Ils couvrent notamment contrat backend, cookies/CSRF, origine, refus de redirection/retry, reprise du pari, brouillon isolé et opérations de profil. Lint réussi ; un avertissement de dépréciation de l’icône retour ne bloque pas.
-- Swift : trois tests du cœur passés et build non signé iPhone Simulator réussis dans le workflow `42197397830`. Les derniers ajustements d’isolation de session doivent aussi passer sur le commit final.
+- Swift : trois tests du cœur passés et build non signé iPhone Simulator réussis sur le commit final `5d492b6`, workflow `42199360139`. L’isolation de session et le blocage de la connexion pendant la restauration initiale sont inclus.
 - Sauvegarde : copie cohérente, chiffrement, restauration indépendante, mauvais secret, fichier altéré et refus d’écrasement testés. Upload testé avec transport simulé ; aucun stockage distant réel configuré.
 - Résultats : import manuel, contrôle des identités, rollback de tout le lot, reprise du reçu et versement unique testés.
 - Push : opt-in, stockage chiffré des jetons, suppression à la déconnexion, file transactionnelle, contenu générique, OAuth/FCM avec transport simulé, absence de reprise automatique et de requête sportive testés.
 - Charge locale : `load-result.json`, 1 000 comptes, 6 000 requêtes, 25 workers ; 1 000 réponses 409 attendues pour les doubles bonus. Soldes et clés étrangères cohérents, aucune requête sportive. Ce résultat n’est pas un test de capacité du plan Render.
+- Audits npm `--omit=dev` du backend et du web : aucune vulnérabilité connue signalée par le registre le jour du contrôle. Ce constat ne constitue pas un audit de sécurité exhaustif.
+
+## Déploiement distant constaté
+
+Android : workflow `42199190102` réussi, APK signé `1.1.0-native-beta.12 (12)` chargé et distribué au groupe `betverse-private`. [Installer la bêta 12](https://appdistribution.firebase.google.com/testerapps/1:472242612609:android:35986b1689d8864d5ba080/releases/3lr3acqb3c8uo). Le diff entre `808c352` (ce binaire) et `5d492b6` ne contient qu’un fichier Swift ; le code Android est identique. Le workflow redondant `42199360003` pour la bêta 13 était encore en cours lors de la clôture imposée par le délai du propriétaire ; ne pas présenter sa distribution comme constatée.
+
+Le propriétaire a confirmé le déploiement Render du commit `5d492b6`. Contrôles HTTP effectués ensuite : `/api/health` répond `ok` ; `/api/public/legal` expose StarWhite Interactive, France, avec `ready=false` et `supportVerified=false` comme prévu ; site et pages `/legal/privacy`, `/legal/rules`, `/legal/delete-account`, `/legal/support` répondent 200. La CSP est active et le HTML charge la feuille CSS sans le gestionnaire inline bloqué. Aucune écriture, création de compte ou requête sportive n’a été réalisée sur la production pour ces contrôles.
 
 ## Recette visuelle web réalisée
 
