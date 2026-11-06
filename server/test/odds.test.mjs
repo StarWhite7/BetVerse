@@ -11,7 +11,8 @@ import { createUser, movement } from '../domain/accounts.mjs';
 import { placeBet } from '../domain/matches.mjs';
 
 function setup(t, options = {}) {
-  let clock = Date.now();
+  // Expiry scenarios advance an hour: keep their input date valid across real UTC midnight.
+  let clock = Date.parse('2030-01-15T12:00:00Z');
   t.mock.method(Date, 'now', () => clock);
   const db = openDatabase(':memory:');
   t.after(() => db.close());

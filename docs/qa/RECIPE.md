@@ -4,6 +4,8 @@
 
 Le formulaire affiche maintenant un QR SVG généré localement depuis le secret et le compte renvoyés par le serveur. Aucun générateur distant, stockage navigateur ou assouplissement de CSP. La saisie manuelle reste disponible. Le QR et la clé sont retirés après vérification et à la destruction du composant. Tests Angular : 29 réussis, dont un décodage indépendant du QR avec un secret synthétique, vérifiant le compte, l’émetteur, SHA1, six chiffres et période de trente secondes. Build de production réussi ; seul l’avertissement CSS Bureau déjà connu subsiste. Cette vérification ne remplace pas le scan par le propriétaire dans son authentificateur.
 
+Le commit `9dec9aa` est Live sur Render (`dep-dbn6dhjncjis73dtgmt0`). Le bundle d’enrôlement servi répond HTTP 200 et contient le générateur local. Aucun nouvel enrôlement réel n’a été lancé par l’agent, et aucun QR contenant une vraie clé n’a été capturé. Contrôle élargi : 85 tests backend réussis avec accès loopback autorisé. Deux tests d’expiration des cotes dépendaient de l’heure réelle et échouaient près de minuit UTC après une avance simulée d’une heure ; leur horloge est désormais fixée à midi, sans changement des assertions ni du code de production. Le push initial a rencontré un HTTP 500 GitHub puis a réussi ; aucun nouveau workflow CI n’était visible lors du contrôle, les résultats ci-dessus sont locaux.
+
 ## Vérifications effectuées
 
 - CI `b6e6cac` : 85 tests backend, 25 tests Angular et compilation de production réussis (workflow `42271930058`). Avertissement connu : feuille CSS Bureau d’agence de 13,22 ko pour un seuil d’avertissement de 12 ko ; le seuil bloquant est de 20 ko.
