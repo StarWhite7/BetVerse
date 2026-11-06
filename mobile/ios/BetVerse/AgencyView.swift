@@ -2,8 +2,16 @@ import SwiftUI
 
 struct AgencyView: View {
     @EnvironmentObject var model: Model
-    @State private var search = "", name = "", invite = "", primary = "#0641F5", secondary = "#FFFFFF", logo = "logo-1", banner = "grid"
-    @State private var confirmation = "", action = "", transfer: Object?
+    @State private var search = ""
+    @State private var name = ""
+    @State private var invite = ""
+    @State private var primary = "#0641F5"
+    @State private var secondary = "#FFFFFF"
+    @State private var logo = "logo-1"
+    @State private var banner = "grid"
+    @State private var confirmation = ""
+    @State private var action = ""
+    @State private var transfer: Object?
     var members: [Object] { objects(model.agency?["members"]) }
     var role: String { members.first { string($0,"id") == model.user.map { string($0,"id") } }.map { string($0,"agencyRole") } ?? "" }
     var body: some View { List {
@@ -78,7 +86,8 @@ struct AgencyView: View {
 struct PredictionView: View {
     @EnvironmentObject var model: Model
     let match: Object
-    @State private var home = "0", away = "0"
+    @State private var home = "0"
+    @State private var away = "0"
     var body: some View { Form {
         Text(string(match,"homeTeam") + " — " + string(match,"awayTeam")).font(.headline)
         Text("Pronostic personnel contribuant au score collectif. Verrouillé au début du match.")

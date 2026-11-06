@@ -120,7 +120,10 @@ struct PendingTicket: Codable { var owner: String; var path: String; var body: D
 }
 struct LoginView: View {
     @EnvironmentObject var model: Model
-    @State private var identifier = "", password = "", email = "", registration = false
+    @State private var identifier = ""
+    @State private var password = ""
+    @State private var email = ""
+    @State private var registration = false
     var body: some View { NavigationStack { Form {
         Section { Text("BV BETVERSE").font(.largeTitle.bold()).foregroundStyle(.blue); Text("Votre club de pronostics. Monnaie virtuelle, aucun gain en argent.") }
         Section(registration ? "Créer un compte" : "Connexion") {
@@ -214,8 +217,13 @@ struct JSONFile: FileDocument {
 struct ProfileView: View {
     @EnvironmentObject var model: Model
     @AppStorage("appearance") private var appearance = "system"
-    @State private var username = "", password = "", newPassword = "", confirmation = "", deletion = false
-    @State private var file = JSONFile(data:Data()), export = false
+    @State private var username = ""
+    @State private var password = ""
+    @State private var newPassword = ""
+    @State private var confirmation = ""
+    @State private var deletion = false
+    @State private var file = JSONFile(data:Data())
+    @State private var export = false
     var body: some View { Form {
         Section("Mon compte") {
             Text(model.user.map { string($0,"email") } ?? "")
