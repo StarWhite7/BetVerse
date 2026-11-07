@@ -34,6 +34,33 @@ interface OddsFixture {
   } | null;
 }
 interface OddsState {
+  scores?: {
+    externalId: string;
+    sportKey: string;
+    competition: string;
+    homeTeam: string;
+    awayTeam: string;
+    homeScore: number;
+    awayScore: number;
+    reason: string;
+    eligible: boolean;
+    matchId: string | null;
+    fetchedAt: number;
+    providerSnapshotId: string;
+  }[];
+  resultPreview?: {
+    id: string;
+    rows: {
+      matchId: string;
+      homeTeam: string;
+      awayTeam: string;
+      homeScore: number;
+      awayScore: number;
+      providerSnapshotId: string;
+    }[];
+    applied: boolean;
+    expired: boolean;
+  } | null;
   usage: {
     mode: string;
     configured: boolean;
@@ -49,7 +76,13 @@ interface OddsState {
   competitions: Record<string, string>;
   bookmakers: Record<string, string>;
   fixtures: OddsFixture[];
-  batchResults?: { competition: string; status: string; message?: string }[];
+  batchResults?: {
+    competition: string;
+    kind?: string;
+    cost?: number;
+    status: string;
+    message?: string;
+  }[];
   publishedCount?: number;
 }
 
@@ -184,7 +217,71 @@ export class OddsImportComponent implements OnInit {
       checked ? [...new Set([...ids, id])].slice(0, 200) : ids.filter((value) => value !== id),
     );
   }
-  preview() {
+  scoresSupported() {
+    const keys = this.selectedCompetitions();
+    return (
+      keys.length > 0 && keys.every((key) => this.majorLeagues.some((league) => league.key === key))
+    );
+  }
+  visibleScores() {
+    const keys = this.selectedCompetitions();
+    return (this.state()?.scores || []).filter(
+      (row) => !keys.length || keys.includes(row.sportKey),
+    );
+  }
+  canApplyScores() {
+    const preview = this.state()?.resultPreview;
+    return (
+      !!preview &&
+      !preview.applied &&
+      !preview.expired &&
+      preview.rows.length > 0 &&
+      preview.rows.every((row) =>
+        this.visibleScores().some(
+          (score) =>
+            score.eligible &&
+            score.matchId === row.matchId &&
+            score.providerSnapshotId === row.providerSnapshotId,
+        ),
+      )
+    );
+  }
+  scoreStatus(score: NonNullable<OddsState['scores']>[number]) {
+    if (!score.eligible) return score.reason;
+    const included = this.state()?.resultPreview?.rows.some(
+      (row) => row.matchId === score.matchId && row.providerSnapshotId === score.providerSnapshotId,
+    );
+    return included ? 'Dans le lot à valider' : 'Hors du lot à valider';
+  }
+  applyScores() {
+    if (this.busy() || !this.canApplyScores()) return;
+    this.busy.set(true);
+    this.http
+      .post<{ count?: number; replayed?: boolean }>(
+        `${environment.apiUrl}/admin/operations/results/apply`,
+        { id: this.state()!.resultPreview!.id, confirmation: 'REGLER' },
+      )
+      .subscribe({
+        next: (data) => {
+          this.busy.set(false);
+          this.message.set(
+            data.replayed
+              ? 'Ce lot était déjà réglé : aucun paiement supplémentaire.'
+              : `${data.count || 0} résultat(s) réglé(s), gains calculés aux cotes acceptées. Aucun crédit fournisseur consommé.`,
+          );
+          this.imported.emit();
+          this.read();
+        },
+        error: (error) => {
+          this.busy.set(false);
+          this.message.set(
+            error?.error?.message || 'Règlement refusé. Aucune relance automatique.',
+          );
+          this.read();
+        },
+      });
+  }
+  preview(action: 'preview-batch' | 'scores-batch' | 'refresh-global' = 'preview-batch') {
     const competitions = this.selectedCompetitions();
     if (
       this.busy() ||
@@ -194,9 +291,10 @@ export class OddsImportComponent implements OnInit {
       competitions.length > 5
     )
       return;
+    if (action !== 'preview-batch' && !this.scoresSupported()) return;
     this.accepted = false;
     this.selectedRows.set([]);
-    this.run('preview-batch', { competitions, date: this.date, consent: true });
+    this.run(action, { competitions, date: this.date, consent: true });
   }
   publishSelected() {
     if (this.busy()) return;
@@ -207,26 +305,29 @@ export class OddsImportComponent implements OnInit {
     }));
     if (fixtures.length) this.run('publish-batch', { fixtures });
   }
-  private run(action: 'preview-batch' | 'publish-batch', body: object) {
+  private run(
+    action: 'preview-batch' | 'publish-batch' | 'scores-batch' | 'refresh-global',
+    body: object,
+  ) {
     this.busy.set(true);
     this.message.set(
-      action === 'preview-batch'
+      action !== 'publish-batch'
         ? 'Chargement des championnats sélectionnés…'
         : 'Validation de la sélection…',
     );
     this.http
       .post<OddsState>(`${this.url}/${action}`, body, {
-        headers: action === 'preview-batch' ? { 'Idempotency-Key': crypto.randomUUID() } : {},
+        headers: action !== 'publish-batch' ? { 'Idempotency-Key': crypto.randomUUID() } : {},
       })
       .subscribe({
         next: (data) => {
           this.state.set(data);
           this.busy.set(false);
           this.selectedRows.set([]);
-          if (action === 'preview-batch') {
+          if (action !== 'publish-batch') {
             this.batchResults.set(data.batchResults || []);
             const loaded = (data.batchResults || [])
-              .filter((row) => ['LOADED', 'CACHED'].includes(row.status))
+              .filter((row) => row.kind !== 'scores' && ['LOADED', 'CACHED'].includes(row.status))
               .map((row) => row.competition);
             this.selectedRows.set(
               this.eligibleRows()
@@ -236,10 +337,20 @@ export class OddsImportComponent implements OnInit {
             );
             const failures = (data.batchResults || []).some((row) => row.status === 'FAILED');
             const calls = (data.batchResults || []).filter((row) => row.status === 'LOADED').length;
+            const summary = [`${calls} appel(s) fournisseur.`];
+            if (action !== 'scores-batch')
+              summary.push('Les matchs publiables sont présélectionnés.');
+            if (action !== 'preview-batch') {
+              summary.push(
+                data.resultPreview
+                  ? `${data.resultPreview.rows.length} résultat(s) à valider.`
+                  : 'Aucun résultat à régler dans ce chargement.',
+              );
+            }
             this.message.set(
               failures
                 ? 'Chargement partiel : arrêt au premier échec, sans relance. Vérifiez le bilan ci-dessus.'
-                : `${calls} appel(s) fournisseur ; les autres données proviennent du cache. Les modifications disponibles sont sélectionnées pour validation.`,
+                : summary.join(' '),
             );
           } else {
             this.message.set(

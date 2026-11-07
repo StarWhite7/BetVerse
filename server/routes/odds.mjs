@@ -6,7 +6,27 @@ export function oddsRoutes(context) {
   const router = Router();
   const service = manualOdds(context);
   router.use(context.requireAdmin);
-  router.get('/', (_req, res) => res.json(service.state()));
+  router.get('/', (req, res) => res.json(service.state(req.user.id)));
+  for (const [path, method] of [
+    ['refresh-global', 'refreshGlobal'],
+    ['scores-batch', 'previewScores'],
+  ]) {
+    router.post(`/${path}`, async (req, res) => {
+      const input = z
+        .object({
+          competitions: z
+            .array(z.enum(Object.keys(COMPETITIONS)))
+            .min(1)
+            .max(5)
+            .refine((keys) => new Set(keys).size === keys.length),
+          date: z.iso.date(),
+          consent: z.literal(true),
+        })
+        .strict()
+        .parse(req.body);
+      res.json(await service[method](input, id.parse(req.get('Idempotency-Key')), req.user.id));
+    });
+  }
   router.post('/preview-batch', async (req, res) => {
     const input = z
       .object({

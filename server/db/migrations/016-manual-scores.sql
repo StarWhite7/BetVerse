@@ -1,0 +1,5 @@
+ALTER TABLE odds_calls ADD COLUMN credits INTEGER NOT NULL DEFAULT 1 CHECK(credits BETWEEN 0 AND 2);
+UPDATE odds_calls SET credits=0 WHERE state='CACHED';
+ALTER TABLE odds_batches ADD COLUMN mode TEXT NOT NULL DEFAULT 'odds';
+ALTER TABLE odds_batches ADD COLUMN actorId TEXT REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE odds_batches ADD COLUMN resultPreviewId TEXT REFERENCES result_previews(id) ON DELETE SET NULL;

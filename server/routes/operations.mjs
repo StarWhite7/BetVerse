@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from '../lib/validation.mjs';
 import { manualOdds } from '../domain/odds.mjs';
-import { randomUUID } from 'node:crypto';
+import { createResultPreview } from '../domain/result-previews.mjs';
 import { ensure, transaction } from '../lib/errors.mjs';
 import { finishMatch } from '../domain/matches.mjs';
 import { audit, now } from '../domain/accounts.mjs';
@@ -63,36 +63,7 @@ export function operationsRoutes({ db, config, requireAdmin }) {
       400,
       'Une ligne par rencontre.',
     );
-    const preview = rows.map((row) => {
-      const match = db
-        .prepare('SELECT id,homeTeam,awayTeam,startDate,status FROM matches WHERE id=?')
-        .get(row.matchId);
-      ensure(
-        match &&
-          ['UPCOMING', 'LIVE'].includes(match.status) &&
-          Date.parse(match.startDate) <= Date.now(),
-        409,
-        'Une rencontre est absente, future ou déjà réglée.',
-      );
-      return {
-        ...row,
-        ...match,
-        result:
-          row.homeScore === row.awayScore
-            ? 'DRAW'
-            : row.homeScore > row.awayScore
-              ? 'HOME'
-              : 'AWAY',
-      };
-    });
-    const id = randomUUID();
-    db.prepare('INSERT INTO result_previews(id,actorId,createdAt,rows) VALUES (?,?,?,?)').run(
-      id,
-      req.user.id,
-      now(),
-      JSON.stringify(preview),
-    );
-    res.json({ id, rows: preview, expiresIn: 900, providerCredits: 0 });
+    res.json(createResultPreview(db, req.user.id, rows));
   });
   router.post('/results/apply', (req, res) => {
     const { id } = z
@@ -113,6 +84,25 @@ export function operationsRoutes({ db, config, requireAdmin }) {
         );
         const rows = JSON.parse(preview.rows);
         for (const row of rows) {
+          if (row.providerSnapshotId) {
+            const source = db
+              .prepare('SELECT * FROM odds_calls WHERE id=?')
+              .get(row.providerSnapshotId);
+            const latest =
+              source &&
+              db
+                .prepare(
+                  "SELECT id FROM odds_calls WHERE cacheKey=? AND state='SUCCESS' ORDER BY createdAt DESC,rowid DESC LIMIT 1",
+                )
+                .get(source.cacheKey);
+            ensure(
+              source?.state === 'SUCCESS' &&
+                source.cacheKey.startsWith('scores/') &&
+                latest?.id === source.id,
+              409,
+              'Les scores ont été actualisés depuis cet aperçu. Aucun résultat appliqué.',
+            );
+          }
           const match = db.prepare('SELECT * FROM matches WHERE id=?').get(row.matchId);
           ensure(
             match &&

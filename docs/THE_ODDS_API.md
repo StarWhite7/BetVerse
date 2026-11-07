@@ -10,7 +10,7 @@ https://the-odds-api.com/liveapi/guides/v4/ et https://the-odds-api.com/sports-o
 | `THE_ODDS_API_KEY`           | Clé secrète déjà ajoutée par le propriétaire dans Render ; jamais dans Git, Angular ou Android |
 | `THE_ODDS_API_MODE`          | `manual` pour activer les aperçus ; défaut `disabled`, même avec une clé                       |
 | `THE_ODDS_API_DAILY_LIMIT`   | `10` par défaut, tentatives sur 24 h glissantes                                                |
-| `THE_ODDS_API_MONTHLY_LIMIT` | `400` par défaut, tentatives sur **31 jours glissants**, plafond configurable jusqu’à 500      |
+| `THE_ODDS_API_MONTHLY_LIMIT` | `400` par défaut, crédits sur **31 jours glissants**, plafond configurable jusqu’à 500        |
 | `API_FOOTBALL_MODE`          | `disabled` recommandé pour l’ancien fournisseur suspendu                                       |
 
 Le stockage SQLite doit rester sur le disque persistant `/var/data`. Aucun secret GitHub ou Firebase supplémentaire.
@@ -26,6 +26,10 @@ Ces plafonds locaux conservateurs sont distincts de la facturation mensuelle du 
 
 L’aperçu charge les matchs et les cotes ensemble ; ce n’est pas une garantie de calendrier exhaustif. Les rencontres déjà commencées, données malformées, cotes incomplètes, cotes avec plus de deux décimales et mises à jour de plus d’une heure sont exclues de la publication. Un aperçu expiré nécessite un nouveau clic manuel. Les heures d’affichage sont locales ; les filtres du fournisseur sont UTC.
 
+**Actualisation globale** charge cet aperçu et les scores des trois derniers jours pour les grands championnats sélectionnés. Compter au maximum deux appels et trois crédits par championnat. **Récupérer les résultats** charge seulement les scores pour un appel et deux crédits par championnat. Les résultats mis en cache depuis moins de cinq minutes sont réutilisés.
+
+Seuls les matchs terminés associés à un match publié, avec les mêmes équipes et la même heure de coup d’envoi, entrent dans le lot à régler. Vérifier les scores, puis cliquer sur **Valider les résultats (0 crédit)** dans les quinze minutes. La validation est atomique et conserve les cotes acceptées. Les coupes, les matchs non associés et les résultats plus anciens restent à traiter manuellement.
+
 ## Protection du quota et des paris
 
 - Construction de l’application, migration, déploiement, redémarrage, pages publiques, GET administrateur et publication locale : **zéro appel fournisseur**.
@@ -37,7 +41,7 @@ L’aperçu charge les matchs et les cotes ensemble ; ce n’est pas une garanti
 - Un quota fournisseur à zéro bloque les nouveaux appels pendant 31 jours au maximum. Un appel `PENDING` après interruption bloque aussi les nouveaux appels : faire examiner le journal et le tableau de bord par l’administrateur avant toute intervention manuelle ; aucune remise à zéro au redémarrage.
 - Les textes d’erreur externes et l’URL contenant `apiKey` ne sont ni journalisés ni exposés. Seuls les champs de calendrier/cotes autorisés sont persistés.
 - Publication transactionnelle et auditée, réutilisation d’un match existant identifié par équipes/date exactes, aucune réouverture d’un match annulé/terminé. Les paris déjà acceptés conservent leur cote ; leurs équipes/date restent verrouillées.
-- **Pas d’import automatique de résultats** : règlement/annulation via les contrôles administrateur existants.
+- Les chargements de scores passent uniquement par les POST administrateur `/scores-batch` et `/refresh-global`. Le règlement est une action locale séparée et un lot déjà réglé ne verse rien de plus au rejeu.
 
 ## Validation
 

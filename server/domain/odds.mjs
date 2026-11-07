@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { ensure, AppError, transaction } from '../lib/errors.mjs';
 import { audit, now } from './accounts.mjs';
 import { hasMatchBets } from './matches.mjs';
+import { createResultPreview } from './result-previews.mjs';
 
 export const COMPETITIONS = Object.freeze({
   soccer_france_ligue_one: 'Ligue 1',
@@ -20,6 +21,7 @@ export const BOOKMAKERS = Object.freeze({
   winamax_fr: 'Winamax France',
   unibet_fr: 'Unibet France',
 });
+export const SCORE_COMPETITIONS = Object.freeze(Object.keys(COMPETITIONS).slice(0, 5));
 const HOUR = 3600000;
 const DAY = 24 * HOUR;
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -28,6 +30,57 @@ const headerInteger = (response, name) => {
   const value = response.headers.get(name);
   return value !== null && /^\d{1,9}$/.test(value) ? Number(value) : null;
 };
+
+function normalizeScores(data, competition, timestamp) {
+  const rows = [],
+    seen = new Set();
+  for (const item of data) {
+    if (!item || item.sport_key !== competition || item.completed !== true) continue;
+    const start = Date.parse(item.commence_time),
+      updated = Date.parse(item.last_update);
+    if (
+      typeof item.id !== 'string' ||
+      !/^[a-zA-Z0-9_-]{1,100}$/.test(item.id) ||
+      ![item.home_team, item.away_team].every(
+        (v) => typeof v === 'string' && v.trim().length >= 2 && v.length <= 80,
+      ) ||
+      item.home_team.trim() === item.away_team.trim() ||
+      !Number.isFinite(start) ||
+      start > timestamp ||
+      !Number.isFinite(updated) ||
+      updated > timestamp + 60000 ||
+      !Array.isArray(item.scores) ||
+      item.scores.length !== 2
+    )
+      continue;
+    ensure(!seen.has(item.id), 502, 'Résultats fournisseur ambigus. Aucun règlement effectué.');
+    seen.add(item.id);
+    const score = (name) => {
+      const values = item.scores.filter((v) => v?.name === name);
+      return values.length === 1 &&
+        typeof values[0].score === 'string' &&
+        /^\d{1,3}$/.test(values[0].score) &&
+        Number(values[0].score) <= 200
+        ? Number(values[0].score)
+        : null;
+    };
+    const homeScore = score(item.home_team),
+      awayScore = score(item.away_team);
+    if (homeScore === null || awayScore === null) continue;
+    rows.push({
+      externalId: item.id,
+      sportKey: competition,
+      competition: COMPETITIONS[competition],
+      homeTeam: item.home_team.trim(),
+      awayTeam: item.away_team.trim(),
+      startDate: new Date(start).toISOString(),
+      homeScore,
+      awayScore,
+      updatedAt: updated,
+    });
+  }
+  return rows;
+}
 
 // No startup, GET, publication, retry, pagination or fallback ever calls a provider.
 export function manualOdds({ db, config }) {
@@ -52,7 +105,11 @@ export function manualOdds({ db, config }) {
       configured: ready(),
       dailyUsed: count(Date.now() - DAY),
       dailyLimit: config.oddsDailyLimit || 10,
-      monthlyUsed: count(Date.now() - 31 * DAY),
+      monthlyUsed: db
+        .prepare(
+          "SELECT COALESCE(SUM(credits),0) n FROM odds_calls WHERE state!='CACHED' AND createdAt>?",
+        )
+        .get(Date.now() - 31 * DAY).n,
       monthlyLimit: config.oddsMonthlyLimit || 400,
       providerRemaining: quota?.remaining ?? null,
       providerCheckedAt: quota?.createdAt ?? null,
@@ -60,8 +117,10 @@ export function manualOdds({ db, config }) {
       lastError: latest?.errorMessage ?? null,
     };
   };
-  const state = () => ({
+  const state = (actorId = null) => ({
     usage: usage(),
+    scores: scoreRows(),
+    resultPreview: savedResultPreview(actorId),
     competitions: COMPETITIONS,
     bookmakers: BOOKMAKERS,
     fixtures: db
@@ -96,7 +155,81 @@ export function manualOdds({ db, config }) {
       }),
   });
 
-  async function request(competition, date, requestId, actorId, batchId = null) {
+  function scoreRows() {
+    const seen = new Set(),
+      rows = [];
+    const snapshots = db
+      .prepare(
+        "SELECT * FROM odds_calls WHERE cacheKey LIKE 'scores/%' AND state='SUCCESS' AND payload IS NOT NULL AND createdAt>? ORDER BY createdAt DESC,rowid DESC",
+      )
+      .all(Date.now() - HOUR);
+    for (const source of snapshots) {
+      if (seen.has(source.cacheKey)) continue;
+      seen.add(source.cacheKey);
+      for (const row of JSON.parse(source.payload)) {
+        const linked = db
+          .prepare('SELECT matchId,sportKey FROM odds_fixtures WHERE externalId=?')
+          .get(row.externalId);
+        const match = linked?.matchId
+          ? db.prepare('SELECT * FROM matches WHERE id=?').get(linked.matchId)
+          : null;
+        let reason = 'Prêt à régler';
+        if (!match) reason = 'Match non publié ou sans lien fournisseur';
+        else if (
+          linked.sportKey !== row.sportKey ||
+          match.sportKey !== 'football' ||
+          match.homeTeam !== row.homeTeam ||
+          match.awayTeam !== row.awayTeam ||
+          Date.parse(match.startDate) !== Date.parse(row.startDate)
+        )
+          reason = 'Conflit d’identité ou de calendrier';
+        else if (match.status === 'FINISHED')
+          reason =
+            match.homeScore === row.homeScore && match.awayScore === row.awayScore
+              ? 'Déjà réglé'
+              : 'Conflit avec le score déjà réglé';
+        else if (
+          !['UPCOMING', 'LIVE'].includes(match.status) ||
+          Date.parse(match.startDate) > Date.now()
+        )
+          reason = 'Match verrouillé';
+        else if (source.createdAt <= Date.now() - 900000) reason = 'Résultats expirés';
+        rows.push({
+          ...row,
+          matchId: match?.id || null,
+          providerSnapshotId: source.id,
+          fetchedAt: source.createdAt,
+          eligible: reason === 'Prêt à régler',
+          reason,
+        });
+      }
+    }
+    return rows.slice(0, 500);
+  }
+
+  function savedResultPreview(actorId) {
+    if (!actorId) return null;
+    const batch = db
+      .prepare(
+        "SELECT resultPreviewId FROM odds_batches WHERE actorId=? AND mode IN ('global','scores') ORDER BY createdAt DESC,rowid DESC LIMIT 1",
+      )
+      .get(actorId);
+    if (!batch?.resultPreviewId) return null;
+    const row = db
+      .prepare('SELECT * FROM result_previews WHERE id=? AND actorId=?')
+      .get(batch.resultPreviewId, actorId);
+    if (!row) return null;
+    return {
+      id: row.id,
+      rows: JSON.parse(row.rows),
+      applied: Boolean(row.appliedAt),
+      expired: Date.now() - Date.parse(row.createdAt) >= 900000,
+    };
+  }
+
+  async function request(competition, date, requestId, actorId, batchId = null, kind = 'odds') {
+    const cost = kind === 'scores' ? 2 : 1;
+    const ttl = kind === 'scores' ? 5 * 60000 : HOUR;
     ensure(
       ready(),
       409,
@@ -114,7 +247,7 @@ export function manualOdds({ db, config }) {
       400,
       'Choisir une date entre aujourd’hui et les sept prochains jours (UTC).',
     );
-    const cacheKey = `${competition}/${date}`;
+    const cacheKey = kind === 'scores' ? `scores/${competition}` : `${competition}/${date}`;
     const timestamp = Date.now();
     db.prepare('UPDATE odds_calls SET payload=NULL WHERE createdAt<? AND payload IS NOT NULL').run(
       timestamp - DAY,
@@ -145,10 +278,10 @@ export function manualOdds({ db, config }) {
         .prepare(
           "SELECT * FROM odds_calls WHERE cacheKey=? AND state='SUCCESS' AND createdAt>? ORDER BY createdAt DESC LIMIT 1",
         )
-        .get(cacheKey, timestamp - HOUR);
+        .get(cacheKey, timestamp - ttl);
       if (hit) {
         db.prepare(
-          "INSERT INTO odds_calls (id,cacheKey,state,createdAt,sourceId) VALUES (?,?,'CACHED',?,?)",
+          "INSERT INTO odds_calls (id,cacheKey,state,createdAt,sourceId,credits) VALUES (?,?,'CACHED',?,?,0)",
         ).run(requestId, cacheKey, timestamp, hit.id);
         return { ...hit, cached: true };
       }
@@ -159,12 +292,15 @@ export function manualOdds({ db, config }) {
       );
       const current = usage();
       ensure(
-        current.dailyUsed < current.dailyLimit && current.monthlyUsed < current.monthlyLimit,
+        current.dailyUsed < current.dailyLimit &&
+          current.monthlyUsed + cost <= current.monthlyLimit,
         429,
         'Plafond local atteint (24 heures ou 31 jours glissants). Aucun appel envoyé.',
       );
       ensure(
-        current.providerRemaining !== 0 || timestamp - current.providerCheckedAt > 31 * DAY,
+        current.providerRemaining === null ||
+          current.providerRemaining >= cost ||
+          timestamp - current.providerCheckedAt > 31 * DAY,
         429,
         'Quota fournisseur épuisé au dernier appel. Import bloqué par précaution pendant 31 jours au maximum ; consulter son tableau de bord.',
       );
@@ -174,28 +310,33 @@ export function manualOdds({ db, config }) {
         'Attendre une minute entre deux appels The Odds API.',
       );
       db.prepare(
-        "INSERT INTO odds_calls (id,cacheKey,state,createdAt) VALUES (?,?,'PENDING',?)",
-      ).run(requestId, cacheKey, timestamp);
+        "INSERT INTO odds_calls (id,cacheKey,state,createdAt,credits) VALUES (?,?,'PENDING',?,?)",
+      ).run(requestId, cacheKey, timestamp, cost);
       audit(db, actorId, 'ODDS_REQUEST_RESERVED', requestId, {
         competition,
         date,
-        estimatedCredits: 1,
+        estimatedCredits: cost,
+        kind,
       });
       return null;
     });
     if (receipt) return receipt;
     let remaining = null;
     try {
-      const url = new URL(`https://api.the-odds-api.com/v4/sports/${competition}/odds/`);
-      url.search = new URLSearchParams({
-        apiKey: config.oddsKey,
-        regions: 'fr',
-        markets: 'h2h',
-        oddsFormat: 'decimal',
-        dateFormat: 'iso',
-        commenceTimeFrom: new Date(from).toISOString().replace('.000Z', 'Z'),
-        commenceTimeTo: new Date(from + 7 * DAY - 1000).toISOString().replace('.000Z', 'Z'),
-      }).toString();
+      const url = new URL(`https://api.the-odds-api.com/v4/sports/${competition}/${kind}/`);
+      url.search = new URLSearchParams(
+        kind === 'scores'
+          ? { apiKey: config.oddsKey, daysFrom: '3', dateFormat: 'iso' }
+          : {
+              apiKey: config.oddsKey,
+              regions: 'fr',
+              markets: 'h2h',
+              oddsFormat: 'decimal',
+              dateFormat: 'iso',
+              commenceTimeFrom: new Date(from).toISOString().replace('.000Z', 'Z'),
+              commenceTimeTo: new Date(from + 7 * DAY - 1000).toISOString().replace('.000Z', 'Z'),
+            },
+      ).toString();
       const response = await (config.oddsFetch || globalThis.fetch)(url.href, {
         headers: { Accept: 'application/json' },
         redirect: 'error',
@@ -228,8 +369,8 @@ export function manualOdds({ db, config }) {
         'Réponse The Odds API invalide. Aucun nouvel essai automatique.',
       );
       // Persist only the allowlisted fixture and price fields, never provider URLs or errors.
-      const fixtures = [];
-      for (const item of data) {
+      const fixtures = kind === 'scores' ? normalizeScores(data, competition, timestamp) : [];
+      for (const item of kind === 'scores' ? [] : data) {
         if (!item || typeof item !== 'object') continue;
         const start = Date.parse(item.commence_time);
         if (
@@ -425,7 +566,7 @@ export function manualOdds({ db, config }) {
 
   function publish(input, actorId) {
     const matchId = transaction(db, () => publishOne(input, actorId));
-    return { ...state(), matchId };
+    return { ...state(actorId), matchId };
   }
 
   function publishBatch({ fixtures }, actorId) {
@@ -439,10 +580,11 @@ export function manualOdds({ db, config }) {
     );
     // Entire selection commits together; one expired/conflicting row rolls everything back.
     const matchIds = transaction(db, () => fixtures.map((input) => publishOne(input, actorId)));
-    return { ...state(), publishedCount: matchIds.length };
+    return { ...state(actorId), publishedCount: matchIds.length };
   }
 
-  async function previewBatch(input, batchId, actorId) {
+  async function previewBatch(input, batchId, actorId, mode = 'odds') {
+    ensure(['odds', 'scores', 'global'].includes(mode), 400, 'Mode de chargement invalide.');
     const { competitions, date, consent } = input;
     ensure(
       consent === true &&
@@ -453,6 +595,19 @@ export function manualOdds({ db, config }) {
         competitions.every((key) => has(COMPETITIONS, key)),
       400,
       'Choisir entre 1 et 5 compétitions distinctes et autoriser le coût maximal.',
+    );
+    ensure(
+      mode === 'odds' || competitions.every((key) => SCORE_COMPETITIONS.includes(key)),
+      400,
+      'Les scores 1N2 sont pris en charge pour les cinq grands championnats uniquement.',
+    );
+    const tasks = competitions.flatMap((competition) =>
+      mode === 'global'
+        ? [
+            { competition, kind: 'odds', cost: 1 },
+            { competition, kind: 'scores', cost: 2 },
+          ]
+        : [{ competition, kind: mode, cost: mode === 'scores' ? 2 : 1 }],
     );
     const day = Date.parse(`${date}T00:00:00Z`);
     const today = Date.parse(new Date(Date.now()).toISOString().slice(0, 10));
@@ -465,10 +620,19 @@ export function manualOdds({ db, config }) {
       400,
       'Date invalide : choisir aujourd’hui à J+7 (UTC).',
     );
-    const serialized = JSON.stringify({ competitions: [...competitions].sort(), date });
+    const serialized = JSON.stringify({
+      competitions: [...competitions].sort(),
+      date,
+      ...(mode === 'odds' ? {} : { mode }),
+    });
     const replay = transaction(db, () => {
       const previous = db.prepare('SELECT * FROM odds_batches WHERE id=?').get(batchId);
       if (previous) {
+        ensure(
+          !previous.actorId || previous.actorId === actorId,
+          409,
+          'Ce chargement appartient à un autre administrateur.',
+        );
         ensure(previous.input === serialized, 409, 'Clé déjà utilisée pour une autre sélection.');
         ensure(
           previous.state === 'COMPLETE',
@@ -484,18 +648,23 @@ export function manualOdds({ db, config }) {
         409,
         'Un chargement est en cours ou interrompu.',
       );
-      const required = competitions.filter(
-        (key) =>
+      const missing = tasks.filter(
+        (task) =>
           !db
             .prepare(
               "SELECT 1 FROM odds_calls WHERE cacheKey=? AND state='SUCCESS' AND createdAt>? LIMIT 1",
             )
-            .get(`${key}/${date}`, Date.now() - HOUR),
-      ).length;
+            .get(
+              task.kind === 'scores' ? `scores/${task.competition}` : `${task.competition}/${date}`,
+              Date.now() - (task.kind === 'scores' ? 300000 : HOUR),
+            ),
+      );
+      const required = missing.length,
+        requiredCredits = missing.reduce((sum, task) => sum + task.cost, 0);
       const current = usage();
       ensure(
         current.dailyUsed + required <= current.dailyLimit &&
-          current.monthlyUsed + required <= current.monthlyLimit,
+          current.monthlyUsed + requiredCredits <= current.monthlyLimit,
         429,
         'Quota local insuffisant pour cette sélection. Réduire le nombre de championnats. Aucun appel envoyé.',
       );
@@ -508,24 +677,25 @@ export function manualOdds({ db, config }) {
         !required ||
           current.providerRemaining === null ||
           Date.now() - current.providerCheckedAt > 31 * DAY ||
-          current.providerRemaining >= required,
+          current.providerRemaining >= requiredCredits,
         429,
         'Crédits fournisseur insuffisants pour la sélection au dernier relevé. Aucun appel envoyé.',
       );
       db.prepare(
-        "INSERT INTO odds_batches (id,input,createdAt,state) VALUES (?,?,?,'PENDING')",
-      ).run(batchId, serialized, Date.now());
+        "INSERT INTO odds_batches (id,input,createdAt,state,mode,actorId) VALUES (?,?,?,'PENDING',?,?)",
+      ).run(batchId, serialized, Date.now(), mode, actorId);
       audit(db, actorId, 'ODDS_BATCH_RESERVED', batchId, {
         competitions,
         date,
-        maximumCredits: competitions.length,
+        maximumCredits: tasks.reduce((sum, task) => sum + task.cost, 0),
+        requiredCredits,
         required,
       });
       return null;
     });
     if (replay)
       return {
-        ...state(),
+        ...state(actorId),
         batchResults: replay.map((row) => ({
           ...row,
           status: row.status === 'LOADED' ? 'CACHED' : row.status,
@@ -534,26 +704,35 @@ export function manualOdds({ db, config }) {
       };
     const results = [];
     let stopped = false;
-    for (const competition of competitions) {
+    for (const { competition, kind, cost } of tasks) {
       if (stopped) {
         results.push({
           competition,
+          kind,
+          cost,
           status: 'SKIPPED',
           message: 'Non appelé : chargement arrêté après un échec.',
         });
         continue;
       }
       try {
-        const result = await preview(
-          { competition, date, consent: true },
-          randomUUID(),
-          actorId,
-          batchId,
-        );
-        results.push({ competition, status: result.cached ? 'CACHED' : 'LOADED' });
+        const result =
+          kind === 'scores'
+            ? await request(
+                competition,
+                new Date(Date.now()).toISOString().slice(0, 10),
+                randomUUID(),
+                actorId,
+                batchId,
+                'scores',
+              )
+            : await preview({ competition, date, consent: true }, randomUUID(), actorId, batchId);
+        results.push({ competition, kind, cost, status: result.cached ? 'CACHED' : 'LOADED' });
       } catch (error) {
         results.push({
           competition,
+          kind,
+          cost,
           status: 'FAILED',
           message:
             error instanceof AppError
@@ -563,11 +742,37 @@ export function manualOdds({ db, config }) {
         stopped = true;
       }
     }
-    db.prepare("UPDATE odds_batches SET state='COMPLETE',results=? WHERE id=?").run(
-      JSON.stringify(results),
-      batchId,
-    );
-    return { ...state(), batchResults: results };
+    transaction(db, () => {
+      const loaded = results
+        .filter((row) => row.kind === 'scores' && ['LOADED', 'CACHED'].includes(row.status))
+        .map((row) => row.competition);
+      const rows = scoreRows()
+        .filter((row) => row.eligible && loaded.includes(row.sportKey))
+        .slice(0, 100)
+        .map((row) => ({
+          matchId: row.matchId,
+          homeScore: row.homeScore,
+          awayScore: row.awayScore,
+          providerSnapshotId: row.providerSnapshotId,
+        }));
+      const resultPreview = rows.length ? createResultPreview(db, actorId, rows) : null;
+      db.prepare(
+        "UPDATE odds_batches SET state='COMPLETE',results=?,resultPreviewId=? WHERE id=?",
+      ).run(JSON.stringify(results), resultPreview?.id || null, batchId);
+      audit(db, actorId, 'ODDS_BATCH_COMPLETE', batchId, {
+        mode,
+        resultPreviewId: resultPreview?.id || null,
+      });
+    });
+    return { ...state(actorId), batchResults: results };
   }
-  return { state, preview, publish, previewBatch, publishBatch };
+  return {
+    state,
+    preview,
+    publish,
+    previewBatch,
+    publishBatch,
+    refreshGlobal: (input, id, actor) => previewBatch(input, id, actor, 'global'),
+    previewScores: (input, id, actor) => previewBatch(input, id, actor, 'scores'),
+  };
 }

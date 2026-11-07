@@ -1241,6 +1241,99 @@ test('manual result batches preview without provider calls, roll back atomically
   );
 });
 
+test('global odds refresh previews scores and settles accepted bets only on explicit validation', async (t) => {
+  const competition = 'soccer_france_ligue_one';
+  const path = '/admin/odds/refresh-global';
+  const kickoff = new Date(Date.now() - 7200000).toISOString();
+  const calls = [];
+  const f = await fixture(t, {
+    football: {
+      oddsMode: 'manual',
+      oddsKey: 'fake-score-test-key',
+      oddsFetch: async (url) => {
+        const endpoint = new URL(url).pathname;
+        calls.push(endpoint);
+        return Response.json(
+          endpoint.endsWith('/scores/')
+            ? [
+                {
+                  id: 'settlement-event',
+                  sport_key: competition,
+                  commence_time: kickoff,
+                  completed: true,
+                  home_team: 'Home FC',
+                  away_team: 'Away FC',
+                  last_update: new Date().toISOString(),
+                  scores: [
+                    { name: 'Home FC', score: '2' },
+                    { name: 'Away FC', score: '1' },
+                  ],
+                },
+              ]
+            : [],
+        );
+      },
+    },
+  });
+  const { db, request, adminSession, aliceSession } = f;
+  const match = await f.makeMatch({ competition: 'Ligue 1' });
+  assert.equal((await f.claim()).status, 200);
+  assert.equal((await f.bet(match)).status, 201);
+  db.prepare('UPDATE matches SET startDate=?,oddsHome=300 WHERE id=?').run(kickoff, match.id);
+  db.prepare(
+    `INSERT INTO odds_fixtures
+    (externalId,sportKey,competition,homeTeam,awayTeam,startDate,quotes,fetchedAt,snapshotId,matchId)
+    VALUES ('settlement-event',?,'Ligue 1','Home FC','Away FC',?,'[]',?,?,?)`,
+  ).run(competition, kickoff, Date.now(), randomUUID(), match.id);
+  const action = {
+    method: 'POST',
+    session: adminSession,
+    body: {
+      competitions: [competition],
+      date: new Date().toISOString().slice(0, 10),
+      consent: true,
+    },
+    headers: { 'Idempotency-Key': randomUUID() },
+  };
+  assert.equal((await request('/admin/odds', { session: adminSession })).status, 200);
+  assert.equal((await request(path, { ...action, session: aliceSession })).status, 403);
+  assert.equal(
+    (await request(path, { ...action, headers: { ...action.headers, 'X-CSRF-Token': 'invalid' } }))
+      .status,
+    403,
+  );
+  assert.equal(
+    (await request(path, { ...action, body: { ...action.body, consent: false } })).status,
+    400,
+  );
+  assert.equal(calls.length, 0);
+  const preview = await request(path, action);
+  assert.equal(preview.status, 200, JSON.stringify(preview.body));
+  assert.equal(preview.body.resultPreview?.rows[0]?.matchId, match.id);
+  assert.equal(preview.body.usage.monthlyUsed, 3);
+  assert.equal(
+    db.prepare('SELECT status FROM matches WHERE id=?').get(match.id).status,
+    'UPCOMING',
+  );
+  const wallet = async () => (await request('/wallet', { session: aliceSession })).body.balance;
+  assert.equal(await wallet(), 400);
+  const apply = () =>
+    request('/admin/operations/results/apply', {
+      method: 'POST',
+      session: adminSession,
+      body: { id: preview.body.resultPreview.id, confirmation: 'REGLER' },
+    });
+  const settled = await apply();
+  assert.equal(settled.status, 200, JSON.stringify(settled.body));
+  assert.equal(await wallet(), 580);
+  assert.equal((await apply()).body.replayed, true);
+  assert.equal(await wallet(), 580);
+  assert.deepEqual(
+    calls.map((call) => call.split('/').at(-2)),
+    ['odds', 'scores'],
+  );
+});
+
 test('deleting an agency director transfers direction and preserves other members', async (t) => {
   const { db, request, alice, bob, aliceSession, login } = await fixture(t);
   const created = await request('/agence', {

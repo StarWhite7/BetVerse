@@ -9,10 +9,11 @@
   @if (state(); as data) {
     <div class="quota">
       <span
-        >24 h : <strong>{{ data.usage.dailyUsed }} / {{ data.usage.dailyLimit }}</strong></span
+        >24 h :
+        <strong>{{ data.usage.dailyUsed }} / {{ data.usage.dailyLimit }} appels</strong></span
       ><span
         >31 jours :
-        <strong>{{ data.usage.monthlyUsed }} / {{ data.usage.monthlyLimit }}</strong></span
+        <strong>{{ data.usage.monthlyUsed }} / {{ data.usage.monthlyLimit }} crédits</strong></span
       >
       @if (data.usage.providerRemaining !== null) {
         <span
@@ -66,8 +67,8 @@
         <p>
           Sept jours de rencontres ·
           <strong
-            >{{ selectedCompetitions().length }} compétition(s) ·
-            {{ selectedCompetitions().length }} crédit(s) maximum</strong
+            >{{ selectedCompetitions().length }} compétition(s) · jusqu’à
+            {{ selectedCompetitions().length * 3 }} crédits pour une actualisation globale</strong
           >
         </p>
       </div>
@@ -75,8 +76,8 @@
         <p role="alert">Choisissez cinq compétitions au maximum par chargement.</p>
       }
       <label class="consent"
-        ><input type="checkbox" [(ngModel)]="accepted" />J’autorise ce chargement manuel, jusqu’à
-        {{ selectedCompetitions().length }} crédit(s). Le cache peut réduire ce coût.</label
+        ><input type="checkbox" [(ngModel)]="accepted" />J’autorise le prochain chargement manuel au
+        coût maximal indiqué sur son bouton. Le cache peut réduire ce coût.</label
       >
       <button
         type="button"
@@ -88,15 +89,36 @@
       >
         Charger l’aperçu · ≤ {{ selectedCompetitions().length }} crédit(s)
       </button>
+      <button
+        type="button"
+        [disabled]="!accepted || !date || !scoresSupported() || selectedCompetitions().length > 5"
+        (click)="preview('scores-batch')"
+      >
+        Récupérer les résultats · ≤ {{ selectedCompetitions().length * 2 }} crédits
+      </button>
+      <button
+        type="button"
+        class="primary"
+        [disabled]="!accepted || !date || !scoresSupported() || selectedCompetitions().length > 5"
+        (click)="preview('refresh-global')"
+      >
+        Actualisation globale · ≤ {{ selectedCompetitions().length * 3 }} crédits
+      </button>
+      <p>
+        Globale : matchs et cotes des sept jours choisis + scores terminés des trois derniers jours.
+        Deux appels maximum par championnat. Les résultats concernent les cinq grands championnats
+        (1N2 à 90 minutes).
+      </p>
     </fieldset>
     @if (batchResults().length) {
       <ul class="batch-results" aria-label="Bilan du chargement">
-        @for (result of batchResults(); track result.competition) {
+        @for (result of batchResults(); track result.competition + (result.kind || 'odds')) {
           <li>
-            <strong>{{ data.competitions[result.competition] }}</strong> :
+            <strong>{{ data.competitions[result.competition] }}</strong> —
+            {{ result.kind === 'scores' ? 'résultats' : 'matchs / cotes' }} :
             {{
               result.status === 'LOADED'
-                ? 'chargé (1 appel)'
+                ? 'chargé (1 appel, jusqu’à ' + (result.cost || 1) + ' crédit(s))'
                 : result.status === 'CACHED'
                   ? 'cache (0 crédit)'
                   : result.status === 'FAILED'
@@ -234,12 +256,63 @@
       exclure, ou cochez l’en-tête pour tout sélectionner (200 maximum). Si une ligne devient
       invalide, aucun match de la sélection n’est modifié.
     </p>
+    @if (visibleScores().length || data.resultPreview) {
+      <div class="review-heading">
+        <h3>3. Vérifier les scores et régler les paris</h3>
+        <button
+          type="button"
+          class="primary"
+          [disabled]="busy() || !canApplyScores()"
+          (click)="applyScores()"
+        >
+          Valider les résultats ({{ data.resultPreview?.rows?.length || 0 }}) · 0 crédit
+        </button>
+      </div>
+      <p>
+        Vérifiez le score à la fin du temps réglementaire. La validation règle les paris du lot aux
+        cotes acceptées. Un aperçu expire après quinze minutes.
+      </p>
+      @if (data.resultPreview?.applied) {
+        <p>Ce lot a déjà été réglé. Aucun paiement supplémentaire ne sera effectué.</p>
+      }
+      @if (data.resultPreview?.expired && !data.resultPreview.applied) {
+        <p>
+          L’aperçu des résultats est expiré. Rechargez volontairement les résultats avant de
+          valider.
+        </p>
+      }
+      <div class="table-wrap" role="region" aria-label="Scores récupérés" tabindex="0">
+        <table>
+          <thead>
+            <tr>
+              <th>Compétition</th>
+              <th>Match</th>
+              <th>Score final</th>
+              <th>Contrôle</th>
+              <th>Chargé le</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (score of visibleScores(); track score.externalId) {
+              <tr>
+                <td>{{ score.competition }}</td>
+                <td>{{ score.homeTeam }} — {{ score.awayTeam }}</td>
+                <td>{{ score.homeScore }} – {{ score.awayScore }}</td>
+                <td>{{ scoreStatus(score) }}</td>
+                <td>{{ score.fetchedAt | date: 'dd/MM HH:mm' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
     <details class="help">
       <summary>Quota, fraîcheur et résultats</summary>
       <p>
-        Un appel maximum par compétition, aucun appel au déploiement ni à l’ouverture de cette page.
-        Cache persistant d’une heure ; arrêt au premier échec, sans relance. Les cotes absentes ou
-        expirées sont exclues. Les résultats restent à saisir manuellement.
+        Un appel pour les cotes et un pour les résultats par compétition, aucun appel au déploiement
+        ni à l’ouverture de cette page. Cache persistant d’une heure pour les cotes et cinq minutes
+        pour les résultats ; arrêt au premier échec, sans relance. Les scores plus anciens que trois
+        jours et les cas ambigus restent à traiter manuellement dans l’exploitation.
       </p>
       @if (data.usage.lastError) {
         <p>Dernier échec enregistré : {{ data.usage.lastError }}</p>

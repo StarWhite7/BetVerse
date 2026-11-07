@@ -457,3 +457,136 @@ test('bulk publication rolls every row and audit back on a late conflict; valid 
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM matches').get().n, 2);
   assert.equal(f.requests.length, 1);
 });
+
+test('global refresh shares durable quota: five leagues, ten calls, fifteen credits, cache replay is free', async (t) => {
+  const f = setup(t, {
+    fetcher: async (event, url) => {
+      const key = new URL(url).pathname.split('/')[3];
+      return Response.json(
+        url.includes('/scores/') ? [] : [{ ...event, id: key, sport_key: key }],
+        { headers: { 'x-requests-remaining': '499' } },
+      );
+    },
+  });
+  const input = {
+    competitions: [
+      'soccer_france_ligue_one',
+      'soccer_epl',
+      'soccer_spain_la_liga',
+      'soccer_italy_serie_a',
+      'soccer_germany_bundesliga',
+    ],
+    date: f.input.date,
+    consent: true,
+  };
+  const id = randomUUID();
+  const result = await f.service.refreshGlobal(input, id, f.actor);
+  assert.equal(f.requests.length, 10);
+  assert.equal(result.usage.dailyUsed, 10);
+  assert.equal(result.usage.monthlyUsed, 15);
+  assert.equal(result.resultPreview, null);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM matches').get().n, 0);
+  for (const { url } of f.requests.filter((r) => r.url.pathname.includes('/scores/')))
+    assert.equal(url.searchParams.get('daysFrom'), '3');
+  const restarted = manualOdds({ db: f.db, config: f.config });
+  await restarted.refreshGlobal(input, id, f.actor);
+  const cached = await restarted.refreshGlobal(input, randomUUID(), f.actor);
+  assert.ok(cached.batchResults.every((row) => row.status === 'CACHED'));
+  assert.equal(cached.usage.monthlyUsed, 15);
+  assert.equal(f.requests.length, 10);
+});
+
+test('global refresh reserves the full weighted budget before making any provider call', async (t) => {
+  const f = setup(t, { config: { oddsMonthlyLimit: 2 } });
+  const input = { competitions: ['soccer_epl'], date: f.input.date, consent: true };
+  await assert.rejects(f.service.refreshGlobal(input, randomUUID(), f.actor), /insuffisant/);
+  await assert.rejects(
+    f.service.refreshGlobal(
+      { ...input, competitions: ['soccer_uefa_champs_league'] },
+      randomUUID(),
+      f.actor,
+    ),
+    /cinq grands/,
+  );
+  assert.equal(f.requests.length, 0);
+  assert.equal(f.service.state().usage.monthlyUsed, 0);
+});
+
+test('global refresh stops on score failure, counts the attempt, never retries or leaks its key', async (t) => {
+  const f = setup(t, {
+    fetcher: async (event, url) =>
+      url.includes('/scores/')
+        ? Response.json({ error: 'fake-test-key' }, { status: 429 })
+        : Response.json([event]),
+  });
+  const input = {
+      competitions: ['soccer_france_ligue_one', 'soccer_epl'],
+      date: f.input.date,
+      consent: true,
+    },
+    id = randomUUID();
+  const result = await f.service.refreshGlobal(input, id, f.actor);
+  assert.deepEqual(
+    result.batchResults.map((r) => r.status),
+    ['LOADED', 'FAILED', 'SKIPPED', 'SKIPPED'],
+  );
+  assert.equal(result.usage.monthlyUsed, 3);
+  assert.equal(JSON.stringify(result).includes('fake-test-key'), false);
+  await f.service.refreshGlobal(input, id, f.actor);
+  f.service.state(f.actor);
+  assert.equal(f.requests.length, 2);
+});
+
+test('scores only preview completed linked games; identity conflicts and live scores cannot settle a ticket', async (t) => {
+  let data = [];
+  const f = setup(t, {
+    fetcher: async (event, url) => Response.json(url.includes('/scores/') ? data : [event]),
+  });
+  const catalogue = await f.preview();
+  const matchId = f.publish(catalogue.fixtures[0]).matchId;
+  const past = new Date(Date.now() - 7200000).toISOString();
+  f.db.prepare('UPDATE matches SET startDate=? WHERE id=?').run(past, matchId);
+  f.advance();
+  const result = {
+    ...f.event(),
+    commence_time: past,
+    completed: true,
+    last_update: new Date(Date.now()).toISOString(),
+    scores: [
+      { name: 'Away FC', score: '1' },
+      { name: 'Home FC', score: '2' },
+    ],
+  };
+  data = [result, { ...result, id: 'unpublished' }, { ...result, id: 'live', completed: false }];
+  const input = { competitions: ['soccer_france_ligue_one'], date: f.input.date, consent: true };
+  const first = await f.service.previewScores(input, randomUUID(), f.actor);
+  assert.equal(first.resultPreview.rows.length, 1);
+  assert.equal(first.resultPreview.rows[0].matchId, matchId);
+  assert.equal(first.resultPreview.rows[0].homeScore, 2);
+  assert.equal(first.scores.find((r) => r.externalId === 'unpublished').eligible, false);
+  assert.equal(
+    first.scores.some((r) => r.externalId === 'live'),
+    false,
+  );
+  assert.equal(
+    f.db.prepare('SELECT status FROM matches WHERE id=?').get(matchId).status,
+    'UPCOMING',
+  );
+  assert.equal(f.service.state(f.actor).resultPreview.id, first.resultPreview.id);
+  assert.equal(f.service.state().resultPreview, null);
+  f.advance(300001);
+  data = [
+    {
+      ...result,
+      home_team: 'Other FC',
+      scores: [
+        { name: 'Other FC', score: '2' },
+        { name: 'Away FC', score: '1' },
+      ],
+    },
+  ];
+  const conflict = await f.service.previewScores(input, randomUUID(), f.actor);
+  assert.equal(conflict.resultPreview, null);
+  assert.equal(conflict.scores[0].eligible, false);
+  assert.match(conflict.scores[0].reason, /Conflit/);
+});

@@ -88,6 +88,46 @@ describe('Manual The Odds API import', () => {
     component.preview();
     http.expectNone((request) => request.method === 'POST');
   });
+  it('uses the global button to load a preview and requires a separate click to settle it', () => {
+    const view = TestBed.createComponent(OddsImportComponent);
+    view.detectChanges();
+    http.expectOne('/api/admin/odds').flush(state);
+    const component = view.componentInstance;
+    const button = (label: string): HTMLButtonElement =>
+      Array.from(
+        view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+      ).find((entry) => entry.textContent?.includes(label))!;
+    view.detectChanges();
+    expect(button('Actualisation globale').disabled).toBe(true);
+    component.toggleCompetition(fixture.sportKey, true);
+    component.accepted = true;
+    view.detectChanges();
+    expect(button('Actualisation globale').disabled).toBe(false);
+    button('Actualisation globale').click();
+    const request = http.expectOne('/api/admin/odds/refresh-global');
+    expect(request.request.body.competitions).toEqual([fixture.sportKey]);
+    expect(request.request.body.consent).toBe(true);
+    expect(component.accepted).toBe(false);
+    const result = {
+      ...fixture,
+      matchId: 'match-1',
+      homeScore: 2,
+      awayScore: 1,
+      providerSnapshotId: 'score-snapshot',
+    };
+    request.flush({
+      ...state,
+      scores: [{ ...result, eligible: true }],
+      resultPreview: { id: 'result-preview', rows: [result], applied: false, expired: false },
+    });
+    http.expectNone((request) => request.method === 'POST');
+    view.detectChanges();
+    button('Valider les résultats').click();
+    const apply = http.expectOne('/api/admin/operations/results/apply');
+    expect(apply.request.body).toEqual({ id: 'result-preview', confirmation: 'REGLER' });
+    apply.flush({ count: 1 });
+    http.expectOne('/api/admin/odds').flush(state);
+  });
   it('publishes the displayed snapshot with no preview request and never retries failures', () => {
     const view = TestBed.createComponent(OddsImportComponent);
     view.detectChanges();
@@ -127,12 +167,10 @@ describe('Manual The Odds API import', () => {
       externalId: 'changed',
       quotes: [{ ...fixture.quotes[0], home: 210 }],
     };
-    http
-      .expectOne('/api/admin/odds')
-      .flush({
-        ...state,
-        fixtures: [fixture, unchanged, changed, { ...fixture, externalId: 'missing', quotes: [] }],
-      });
+    http.expectOne('/api/admin/odds').flush({
+      ...state,
+      fixtures: [fixture, unchanged, changed, { ...fixture, externalId: 'missing', quotes: [] }],
+    });
     view.detectChanges();
     const component = view.componentInstance;
     expect(view.nativeElement.querySelectorAll('tbody tr').length).toBe(4);
