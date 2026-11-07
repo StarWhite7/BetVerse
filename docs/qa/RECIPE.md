@@ -1,5 +1,9 @@
 # Recette V1 — 6 novembre 2026
 
+## Retour de bêta — 7 novembre 2026
+
+Le testeur confirme le fonctionnement du nouveau panneau administrateur, du cycle de jeu sur Android et de la réception des mails de support. La réception d’une notification sur Android reste à tester. Un échec silencieux a été signalé lors de la suppression d’agence depuis le bureau web. Le client envoie désormais le corps JSON attendu et affiche le motif en cas de refus.
+
 ## QR d’enrôlement MFA — 7 novembre 2026
 
 Le formulaire affiche maintenant un QR SVG généré localement depuis le secret et le compte renvoyés par le serveur. Aucun générateur distant, stockage navigateur ou assouplissement de CSP. La saisie manuelle reste disponible. Le QR et la clé sont retirés après vérification et à la destruction du composant. Tests Angular : 29 réussis, dont un décodage indépendant du QR avec un secret synthétique, vérifiant le compte, l’émetteur, SHA1, six chiffres et période de trente secondes. Build de production réussi ; seul l’avertissement CSS Bureau déjà connu subsiste. Cette vérification ne remplace pas le scan par le propriétaire dans son authentificateur.

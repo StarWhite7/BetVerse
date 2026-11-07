@@ -487,6 +487,11 @@ test('agencies charge shards once, invitations are scoped, leadership transfer i
     (await f.request('/agence/leave', { method: 'POST', session: bob, body: {} })).status,
     409,
   );
+  assert.equal(
+    (await f.request('/agence', { method: 'DELETE', session: bob, body: {} })).status,
+    200,
+  );
+  assert.equal((await f.request('/agence/me', { session: f.aliceSession })).body, null);
 });
 test('agency prediction cutoff and score settlement persist', async (t) => {
   const f = await fixture(t);

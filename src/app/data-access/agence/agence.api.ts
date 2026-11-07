@@ -148,7 +148,7 @@ export class AgenceApiService {
   }
 
   deleteAgency() {
-    return this.http.delete<{ success: true }>(this.baseUrl);
+    return this.http.delete<{ success: true }>(this.baseUrl, { body: {} });
   }
 
   leaveAgency() {

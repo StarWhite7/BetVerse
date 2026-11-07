@@ -40,6 +40,7 @@ export class AgenceBureauComponent implements OnInit {
   deleteOpen = signal(false);
   deleteInput = signal('');
   deleteError = signal(false);
+  deleteFailure = signal('');
   deleting = signal(false);
   leaveOpen = signal(false);
   leaving = signal(false);
@@ -106,13 +107,16 @@ export class AgenceBureauComponent implements OnInit {
   openDelete() {
     this.deleteInput.set('');
     this.deleteError.set(false);
+    this.deleteFailure.set('');
     this.deleteOpen.set(true);
   }
 
   closeDelete() {
+    if (this.deleting()) return;
     this.deleteOpen.set(false);
     this.deleteInput.set('');
     this.deleteError.set(false);
+    this.deleteFailure.set('');
   }
 
   openLeave() {
@@ -165,6 +169,7 @@ export class AgenceBureauComponent implements OnInit {
     }
 
     this.deleting.set(true);
+    this.deleteFailure.set('');
     this.agenceApi
       .deleteAgency()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -181,8 +186,11 @@ export class AgenceBureauComponent implements OnInit {
               error: () => this.router.navigate(['/agence']),
             });
         },
-        error: () => {
+        error: (error) => {
           this.deleting.set(false);
+          this.deleteFailure.set(
+            error?.error?.message || 'Impossible de supprimer l’agence. Réessayez.',
+          );
         },
       });
   }

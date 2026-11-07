@@ -307,6 +307,9 @@
       <div class="bureau-delete__warning" [class.bureau-delete__warning--flash]="deleteError()">
         Écrire "DELETE" pour supprimer définitivement l'agence.
       </div>
+      @if (deleteFailure()) {
+        <p class="bv-error" role="alert">{{ deleteFailure() }}</p>
+      }
       <div class="bureau-delete__actions">
         <button type="button" class="bureau__button bureau__button--ghost" (click)="closeDelete()">
           Annuler
@@ -317,7 +320,7 @@
           (click)="confirmDelete()"
           [disabled]="deleting()"
         >
-          Supprimer
+          {{ deleting() ? 'Suppression…' : 'Supprimer' }}
         </button>
       </div>
     </div>
