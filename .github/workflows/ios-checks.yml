@@ -5,6 +5,7 @@ on:
     branches: [beta, codex/private-beta]
     paths:
       - 'mobile/ios/**'
+      - 'public/club-badges/**'
       - 'server/**'
       - '.github/workflows/ios-checks.yml'
 permissions:

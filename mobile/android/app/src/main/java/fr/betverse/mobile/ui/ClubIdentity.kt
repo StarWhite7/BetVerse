@@ -5,7 +5,7 @@ import java.text.Normalizer
 import java.util.Locale
 
 data class ClubIdentity(val initials: String, val primary: Color, val secondary: Color)
-private fun normalizedClub(value: String) = Normalizer.normalize(value, Normalizer.Form.NFD)
+internal fun normalizedClub(value: String) = Normalizer.normalize(value, Normalizer.Form.NFD)
     .replace(Regex("\\p{M}+"), "").lowercase(Locale.ROOT).filter(Char::isLetterOrDigit)
 
 // Local identity catalogue. No logo download or external sports-provider call.

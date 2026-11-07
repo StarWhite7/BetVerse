@@ -98,6 +98,17 @@ class ClubUiTest {
 
     @Test fun renderDarkForVisualReview() = renderForVisualReview(ThemePreference.DARK, "club-dark")
 
+    @Test fun serieAClubsLoadEmbroideredBadgesFromTheAppAssets() {
+        val assets = compose.activity.assets
+        val napoli = ClubBadgeArtwork.image(assets, "Napoli")
+        assertNotNull(napoli)
+        assertSame(napoli, ClubBadgeArtwork.image(assets, "SSC Napoli"))
+        for (team in listOf("Lazio", "Monza", "Atalanta BC")) {
+            assertNotNull(team, ClubBadgeArtwork.image(assets, team))
+        }
+        assertNull(ClubBadgeArtwork.image(assets, "Club sans badge"))
+    }
+
     private fun renderForVisualReview(theme: ThemePreference, name: String) {
         val preview = state().copy(fixtures = listOf(
             fixture.copy(away = "Marseille", competition = "Ligue 1"),

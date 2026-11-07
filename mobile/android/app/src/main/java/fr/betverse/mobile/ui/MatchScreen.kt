@@ -12,8 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
@@ -104,8 +106,8 @@ import fr.betverse.mobile.data.*
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                TeamName(fixture.home)
-                TeamName(fixture.away)
+                TeamName(fixture.home, showBadge = fixture.sport == "football")
+                TeamName(fixture.away, showBadge = fixture.sport == "football")
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault()).format(fixture.start),
@@ -196,22 +198,36 @@ private fun competitionArtwork(fixture: Fixture): Banner? {
     }
 }
 
-@Composable private fun TeamName(name: String) {
-    val club = clubIdentity(name)
+@Composable private fun TeamName(name: String, showBadge: Boolean) {
+    val assets = LocalContext.current.assets
+    val badge = remember(assets, name, showBadge) {
+        if (showBadge) ClubBadgeArtwork.image(assets, name) else null
+    }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Surface(color = club?.secondary ?: MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = club?.primary ?: MaterialTheme.colorScheme.onSurfaceVariant, shape = RoundedCornerShape(4.dp)) {
-            val text = club?.initials ?: name.filter { it.isLetterOrDigit() }.take(3).uppercase()
-            val primary = club?.primary ?: MaterialTheme.colorScheme.onSurfaceVariant
-            val secondary = club?.secondary ?: MaterialTheme.colorScheme.surfaceVariant
-            val contrast = (maxOf(primary.luminance(), secondary.luminance()) + .05f) / (minOf(primary.luminance(), secondary.luminance()) + .05f)
-            Box(Modifier.padding(horizontal=5.dp, vertical=4.dp)) {
-                if (contrast < 4.5f) Text(text, color=if (primary.luminance() < .4f) Color.White else Color.Black,
-                    style=MaterialTheme.typography.labelSmall.copy(drawStyle=Stroke(width=2f)), fontWeight=FontWeight.Bold)
-                Text(text, color=primary, style=MaterialTheme.typography.labelSmall, fontWeight=FontWeight.Bold)
+        if (badge != null) {
+            Image(badge, contentDescription = null, modifier = Modifier.size(width = 44.dp, height = 29.dp))
+        } else {
+            Box(Modifier.width(44.dp), contentAlignment = Alignment.CenterStart) {
+                ClubInitials(name)
             }
         }
         Text(name, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable private fun ClubInitials(name: String) {
+    val club = clubIdentity(name)
+    Surface(color = club?.secondary ?: MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = club?.primary ?: MaterialTheme.colorScheme.onSurfaceVariant, shape = RoundedCornerShape(4.dp)) {
+        val text = club?.initials ?: name.filter { it.isLetterOrDigit() }.take(3).uppercase()
+        val primary = club?.primary ?: MaterialTheme.colorScheme.onSurfaceVariant
+        val secondary = club?.secondary ?: MaterialTheme.colorScheme.surfaceVariant
+        val contrast = (maxOf(primary.luminance(), secondary.luminance()) + .05f) / (minOf(primary.luminance(), secondary.luminance()) + .05f)
+        Box(Modifier.padding(horizontal=5.dp, vertical=4.dp)) {
+            if (contrast < 4.5f) Text(text, color=if (primary.luminance() < .4f) Color.White else Color.Black,
+                style=MaterialTheme.typography.labelSmall.copy(drawStyle=Stroke(width=2f)), fontWeight=FontWeight.Bold)
+            Text(text, color=primary, style=MaterialTheme.typography.labelSmall, fontWeight=FontWeight.Bold)
+        }
     }
 }
 

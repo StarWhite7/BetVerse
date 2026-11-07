@@ -27,6 +27,9 @@ targets:
         buildPhase: resources
       - path: ../../assets/sport-icons/drawable-nodpi
         buildPhase: resources
+      - path: ../../public/club-badges
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: BetVerseCore
         product: BetVerseCore

@@ -209,7 +209,14 @@ struct MatchesView: View {
             ForEach(model.matches.filter { string($0,"sportKey") == model.sport && (model.competition.isEmpty || string($0,"competition") == model.competition) },id:\.selfID) { match in
                 VStack(alignment:.leading,spacing:12) {
                     MatchCompetitionBanner(name: string(match,"competition"), sport: string(match,"sportKey"))
-                    Text(string(match,"homeTeam") + " — " + string(match,"awayTeam")).font(.headline)
+                    if string(match,"sportKey") == "football" {
+                        VStack(alignment: .leading, spacing: 4) {
+                            MatchClubBadge(name: string(match,"homeTeam"))
+                            MatchClubBadge(name: string(match,"awayTeam"))
+                        }
+                    } else {
+                        Text(string(match,"homeTeam") + " — " + string(match,"awayTeam")).font(.headline)
+                    }
                     Text(string(match,"startDate")).font(.caption)
                     HStack { ForEach([("HOME","1","oddsHome"),("DRAW","N","oddsDraw"),("AWAY","2","oddsAway")],id:\.0) { type,label,key in
                         if decimal(match,key) > 0 {

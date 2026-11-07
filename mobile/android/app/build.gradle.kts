@@ -20,6 +20,7 @@ android {
     compileSdk = 36
     sourceSets.getByName("main").res.srcDir(rootProject.file("../../assets/competition-banners"))
     sourceSets.getByName("main").res.srcDir(rootProject.file("../../assets/sport-icons"))
+    sourceSets.getByName("main").assets.srcDir(rootProject.file("../../public/club-badges"))
     defaultConfig {
         applicationId = "fr.betverse.app.beta"
         minSdk = 24
