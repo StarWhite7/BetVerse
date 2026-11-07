@@ -135,19 +135,24 @@ export async function createApp({ db, config }) {
     ensure(req.user.status === 'ACTIVE', 401, 'Ce compte est suspendu. Contactez le support.');
     next();
   };
-  const requireAdmin = (req, _res, next) => {
+  const requireAdmin = (req, res, next) => {
     ensure(req.user?.role === 'ADMIN', 403, 'Accès administrateur requis.');
     const enrolled = db
       .prepare('SELECT 1 FROM admin_mfa WHERE userId=? AND secretCipher IS NOT NULL')
       .get(req.user.id);
-    ensure(
-      !(config.adminMfaRequired || enrolled) ||
-        db
-          .prepare('SELECT 1 FROM session_mfa WHERE tokenHash=? AND expiresAt>?')
-          .get(req.session.tokenHash, Date.now()),
-      403,
-      'Vérifiez la double authentification dans Administration → Sécurité.',
-    );
+    if (
+      (config.adminMfaRequired || enrolled) &&
+      !db
+        .prepare('SELECT 1 FROM session_mfa WHERE tokenHash=? AND expiresAt>?')
+        .get(req.session.tokenHash, Date.now())
+    ) {
+      return res.status(403).json({
+        code: 'ADMIN_MFA_REQUIRED',
+        message:
+          'Validez votre session avec votre code de double authentification dans l’onglet Sécurité.',
+        requestId: req.requestId,
+      });
+    }
     next();
   };
   const context = { db, config, requireUser, requireAdmin };

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { ensure, AppError, transaction } from '../lib/errors.mjs';
 import { audit, now } from './accounts.mjs';
-import { hasMatchBets } from './matches.mjs';
+import { finishMatch, hasMatchBets } from './matches.mjs';
 import { createResultPreview } from './result-previews.mjs';
 
 export const COMPETITIONS = Object.freeze({
@@ -155,7 +155,7 @@ export function manualOdds({ db, config }) {
       }),
   });
 
-  function scoreRows() {
+  function scoreRows(onlySnapshotId = null) {
     const seen = new Set(),
       rows = [];
     const snapshots = db
@@ -166,6 +166,7 @@ export function manualOdds({ db, config }) {
     for (const source of snapshots) {
       if (seen.has(source.cacheKey)) continue;
       seen.add(source.cacheKey);
+      if (onlySnapshotId && source.id !== onlySnapshotId) continue;
       for (const row of JSON.parse(source.payload)) {
         const linked = db
           .prepare('SELECT matchId,sportKey FROM odds_fixtures WHERE externalId=?')
@@ -178,6 +179,7 @@ export function manualOdds({ db, config }) {
         else if (
           linked.sportKey !== row.sportKey ||
           match.sportKey !== 'football' ||
+          match.competition !== row.competition ||
           match.homeTeam !== row.homeTeam ||
           match.awayTeam !== row.awayTeam ||
           Date.parse(match.startDate) !== Date.parse(row.startDate)
@@ -204,7 +206,7 @@ export function manualOdds({ db, config }) {
         });
       }
     }
-    return rows.slice(0, 500);
+    return onlySnapshotId ? rows : rows.slice(0, 500);
   }
 
   function savedResultPreview(actorId) {
@@ -370,6 +372,7 @@ export function manualOdds({ db, config }) {
       );
       // Persist only the allowlisted fixture and price fields, never provider URLs or errors.
       const fixtures = kind === 'scores' ? normalizeScores(data, competition, timestamp) : [];
+      const eventIds = new Set();
       for (const item of kind === 'scores' ? [] : data) {
         if (!item || typeof item !== 'object') continue;
         const start = Date.parse(item.commence_time);
@@ -417,6 +420,8 @@ export function manualOdds({ db, config }) {
           if (home && draw && away && !quotes.some((q) => q.bookmaker === bookmaker.key))
             quotes.push({ bookmaker: bookmaker.key, home, draw, away, updatedAt });
         }
+        ensure(!eventIds.has(item.id), 502, 'Rencontres en double dans la réponse du fournisseur.');
+        eventIds.add(item.id);
         fixtures.push({
           externalId: item.id,
           sportKey: competition,
@@ -452,7 +457,7 @@ export function manualOdds({ db, config }) {
     }
   }
 
-  async function preview(input, requestId, actorId, batchId = null) {
+  async function loadOdds(input, requestId, actorId, batchId = null) {
     ensure(input.consent === true, 400, 'Autoriser explicitement la consommation d’un crédit.');
     const receipt = await request(input.competition, input.date, requestId, actorId, batchId);
     transaction(db, () => {
@@ -483,10 +488,15 @@ export function manualOdds({ db, config }) {
         );
       audit(db, actorId, 'ODDS_PREVIEW_LOADED', receipt.id, { cached: receipt.cached });
     });
+    return receipt;
+  }
+
+  async function preview(input, requestId, actorId) {
+    const receipt = await loadOdds(input, requestId, actorId);
     return { ...state(), cached: receipt.cached };
   }
 
-  function publishOne({ eventId, bookmaker, snapshotId }, actorId) {
+  function publishOne({ eventId, bookmaker, snapshotId }, actorId, automatic = false) {
     const fixture = db.prepare('SELECT * FROM odds_fixtures WHERE externalId=?').get(eventId);
     ensure(
       fixture && fixture.snapshotId === snapshotId,
@@ -518,6 +528,11 @@ export function manualOdds({ db, config }) {
     }
     if (current) {
       ensure(
+        !automatic || current.competition === fixture.competition,
+        409,
+        'Le match existant est associé à une autre compétition.',
+      );
+      ensure(
         current.status === 'UPCOMING' && Date.parse(current.startDate) > Date.now(),
         409,
         'Ce match ne peut plus être modifié.',
@@ -530,6 +545,17 @@ export function manualOdds({ db, config }) {
         409,
         'Des paris existent : équipes et date sont verrouillées. Traiter ce changement manuellement.',
       );
+      if (
+        automatic &&
+        fixture.matchId === current.id &&
+        current.homeTeam === fixture.homeTeam &&
+        current.awayTeam === fixture.awayTeam &&
+        current.startDate === fixture.startDate &&
+        current.oddsHome === quote.home &&
+        current.oddsDraw === quote.draw &&
+        current.oddsAway === quote.away
+      )
+        return null;
     }
     const id = current?.id || randomUUID();
     if (current)
@@ -583,32 +609,89 @@ export function manualOdds({ db, config }) {
     return { ...state(actorId), publishedCount: matchIds.length };
   }
 
-  async function previewBatch(input, batchId, actorId, mode = 'odds') {
+  function applySnapshot({ competition, kind, snapshotId }, bookmaker, actorId) {
+    let applied = 0;
+    const skipped = [];
+    if (kind === 'odds') {
+      const fixtures = db
+        .prepare(
+          'SELECT externalId,homeTeam,awayTeam FROM odds_fixtures WHERE sportKey=? AND snapshotId=?',
+        )
+        .all(competition, snapshotId);
+      for (const fixture of fixtures) {
+        try {
+          const matchId = publishOne(
+            { eventId: fixture.externalId, bookmaker, snapshotId },
+            actorId,
+            true,
+          );
+          if (matchId) applied++;
+        } catch (error) {
+          if (!(error instanceof AppError) || error.status !== 409) throw error;
+          skipped.push({
+            homeTeam: fixture.homeTeam,
+            awayTeam: fixture.awayTeam,
+            reason: error.message,
+          });
+        }
+      }
+    } else {
+      for (const score of scoreRows(snapshotId)) {
+        if (score.reason === 'Déjà réglé') continue;
+        if (!score.eligible || Date.now() - Date.parse(score.startDate) < 90 * 60000) {
+          skipped.push({
+            homeTeam: score.homeTeam,
+            awayTeam: score.awayTeam,
+            reason: score.eligible
+              ? 'Fin de match signalée trop tôt par le fournisseur.'
+              : score.reason,
+          });
+          continue;
+        }
+        const { matchId, homeScore, awayScore } = score;
+        const result = homeScore === awayScore ? 'DRAW' : homeScore > awayScore ? 'HOME' : 'AWAY';
+        try {
+          finishMatch(db, actorId, matchId, { result, homeScore, awayScore });
+          applied++;
+        } catch (error) {
+          if (!(error instanceof AppError) || error.status !== 409) throw error;
+          skipped.push({
+            homeTeam: score.homeTeam,
+            awayTeam: score.awayTeam,
+            reason: error.message,
+          });
+        }
+      }
+    }
+    return { applied, skipped };
+  }
+
+  async function previewBatch(input, batchId, actorId, mode = 'odds', bookmaker = null) {
     ensure(['odds', 'scores', 'global'].includes(mode), 400, 'Mode de chargement invalide.');
     const { competitions, date, consent } = input;
     ensure(
       consent === true &&
         Array.isArray(competitions) &&
         competitions.length >= 1 &&
-        competitions.length <= 5 &&
+        competitions.length <= (bookmaker ? Object.keys(COMPETITIONS).length : 5) &&
         new Set(competitions).size === competitions.length &&
         competitions.every((key) => has(COMPETITIONS, key)),
       400,
-      'Choisir entre 1 et 5 compétitions distinctes et autoriser le coût maximal.',
+      'Choisir des compétitions distinctes et autoriser le coût affiché.',
     );
     ensure(
-      mode === 'odds' || competitions.every((key) => SCORE_COMPETITIONS.includes(key)),
+      bookmaker || mode === 'odds' || competitions.every((key) => SCORE_COMPETITIONS.includes(key)),
       400,
       'Les scores 1N2 sont pris en charge pour les cinq grands championnats uniquement.',
     );
-    const tasks = competitions.flatMap((competition) =>
-      mode === 'global'
-        ? [
-            { competition, kind: 'odds', cost: 1 },
-            { competition, kind: 'scores', cost: 2 },
-          ]
-        : [{ competition, kind: mode, cost: mode === 'scores' ? 2 : 1 }],
-    );
+    const tasks = competitions.flatMap((competition) => {
+      const calls = [];
+      if (mode !== 'scores') calls.push({ competition, kind: 'odds', cost: 1 });
+      if (mode !== 'odds' && SCORE_COMPETITIONS.includes(competition))
+        calls.push({ competition, kind: 'scores', cost: 2 });
+      return calls;
+    });
+    ensure(tasks.length, 400, 'Sélectionnez un grand championnat pour actualiser ses résultats.');
     const day = Date.parse(`${date}T00:00:00Z`);
     const today = Date.parse(new Date(Date.now()).toISOString().slice(0, 10));
     ensure(
@@ -624,6 +707,7 @@ export function manualOdds({ db, config }) {
       competitions: [...competitions].sort(),
       date,
       ...(mode === 'odds' ? {} : { mode }),
+      ...(bookmaker ? { bookmaker } : {}),
     });
     const replay = transaction(db, () => {
       const previous = db.prepare('SELECT * FROM odds_batches WHERE id=?').get(batchId);
@@ -666,7 +750,7 @@ export function manualOdds({ db, config }) {
         current.dailyUsed + required <= current.dailyLimit &&
           current.monthlyUsed + requiredCredits <= current.monthlyLimit,
         429,
-        'Quota local insuffisant pour cette sélection. Réduire le nombre de championnats. Aucun appel envoyé.',
+        `Quota local insuffisant pour cette sélection (${required} appels nécessaires). Réduisez la sélection ou attendez que le quota se libère. Aucun appel envoyé.`,
       );
       ensure(
         !required || !current.lastCallAt || Date.now() - current.lastCallAt >= 60000,
@@ -726,8 +810,14 @@ export function manualOdds({ db, config }) {
                 batchId,
                 'scores',
               )
-            : await preview({ competition, date, consent: true }, randomUUID(), actorId, batchId);
-        results.push({ competition, kind, cost, status: result.cached ? 'CACHED' : 'LOADED' });
+            : await loadOdds({ competition, date, consent: true }, randomUUID(), actorId, batchId);
+        results.push({
+          competition,
+          kind,
+          cost,
+          status: result.cached ? 'CACHED' : 'LOADED',
+          snapshotId: result.id,
+        });
       } catch (error) {
         results.push({
           competition,
@@ -746,7 +836,7 @@ export function manualOdds({ db, config }) {
       const loaded = results
         .filter((row) => row.kind === 'scores' && ['LOADED', 'CACHED'].includes(row.status))
         .map((row) => row.competition);
-      const rows = scoreRows()
+      const rows = (bookmaker ? [] : scoreRows())
         .filter((row) => row.eligible && loaded.includes(row.sportKey))
         .slice(0, 100)
         .map((row) => ({
@@ -756,11 +846,19 @@ export function manualOdds({ db, config }) {
           providerSnapshotId: row.providerSnapshotId,
         }));
       const resultPreview = rows.length ? createResultPreview(db, actorId, rows) : null;
+      if (bookmaker) {
+        for (const row of results) {
+          if (row.snapshotId) Object.assign(row, applySnapshot(row, bookmaker, actorId));
+        }
+      }
       db.prepare(
         "UPDATE odds_batches SET state='COMPLETE',results=?,resultPreviewId=? WHERE id=?",
       ).run(JSON.stringify(results), resultPreview?.id || null, batchId);
       audit(db, actorId, 'ODDS_BATCH_COMPLETE', batchId, {
         mode,
+        ...(bookmaker
+          ? { bookmaker, applied: results.reduce((sum, row) => sum + (row.applied || 0), 0) }
+          : {}),
         resultPreviewId: resultPreview?.id || null,
       });
     });
@@ -772,6 +870,10 @@ export function manualOdds({ db, config }) {
     publish,
     previewBatch,
     publishBatch,
+    sync: (input, id, actor) => {
+      ensure(has(BOOKMAKERS, input.bookmaker), 400, 'Bookmaker inconnu.');
+      return previewBatch(input, id, actor, input.mode, input.bookmaker);
+    },
     refreshGlobal: (input, id, actor) => previewBatch(input, id, actor, 'global'),
     previewScores: (input, id, actor) => previewBatch(input, id, actor, 'scores'),
   };

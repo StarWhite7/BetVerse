@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { OddsImportComponent } from './odds-import.component';
 
@@ -41,6 +42,7 @@ describe('Manual The Odds API import', () => {
         provideZonelessChangeDetection(),
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -58,135 +60,74 @@ describe('Manual The Odds API import', () => {
     http.expectOne('/api/admin/odds').flush(state);
     http.expectNone((request) => request.method === 'POST');
   });
-  it('loads one preview only after consent and does not send provider credentials', () => {
+  it('explains MFA rejection and links to admin security without a provider request', () => {
     const view = TestBed.createComponent(OddsImportComponent);
     view.detectChanges();
-    http.expectOne('/api/admin/odds').flush(state);
-    const component = view.componentInstance;
-    component.preview();
-    http.expectNone((request) => request.method === 'POST');
-    component.toggleCompetition('soccer_france_ligue_one', true);
-    component.toggleCompetition('soccer_epl', true);
-    component.accepted = true;
-    component.preview();
-    component.preview();
-    const request = http.expectOne('/api/admin/odds/preview-batch');
-    expect(request.request.body.competitions).toEqual(['soccer_france_ligue_one', 'soccer_epl']);
-    expect(request.request.body.consent).toBe(true);
-    expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
-    expect(JSON.stringify(request.request.body)).not.toContain('apiKey');
-    expect(component.accepted).toBe(false);
-    request.flush({
-      ...state,
-      batchResults: [
-        { competition: 'soccer_france_ligue_one', status: 'CACHED' },
-        { competition: 'soccer_epl', status: 'CACHED' },
-      ],
-    });
-    expect(component.message()).toContain('0 appel');
-    expect(component.selectedFixtures().length).toBe(1);
-    component.preview();
-    http.expectNone((request) => request.method === 'POST');
-  });
-  it('uses the global button to load a preview and requires a separate click to settle it', () => {
-    const view = TestBed.createComponent(OddsImportComponent);
+    const message =
+      'Validez votre session avec votre code de double authentification dans l’onglet Sécurité.';
+    http
+      .expectOne('/api/admin/odds')
+      .flush({ code: 'ADMIN_MFA_REQUIRED', message }, { status: 403, statusText: 'Forbidden' });
     view.detectChanges();
-    http.expectOne('/api/admin/odds').flush(state);
-    const component = view.componentInstance;
-    const button = (label: string): HTMLButtonElement =>
-      Array.from(
-        view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-      ).find((entry) => entry.textContent?.includes(label))!;
-    view.detectChanges();
-    expect(button('Actualisation globale').disabled).toBe(true);
-    component.toggleCompetition(fixture.sportKey, true);
-    component.accepted = true;
-    view.detectChanges();
-    expect(button('Actualisation globale').disabled).toBe(false);
-    button('Actualisation globale').click();
-    const request = http.expectOne('/api/admin/odds/refresh-global');
-    expect(request.request.body.competitions).toEqual([fixture.sportKey]);
-    expect(request.request.body.consent).toBe(true);
-    expect(component.accepted).toBe(false);
-    const result = {
-      ...fixture,
-      matchId: 'match-1',
-      homeScore: 2,
-      awayScore: 1,
-      providerSnapshotId: 'score-snapshot',
-    };
-    request.flush({
-      ...state,
-      scores: [{ ...result, eligible: true }],
-      resultPreview: { id: 'result-preview', rows: [result], applied: false, expired: false },
-    });
-    http.expectNone((request) => request.method === 'POST');
-    view.detectChanges();
-    button('Valider les résultats').click();
-    const apply = http.expectOne('/api/admin/operations/results/apply');
-    expect(apply.request.body).toEqual({ id: 'result-preview', confirmation: 'REGLER' });
-    apply.flush({ count: 1 });
-    http.expectOne('/api/admin/odds').flush(state);
-  });
-  it('publishes the displayed snapshot with no preview request and never retries failures', () => {
-    const view = TestBed.createComponent(OddsImportComponent);
-    view.detectChanges();
-    http.expectOne('/api/admin/odds').flush(state);
-    const component = view.componentInstance;
-    component.toggleAll(true);
-    component.publishSelected();
-    component.publishSelected();
-    const publish = http.expectOne('/api/admin/odds/publish-batch');
-    expect(publish.request.body.fixtures[0].snapshotId).toBe('snapshot');
-    expect(publish.request.body.fixtures[0].bookmaker).toBe('winamax_fr');
-    publish.flush({ message: 'Aperçu expiré' }, { status: 409, statusText: 'Conflict' });
-    expect(component.message()).toBe('Aperçu expiré');
-    http.expectOne('/api/admin/odds').flush(state);
+    expect(view.nativeElement.querySelector('[role="status"]').textContent).toContain(message);
+    expect(view.nativeElement.querySelector('a').getAttribute('href')).toBe('/admin/security');
     http.expectNone((request) => request.method === 'POST');
   });
 
-  it('renders one row per fixture, detects changes and excludes unchanged or unavailable prices', () => {
-    const view = TestBed.createComponent(OddsImportComponent);
-    view.detectChanges();
-    const unchanged = {
-      ...fixture,
-      externalId: 'unchanged',
-      current: {
-        homeTeam: fixture.homeTeam,
-        awayTeam: fixture.awayTeam,
-        startDate: fixture.startDate,
-        status: 'UPCOMING',
-        home: 180,
-        draw: 310,
-        away: 240,
-        hasBets: false,
-      },
-    };
-    const changed = {
-      ...unchanged,
-      externalId: 'changed',
-      quotes: [{ ...fixture.quotes[0], home: 210 }],
-    };
-    http.expectOne('/api/admin/odds').flush({
-      ...state,
-      fixtures: [fixture, unchanged, changed, { ...fixture, externalId: 'missing', quotes: [] }],
+  for (const [mode, label, cost] of [
+    ['odds', 'Actualiser les matchs et cotes', 2],
+    ['scores', 'Actualiser les résultats', 2],
+    ['global', 'Actualisation globale', 4],
+  ] as const) {
+    it(`sends a single ${mode} sync and displays the result without a confirmation step`, () => {
+      const view = TestBed.createComponent(OddsImportComponent);
+      view.detectChanges();
+      const cup = 'soccer_uefa_champs_league';
+      const mixed = {
+        ...state,
+        competitions: { ...state.competitions, [cup]: 'Ligue des champions' },
+      };
+      http.expectOne('/api/admin/odds').flush(mixed);
+      const component = view.componentInstance;
+      const button = () =>
+        Array.from(
+          view.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+        ).find((entry) => entry.textContent?.includes(label))!;
+      view.detectChanges();
+      expect(button().disabled).toBe(true);
+      component.toggleCompetition(fixture.sportKey, true);
+      component.toggleCompetition(cup, true);
+      view.detectChanges();
+      expect(button().disabled).toBe(false);
+      expect(button().textContent).toContain(`≤ ${cost}`);
+      button().click();
+      component.sync(mode);
+      const request = http.expectOne('/api/admin/odds/sync');
+      expect(request.request.body).toMatchObject({
+        mode,
+        competitions: [fixture.sportKey, cup],
+        consent: true,
+        bookmaker: 'winamax_fr',
+      });
+      expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
+      request.flush({
+        ...mixed,
+        batchResults: [
+          {
+            competition: fixture.sportKey,
+            kind: mode === 'scores' ? 'scores' : 'odds',
+            status: 'LOADED',
+            applied: 1,
+          },
+        ],
+      });
+      expect(component.message()).toContain(
+        mode === 'scores' ? '1 résultat(s) réglé(s)' : '1 match(s) publié(s)',
+      );
+      view.detectChanges();
+      expect(view.nativeElement.textContent).not.toContain('Valider la sélection');
+      expect(view.nativeElement.textContent).not.toContain('Valider les résultats');
+      http.expectNone((request) => request.method === 'POST');
     });
-    view.detectChanges();
-    const component = view.componentInstance;
-    expect(view.nativeElement.querySelectorAll('tbody tr').length).toBe(4);
-    expect(view.nativeElement.textContent).toContain('Cotes modifiées');
-    expect(view.nativeElement.querySelector('del').textContent).toContain('1.80');
-    component.toggleAll(true);
-    expect(component.selectedFixtures().map((row) => row.externalId)).toEqual([
-      'event-1',
-      'changed',
-    ]);
-    component.toggleRow('changed', false);
-    expect(component.selectedFixtures().length).toBe(1);
-    component.accepted = true;
-    component.toggleCompetition('soccer_epl', true);
-    expect(component.accepted).toBe(false);
-    expect(component.selectedRows()).toEqual([]);
-    http.expectNone((request) => request.method === 'POST');
-  });
+  }
 });

@@ -11,7 +11,6 @@ section {
 }
 .heading,
 .review-heading,
-.review-controls,
 .load-controls {
   display: flex;
   align-items: center;
@@ -101,8 +100,7 @@ input[type='checkbox'] {
 label {
   font-size: 0.85rem;
 }
-label.date,
-.review-controls > label {
+.load-controls > label {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -111,11 +109,10 @@ label.date,
   justify-content: flex-start;
   margin: 1rem 0;
 }
-.consent {
+.sync-actions {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.6rem;
-  margin-bottom: 1rem;
 }
 .extras {
   display: flex;
@@ -159,17 +156,6 @@ button:disabled {
   padding-top: 0.8rem;
   margin-top: 0.8rem;
 }
-.review-controls {
-  margin: 1rem 0;
-  justify-content: flex-start;
-}
-.review-controls > span {
-  font-size: 0.85rem;
-  color: var(--bv-muted);
-}
-.review-controls > .primary {
-  margin-left: auto;
-}
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--bv-border);
@@ -197,9 +183,6 @@ td {
 tbody tr:last-child td {
   border-bottom: 0;
 }
-tr.selected {
-  background: var(--bv-raised);
-}
 .teams {
   min-width: 180px;
   font-weight: 600;
@@ -221,10 +204,6 @@ tr.selected {
 }
 .nowrap {
   white-space: nowrap;
-}
-.change.actionable {
-  background: var(--bv-raised);
-  color: var(--bv-accent);
 }
 td small {
   display: block;
@@ -253,6 +232,13 @@ summary {
 .status {
   line-height: 1.6;
 }
+.status:empty {
+  margin: 0;
+}
+.status a {
+  margin-inline-start: 0.5rem;
+  color: var(--bv-accent);
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -275,10 +261,6 @@ summary {
   }
   section {
     padding: 0.8rem;
-  }
-  .review-controls > .primary {
-    margin-left: 0;
-    width: 100%;
   }
   .manual {
     margin-bottom: 1rem;

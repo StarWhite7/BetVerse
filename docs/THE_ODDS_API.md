@@ -1,4 +1,4 @@
-# The Odds API : aperçu et publication manuels
+# The Odds API : actualisation depuis l’administration
 
 Fournisseur : https://the-odds-api.com/ (avec tirets). Documentation consultée le 5 novembre 2026 :
 https://the-odds-api.com/liveapi/guides/v4/ et https://the-odds-api.com/sports-odds-data/bookmaker-apis.html.
@@ -8,7 +8,7 @@ https://the-odds-api.com/liveapi/guides/v4/ et https://the-odds-api.com/sports-o
 | Variable                     | Valeur                                                                                         |
 | ---------------------------- | ---------------------------------------------------------------------------------------------- |
 | `THE_ODDS_API_KEY`           | Clé secrète déjà ajoutée par le propriétaire dans Render ; jamais dans Git, Angular ou Android |
-| `THE_ODDS_API_MODE`          | `manual` pour activer les aperçus ; défaut `disabled`, même avec une clé                       |
+| `THE_ODDS_API_MODE`          | `manual` pour activer les actualisations ; défaut `disabled`, même avec une clé                |
 | `THE_ODDS_API_DAILY_LIMIT`   | `10` par défaut, tentatives sur 24 h glissantes                                                |
 | `THE_ODDS_API_MONTHLY_LIMIT` | `400` par défaut, crédits sur **31 jours glissants**, plafond configurable jusqu’à 500        |
 | `API_FOOTBALL_MODE`          | `disabled` recommandé pour l’ancien fournisseur suspendu                                       |
@@ -18,17 +18,13 @@ Ces plafonds locaux conservateurs sont distincts de la facturation mensuelle du 
 
 ## Parcours administrateur
 
-1. Administration → Matchs → **The Odds API — matchs et cotes 1N2**.
-2. Les cinq grands championnats sont **décochés par défaut**. Cocher ceux à charger et choisir le premier jour UTC (aujourd’hui à J+7). La fenêtre contient sept jours calendaires UTC. Les coupes restent accessibles sous « Autres compétitions » ; cinq compétitions maximum par chargement.
-3. Le coût maximal est affiché **avant** consentement : jusqu’à un crédit par compétition cochée (cinq championnats = cinq crédits maximum). Un changement de sélection/date annule le consentement. **Charger l’aperçu** lance un groupe volontaire, séquentiel, avec un seul GET par compétition non cachée, `regions=fr`, `markets=h2h`, prix décimaux. Aucun retry, pagination ou remplacement implicite.
-4. Le bilan distingue compétition chargée, cache, échec et compétition non appelée. Le groupe s’arrête au premier échec, en conservant les aperçus déjà chargés. Examiner ensuite le tableau : une ligne par match, cotes avant/après, ajout, changement de calendrier, cotes modifiées, inchangé ou indisponible. Winamax France est présélectionné ; Betclic France et Unibet France restent disponibles sans nouvel appel.
-5. Les modifications publiables des compétitions effectivement chargées sont présélectionnées ; décocher les lignes à exclure, ou utiliser la case d’en-tête pour sélectionner toutes les lignes disponibles (200 maximum). **Valider la sélection (0 crédit)** publie la sélection en une transaction vers le catalogue commun Web/Android. Une seule ligne invalide au moment du clic fait échouer toute la transaction, sans publication partielle. Les lignes inchangées sont exclues de la sélection dans l’interface.
+1. Ouvrir **Administration → Matchs**. Si la session demande une double authentification, la valider dans l’onglet **Sécurité**.
+2. Sélectionner les compétitions, le bookmaker et le premier jour UTC de la fenêtre de sept jours (aujourd’hui à J+7).
+3. **Actualiser les matchs et cotes** publie les matchs admissibles et met à jour leurs cotes dans le catalogue commun. Compter au plus un crédit par compétition.
+4. **Actualiser les résultats** règle les matchs admissibles des trois derniers jours parmi les cinq grands championnats sélectionnés. Compter au plus deux crédits par championnat.
+5. **Actualisation globale** combine ces deux actions. Pour une coupe, elle récupère uniquement les matchs et les cotes. Le bouton indique le coût maximal et le serveur vérifie les quotas après prise en compte du cache.
 
-L’aperçu charge les matchs et les cotes ensemble ; ce n’est pas une garantie de calendrier exhaustif. Les rencontres déjà commencées, données malformées, cotes incomplètes, cotes avec plus de deux décimales et mises à jour de plus d’une heure sont exclues de la publication. Un aperçu expiré nécessite un nouveau clic manuel. Les heures d’affichage sont locales ; les filtres du fournisseur sont UTC.
-
-**Actualisation globale** charge cet aperçu et les scores des trois derniers jours pour les grands championnats sélectionnés. Compter au maximum deux appels et trois crédits par championnat. **Récupérer les résultats** charge seulement les scores pour un appel et deux crédits par championnat. Les résultats mis en cache depuis moins de cinq minutes sont réutilisés.
-
-Seuls les matchs terminés associés à un match publié, avec les mêmes équipes et la même heure de coup d’envoi, entrent dans le lot à régler. Vérifier les scores, puis cliquer sur **Valider les résultats (0 crédit)** dans les quinze minutes. La validation est atomique et conserve les cotes acceptées. Les coupes, les matchs non associés et les résultats plus anciens restent à traiter manuellement.
+Le clic déclenche le chargement et applique les données valides. Le bilan liste les rencontres écartées avec leur motif. Un score doit concerner un match publié lié par son identifiant fournisseur, avec la même compétition, les mêmes équipes et le même coup d’envoi. Le fournisseur doit déclarer le match terminé et le coup d’envoi remonter à au moins 90 minutes. Les scores des coupes, les résultats plus anciens et les cas ambigus restent à traiter dans l’exploitation.
 
 ## Protection du quota et des paris
 
@@ -36,12 +32,12 @@ Seuls les matchs terminés associés à un match publié, avec les mêmes équip
 - `POST /api/admin/odds/preview-batch`, authentifié administrateur avec CSRF, consentement explicite et UUID d’idempotence, peut charger jusqu’à cinq compétitions explicitement choisies. L’ancien `POST /preview` reste compatible pour un chargement unique. Les publications `/publish` et `/publish-batch` n’appellent jamais le fournisseur.
 - Hôte HTTPS fixe, redirections interdites, délai 15 s, réponse plafonnée à 4 Mio ; aucun retry.
 - Réservation atomique et persistante **avant** l’appel. Le groupe possède son propre reçu persistant : répétition de la même clé ne rejoue pas les appels. Un contrôle préalable vérifie le quota local/fournisseur disponible pour tout le groupe non caché. Un groupe en cours interdit tout autre groupe ou chargement unique ; les appels de ce groupe sont séquentiels, sans attente d’une minute entre ses compétitions. L’attente d’une minute s’applique entre deux chargements non cachés distincts. Un groupe interrompu reste bloqué pour examen manuel après redémarrage.
-- Cache d’une heure en SQLite. Les aperçus, liens de publication et compteurs survivent aux déploiements. Réponses conservées 24 h puis purgées, reçus de requêtes conservés pour empêcher les rejeux. Rejouer une ancienne clé ne prolonge pas la fraîcheur des cotes et ne remplace pas un aperçu plus récent.
+- Cache SQLite d’une heure pour les cotes et de cinq minutes pour les résultats. Les liens de publication et les compteurs survivent aux déploiements. Les réponses sont purgées après 24 h et les reçus conservés pour empêcher les rejeux. Rejouer une ancienne clé ne prolonge pas la fraîcheur des cotes.
 - Échecs comptés par précaution dans les plafonds locaux, même si le fournisseur ne les facture pas. Son dernier `x-requests-remaining` est affiché avec sa date de consultation.
 - Un quota fournisseur à zéro bloque les nouveaux appels pendant 31 jours au maximum. Un appel `PENDING` après interruption bloque aussi les nouveaux appels : faire examiner le journal et le tableau de bord par l’administrateur avant toute intervention manuelle ; aucune remise à zéro au redémarrage.
 - Les textes d’erreur externes et l’URL contenant `apiKey` ne sont ni journalisés ni exposés. Seuls les champs de calendrier/cotes autorisés sont persistés.
 - Publication transactionnelle et auditée, réutilisation d’un match existant identifié par équipes/date exactes, aucune réouverture d’un match annulé/terminé. Les paris déjà acceptés conservent leur cote ; leurs équipes/date restent verrouillées.
-- Les chargements de scores passent uniquement par les POST administrateur `/scores-batch` et `/refresh-global`. Le règlement est une action locale séparée et un lot déjà réglé ne verse rien de plus au rejeu.
+- Le panneau utilise `POST /api/admin/odds/sync` avec la sélection, le mode, le bookmaker et une clé d’idempotence. La publication et le règlement local des données admissibles sont enregistrés avec le reçu du lot. Le rejeu ne débite aucun crédit et ne paie aucun pari une deuxième fois.
 
 ## Validation
 

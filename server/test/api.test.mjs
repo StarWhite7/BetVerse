@@ -1149,7 +1149,9 @@ test('admin TOTP enrollment, recovery and step-up gate all administrative mutati
   assert.equal(verified.body.recoveryCodes.length, 8);
   assert.equal((await f.request('/admin/odds', { session: f.adminSession })).status, 200);
   f.db.prepare('DELETE FROM session_mfa').run();
-  assert.equal((await f.request('/admin/odds', { session: f.adminSession })).status, 403);
+  const blocked = await f.request('/admin/odds', { session: f.adminSession });
+  assert.equal(blocked.status, 403);
+  assert.equal(blocked.body.code, 'ADMIN_MFA_REQUIRED');
   assert.equal(
     (
       await f.request('/admin/security/verify', {
@@ -1241,17 +1243,20 @@ test('manual result batches preview without provider calls, roll back atomically
   );
 });
 
-test('global odds refresh previews scores and settles accepted bets only on explicit validation', async (t) => {
+test('global sync publishes odds and settles linked bets in one protected request without duplicate payout', async (t) => {
   const competition = 'soccer_france_ligue_one';
-  const path = '/admin/odds/refresh-global';
+  const cup = 'soccer_uefa_champs_league';
+  const path = '/admin/odds/sync';
   const kickoff = new Date(Date.now() - 7200000).toISOString();
   const calls = [];
   const f = await fixture(t, {
     football: {
       oddsMode: 'manual',
       oddsKey: 'fake-score-test-key',
+      oddsDailyLimit: 3,
       oddsFetch: async (url) => {
         const endpoint = new URL(url).pathname;
+        const sportKey = endpoint.split('/')[3];
         calls.push(endpoint);
         return Response.json(
           endpoint.endsWith('/scores/')
@@ -1270,7 +1275,31 @@ test('global odds refresh previews scores and settles accepted bets only on expl
                   ],
                 },
               ]
-            : [],
+            : [
+                {
+                  id: `future-${sportKey}`,
+                  sport_key: sportKey,
+                  commence_time: new Date(Date.now() + 86400000).toISOString(),
+                  home_team: `New ${sportKey}`,
+                  away_team: 'Visitors FC',
+                  bookmakers: [
+                    {
+                      key: 'winamax_fr',
+                      last_update: new Date().toISOString(),
+                      markets: [
+                        {
+                          key: 'h2h',
+                          outcomes: [
+                            { name: `New ${sportKey}`, price: 2 },
+                            { name: 'Draw', price: 3.2 },
+                            { name: 'Visitors FC', price: 3.5 },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
         );
       },
     },
@@ -1289,8 +1318,10 @@ test('global odds refresh previews scores and settles accepted bets only on expl
     method: 'POST',
     session: adminSession,
     body: {
-      competitions: [competition],
+      mode: 'global',
+      competitions: [competition, cup],
       date: new Date().toISOString().slice(0, 10),
+      bookmaker: 'winamax_fr',
       consent: true,
     },
     headers: { 'Idempotency-Key': randomUUID() },
@@ -1306,31 +1337,44 @@ test('global odds refresh previews scores and settles accepted bets only on expl
     (await request(path, { ...action, body: { ...action.body, consent: false } })).status,
     400,
   );
+  assert.equal(
+    (
+      await request(path, {
+        ...action,
+        body: { ...action.body, competitions: [competition, cup, 'soccer_epl'] },
+      })
+    ).status,
+    429,
+  );
   assert.equal(calls.length, 0);
-  const preview = await request(path, action);
-  assert.equal(preview.status, 200, JSON.stringify(preview.body));
-  assert.equal(preview.body.resultPreview?.rows[0]?.matchId, match.id);
-  assert.equal(preview.body.usage.monthlyUsed, 3);
+  const result = await request(path, action);
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.deepEqual(
+    result.body.batchResults.map(({ kind, applied }) => [kind, applied]),
+    [
+      ['odds', 1],
+      ['scores', 1],
+      ['odds', 1],
+    ],
+  );
+  assert.equal(result.body.usage.monthlyUsed, 4);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM matches WHERE status='UPCOMING'").get().n, 2);
   assert.equal(
     db.prepare('SELECT status FROM matches WHERE id=?').get(match.id).status,
-    'UPCOMING',
+    'FINISHED',
   );
   const wallet = async () => (await request('/wallet', { session: aliceSession })).body.balance;
-  assert.equal(await wallet(), 400);
-  const apply = () =>
-    request('/admin/operations/results/apply', {
-      method: 'POST',
-      session: adminSession,
-      body: { id: preview.body.resultPreview.id, confirmation: 'REGLER' },
-    });
-  const settled = await apply();
-  assert.equal(settled.status, 200, JSON.stringify(settled.body));
   assert.equal(await wallet(), 580);
-  assert.equal((await apply()).body.replayed, true);
+  assert.equal((await request(path, action)).body.replayed, true);
+  const cached = await request(path, { ...action, headers: { 'Idempotency-Key': randomUUID() } });
+  assert.equal(cached.status, 200, JSON.stringify(cached.body));
+  assert.ok(
+    cached.body.batchResults.every(({ status, applied }) => status === 'CACHED' && applied === 0),
+  );
   assert.equal(await wallet(), 580);
   assert.deepEqual(
     calls.map((call) => call.split('/').at(-2)),
-    ['odds', 'scores'],
+    ['odds', 'scores', 'odds'],
   );
 });
 
