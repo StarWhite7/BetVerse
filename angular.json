@@ -19,6 +19,16 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "*.png",
+                "input": "assets/competition-banners/drawable-nodpi",
+                "output": "competition-banners"
+              },
+              {
+                "glob": "*.png",
+                "input": "assets/sport-icons/drawable-nodpi",
+                "output": "sport-icons"
               }
             ],
             "styles": ["src/styles.css"]

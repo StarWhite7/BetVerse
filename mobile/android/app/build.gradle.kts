@@ -18,6 +18,8 @@ require(uri.scheme == "https" && uri.host != null && uri.rawUserInfo == null &&
 android {
     namespace = "fr.betverse.app.beta"
     compileSdk = 36
+    sourceSets.getByName("main").res.srcDir(rootProject.file("../../assets/competition-banners"))
+    sourceSets.getByName("main").res.srcDir(rootProject.file("../../assets/sport-icons"))
     defaultConfig {
         applicationId = "fr.betverse.app.beta"
         minSdk = 24

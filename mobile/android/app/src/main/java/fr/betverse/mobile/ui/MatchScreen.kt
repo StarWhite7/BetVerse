@@ -1,18 +1,14 @@
 package fr.betverse.mobile.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.SportsSoccer
-import androidx.compose.material.icons.outlined.SportsBasketball
-import androidx.compose.foundation.Canvas
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -20,7 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -30,6 +30,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import fr.betverse.mobile.UiState
+import fr.betverse.app.beta.R
 import fr.betverse.mobile.data.*
 
 @Composable fun MatchesScreen(
@@ -43,21 +44,30 @@ import fr.betverse.mobile.data.*
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { Text("Matchs", style = MaterialTheme.typography.headlineLarge) }
         item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(listOf("football" to "Football", "tennis" to "Tennis", "basketball" to "Basket")) { (key, label) ->
-                    FilterChip(selected = state.sport == key, onClick = { onSport(key) }, label = { SportBall(key) },
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for ((key, label, icon) in sportFilters) {
+                    FilterChip(
+                        selected = state.sport == key,
+                        onClick = { onSport(key) },
+                        label = {
+                            Image(painterResource(icon), contentDescription = null, modifier = Modifier.size(28.dp))
+                        },
                         colors = clubFilterColors(),
-                        modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = label })
+                        modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = label },
+                    )
                 }
             }
         }
         item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item { FilterChip(selected = selectedCompetition == null, onClick = { onCompetition(null) }, label = { Text("Toutes") }, colors = clubFilterColors(), modifier = Modifier.heightIn(min = 48.dp)) }
-                items(competitions) { competition ->
-                    FilterChip(selected = selectedCompetition == competition, onClick = { onCompetition(competition) }, label = { Text(competition) },
-                        colors = clubFilterColors(),
-                        modifier = Modifier.heightIn(min = 48.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Choisir une compétition", style = MaterialTheme.typography.labelLarge)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    item { FilterChip(selected = selectedCompetition == null, onClick = { onCompetition(null) }, label = { Text("Toutes") }, colors = clubFilterColors(), modifier = Modifier.heightIn(min = 48.dp)) }
+                    items(competitions) { competition ->
+                        FilterChip(selected = selectedCompetition == competition, onClick = { onCompetition(competition) }, label = { Text(competition) },
+                            colors = clubFilterColors(),
+                            modifier = Modifier.heightIn(min = 48.dp))
+                    }
                 }
             }
         }
@@ -70,8 +80,10 @@ import fr.betverse.mobile.data.*
                 "Essayez un autre sport ou une autre compétition. Seules les rencontres à venir enregistrées par l’administration sont proposées.")
         }
         fixtures.groupBy { it.competition }.forEach { (competition, matches) ->
-            item(key = "competition:" + competition) {
-                Text(competition, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+            if (competitionArtwork(matches.first()) == null) {
+                item(key = "competition:" + competition) {
+                    Text(competition, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+                }
             }
             items(matches, key = { it.id }) { fixture ->
                 FixtureCard(fixture, state.draft, !state.busy && fixture.available(state.now), onSelect)
@@ -85,8 +97,12 @@ import fr.betverse.mobile.data.*
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-      Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Column {
+        CompetitionBanner(fixture)
+        Row(
+            Modifier.fillMaxWidth().padding(start = 12.dp, top = 12.dp, end = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 TeamName(fixture.home)
                 TeamName(fixture.away)
@@ -98,7 +114,10 @@ import fr.betverse.mobile.data.*
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.padding(start = 12.dp, top = 10.dp, end = 12.dp, bottom = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Choice.entries.forEach { choice ->
                 val odds = fixture.odds(choice)
                 val selected = draft?.selections?.any { it.fixture.id == fixture.id && it.choice == choice } == true
@@ -130,6 +149,53 @@ import fr.betverse.mobile.data.*
       }
     }
 }
+
+private data class Banner(
+    val artwork: Int,
+    val background: Color,
+    val foreground: Color = Color(0xFFF3F6FC)
+)
+
+private fun competitionArtwork(fixture: Fixture): Banner? {
+    if (fixture.sport != "football") return null
+    return when (fixture.competition.trim().lowercase()) {
+        "ligue 1", "france" -> Banner(R.drawable.ligue_1, Color(0xFF12327E))
+        "premier league", "epl" -> Banner(R.drawable.premier_league, Color(0xFF3C164B))
+        "la liga", "laliga", "spain" -> Banner(R.drawable.la_liga, Color(0xFF792919))
+        "serie a", "italy" -> Banner(R.drawable.serie_a, Color(0xFFF4E5C4), Color(0xFF142137))
+        "bundesliga", "germany" -> Banner(R.drawable.bundesliga, Color(0xFF591719))
+        else -> null
+    }
+}
+
+@Composable private fun CompetitionBanner(fixture: Fixture) {
+    val banner = competitionArtwork(fixture) ?: return
+    Box(
+        Modifier.fillMaxWidth().heightIn(min = 40.dp).background(banner.background),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Box(Modifier.matchParentSize().clipToBounds()) {
+            Image(
+                painter = painterResource(banner.artwork),
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.CenterEnd).fillMaxWidth(.65f).fillMaxHeight(),
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.CenterEnd
+            )
+            Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
+                .45f to banner.background, .70f to banner.background.copy(alpha = 0f)
+            )))
+        }
+        Text(
+            fixture.competition.trim(),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = banner.foreground
+        )
+    }
+}
+
 @Composable private fun TeamName(name: String) {
     val club = clubIdentity(name)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -149,15 +215,8 @@ import fr.betverse.mobile.data.*
     }
 }
 
-@Composable private fun SportBall(sport: String) {
-    when (sport) {
-        "football" -> Icon(Icons.Outlined.SportsSoccer, null, Modifier.size(27.dp))
-        "basketball" -> Icon(Icons.Outlined.SportsBasketball, null, Modifier.size(27.dp), tint = Color(0xFFDC681D))
-        else -> Canvas(Modifier.size(27.dp)) {
-            drawCircle(Color(0xFFBBD835))
-            val line = Stroke(width = 1.8.dp.toPx())
-            drawArc(Color.White, -70f, 140f, false, Offset(-size.width * .47f, size.height * .03f), Size(size.width * .9f, size.height * .94f), style = line)
-            drawArc(Color.White, 110f, 140f, false, Offset(size.width * .57f, size.height * .03f), Size(size.width * .9f, size.height * .94f), style = line)
-        }
-    }
-}
+private val sportFilters = listOf(
+    Triple("football", "Football", R.drawable.sport_football),
+    Triple("tennis", "Tennis", R.drawable.sport_tennis),
+    Triple("basketball", "Basket", R.drawable.sport_basketball),
+)

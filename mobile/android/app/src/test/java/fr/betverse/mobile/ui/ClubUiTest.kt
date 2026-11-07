@@ -94,14 +94,21 @@ class ClubUiTest {
         assertEquals("PSG", clubIdentity("Paris Saint-Germain")?.initials)
         assertEquals("RCS", clubIdentity("RC Strasbourg Alsace")?.initials)
     }
-    @Test fun renderLightAndDarkForVisualReview() {
-        var dark by mutableStateOf(false)
+    @Test fun renderLightForVisualReview() = renderForVisualReview(ThemePreference.LIGHT, "club-light")
+
+    @Test fun renderDarkForVisualReview() = renderForVisualReview(ThemePreference.DARK, "club-dark")
+
+    private fun renderForVisualReview(theme: ThemePreference, name: String) {
+        val preview = state().copy(fixtures = listOf(
+            fixture.copy(away = "Marseille", competition = "Ligue 1"),
+            fixture.copy(id = "arsenal", home = "Arsenal", away = "Liverpool", competition = "Premier League")
+        ))
         compose.setContent {
-            ClubTheme(if (dark) ThemePreference.DARK else ThemePreference.LIGHT) {
+            ClubTheme(theme) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     Column(Modifier.fillMaxSize()) {
                         Row(Modifier.fillMaxWidth().padding(16.dp)) { Brand(); Spacer(Modifier.weight(1f)); Text("1 250 V") }
-                        Box(Modifier.weight(1f)) { MatchesScreen(state(), {}, {}, { _, _ -> }) }
+                        Box(Modifier.weight(1f)) { MatchesScreen(preview, {}, {}, { _, _ -> }) }
                         NavigationBar {
                             Destination.entries.forEach { destination ->
                                 NavigationBarItem(selected = destination == Destination.MATCHES, onClick = {},
@@ -112,12 +119,9 @@ class ClubUiTest {
                 }
             }
         }
-        compose.onNodeWithText("Paris SG").assertExists()
-        capture("club-light")
-        compose.runOnIdle { dark = true }
-        compose.waitForIdle()
-        compose.onNodeWithText("Paris SG").assertExists()
-        capture("club-dark")
+        compose.onNodeWithText("Paris SG").assertIsDisplayed()
+        compose.onNodeWithText("Liverpool").assertIsDisplayed()
+        capture(name)
     }
     private fun capture(name: String) {
         val output = File("build/reports/native-previews").apply { mkdirs() }

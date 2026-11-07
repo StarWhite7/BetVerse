@@ -4,22 +4,30 @@
     <p>Catalogue BetVerse · cotes enregistrées lors de la confirmation du pari</p>
   </div>
   <button type="button" (click)="loadMatches()" [disabled]="loading()">Actualiser</button>
-  <nav aria-label="Choisir un sport">
-    <button
-      *ngFor="let sport of sportFilters"
-      type="button"
-      (click)="selectSport(sport.key)"
-      [attr.aria-pressed]="selectedSport() === sport.key"
-    >
-      {{ sport.label }}
-    </button>
-  </nav>
 </header>
 <p class="matches-error" *ngIf="error()">
   {{ error() }}
 </p>
 
-<section class="matches-grid" *ngIf="!loading() && matches().length; else matchesPlaceholder">
+<section class="matches-grid">
+  <nav class="matches-sport-selector" aria-label="Choisir un sport">
+    <button
+      *ngFor="let sport of sportFilters"
+      type="button"
+      (click)="selectSport(sport.key)"
+      [attr.aria-label]="sport.label"
+      [attr.aria-pressed]="selectedSport() === sport.key"
+    >
+      <img
+        [src]="'sport-icons/sport_' + sport.key.toLowerCase() + '.png'"
+        alt=""
+        width="28"
+        height="28"
+      />
+    </button>
+  </nav>
+
+<ng-container *ngIf="!loading() && matches().length; else matchesPlaceholder">
   <div class="matches-competition-filter">
     <h5>Choisir une compétition</h5>
     <ng-container *ngIf="availableCompetitions().length; else noCompetitions">
@@ -76,54 +84,76 @@
     </ng-template>
   </div>
   <article class="match-card" *ngFor="let match of filteredMatches()">
-    <header>
-      <span class="match-card__date">
-        {{ match.startDate | date: 'dd/MM/yyyy HH:mm' }}
-      </span>
+    @if (competitionBanner(match); as banner) {
+      <div class="match-card__banner"
+        [style.--banner-base]="banner.background"
+        [style.color]="banner.foreground">
+        <img [src]="'competition-banners/' + banner.asset + '.png'" alt="" loading="lazy" />
+        <span>{{ banner.label }}</span>
+      </div>
+    }
+    <header class="match-card__header">
       <div class="match-card__teams">
         <div class="match-card__team">
-          <div class="match-card__team-logo">
-            <img
-              [src]="teamLogoUrl(match.homeTeam)"
-              [alt]="displayTeamName(match.homeTeam) + ' logo'"
-            />
-          </div>
+          @if (teamBadgeUrl(match, match.homeTeam); as badge) {
+            <img class="match-card__team-badge" [src]="badge" width="52" height="34" alt="" loading="lazy" />
+          } @else {
+            <div class="match-card__team-logo">
+              <img [src]="teamLogoUrl(match.homeTeam)" alt="" loading="lazy" />
+            </div>
+          }
           <span>{{ displayTeamName(match.homeTeam) }}</span>
         </div>
-        <span class="match-card__vs">vs</span>
         <div class="match-card__team">
-          <div class="match-card__team-logo">
-            <img
-              [src]="teamLogoUrl(match.awayTeam)"
-              [alt]="displayTeamName(match.awayTeam) + ' logo'"
-            />
-          </div>
+          @if (teamBadgeUrl(match, match.awayTeam); as badge) {
+            <img class="match-card__team-badge" [src]="badge" width="52" height="34" alt="" loading="lazy" />
+          } @else {
+            <div class="match-card__team-logo">
+              <img [src]="teamLogoUrl(match.awayTeam)" alt="" loading="lazy" />
+            </div>
+          }
           <span>{{ displayTeamName(match.awayTeam) }}</span>
         </div>
       </div>
+      <time class="match-card__date" [attr.datetime]="match.startDate">
+        <strong>{{ match.startDate | date: 'HH:mm' }}</strong>
+        <span>{{ match.startDate | date: 'dd/MM/yyyy' }}</span>
+      </time>
     </header>
 
     <div class="match-card__odds">
-      <div>
-        <p>{{ displayTeamName(match.homeTeam) }}</p>
-        <strong>{{ match.oddsHome | number: '1.2-2' }}</strong>
-        <button type="button" (click)="openBetModal(match, 'HOME')">Parier</button>
-      </div>
-      <div *ngIf="match.oddsDraw">
-        <p>Nul</p>
-        <strong>{{ match.oddsDraw | number: '1.2-2' }}</strong>
-        <button type="button" (click)="openBetModal(match, 'DRAW')">Parier</button>
-      </div>
-      <div>
-        <p>{{ displayTeamName(match.awayTeam) }}</p>
-        <strong>{{ match.oddsAway | number: '1.2-2' }}</strong>
-        <button type="button" (click)="openBetModal(match, 'AWAY')">Parier</button>
-      </div>
+      @let homeOdds = (match.oddsHome | number: '1.2-2');
+      @let awayOdds = (match.oddsAway | number: '1.2-2');
+      <button
+        type="button"
+        [attr.aria-label]="'1, victoire de ' + displayTeamName(match.homeTeam) + ', cote ' + homeOdds"
+        (click)="openBetModal(match, 'HOME')"
+      >
+        <span>1</span><strong>{{ homeOdds }}</strong>
+      </button>
+      @if (match.oddsDraw) {
+        @let drawOdds = (match.oddsDraw | number: '1.2-2');
+        <button
+          type="button"
+          [attr.aria-label]="'N, match nul, cote ' + drawOdds"
+          (click)="openBetModal(match, 'DRAW')"
+        >
+          <span>N</span><strong>{{ drawOdds }}</strong>
+        </button>
+      }
+      <button
+        type="button"
+        [attr.aria-label]="'2, victoire de ' + displayTeamName(match.awayTeam) + ', cote ' + awayOdds"
+        (click)="openBetModal(match, 'AWAY')"
+      >
+        <span>2</span><strong>{{ awayOdds }}</strong>
+      </button>
     </div>
   </article>
   <p class="matches-empty" *ngIf="!filteredMatches().length">
     Aucun match pour {{ activeSportLabel() }} ({{ activeCompetitionLabel() }}) pour le moment.
   </p>
+</ng-container>
 </section>
 
 <ng-template #matchesPlaceholder>

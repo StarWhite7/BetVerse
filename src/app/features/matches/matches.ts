@@ -13,6 +13,7 @@ import { interval } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DialogDirective } from '../../shared/directives/dialog.directive';
 import { teamLogoUrl as localTeamLogo } from '../../shared/utils/team-presentation';
+import { clubBadgeUrl } from '../../shared/utils/club-badges';
 
 type SportFilter = {
   key: string;
@@ -20,6 +21,14 @@ type SportFilter = {
   keywords: string[];
   fallback?: boolean;
 };
+
+const competitionBanners = new Map([
+  ['ligue 1', { asset: 'ligue_1', background: '#12327e' }],
+  ['premier league', { asset: 'premier_league', background: '#3c164b' }],
+  ['laliga', { asset: 'la_liga', background: '#792919' }],
+  ['serie a', { asset: 'serie_a', background: '#f4e5c4', foreground: '#142137' }],
+  ['bundesliga', { asset: 'bundesliga', background: '#591719' }],
+]);
 
 @Component({
   selector: 'app-matches',
@@ -297,8 +306,21 @@ export class MatchesComponent implements OnInit {
     return null;
   }
 
+  competitionBanner(match: MatchEntity) {
+    if (this.resolveSportKey(match) !== 'FOOTBALL') return null;
+    const label = this.resolveCompetitionLabel(match);
+    if (!label) return null;
+    const key = label.toLowerCase().replace(/^la\s+liga$/, 'laliga');
+    const banner = competitionBanners.get(key);
+    return banner ? { ...banner, label } : null;
+  }
+
   teamLogoUrl(team: string): string {
     return localTeamLogo(team);
+  }
+
+  teamBadgeUrl(match: MatchEntity, team: string): string | undefined {
+    return this.resolveSportKey(match) === 'FOOTBALL' ? clubBadgeUrl(team) : undefined;
   }
 
   private teamInitials(team: string): string {

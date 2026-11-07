@@ -171,14 +171,44 @@ struct ClubTabs: View {
 }
 struct MatchesView: View {
     @EnvironmentObject var model: Model
+    private let sports = [("football", "Football"), ("tennis", "Tennis"), ("basketball", "Basket")]
     var competitions: [String] { Array(Set(model.matches.filter { string($0,"sportKey") == model.sport }.map { string($0,"competition") })).sorted() }
     var body: some View { VStack(spacing:0) {
-        Picker("Sport",selection:$model.sport) { Label("Football",systemImage:"soccerball").tag("football"); Label("Tennis",systemImage:"tennisball").tag("tennis"); Label("Basket",systemImage:"basketball").tag("basketball") }.pickerStyle(.segmented).padding()
+        HStack(spacing: 8) {
+            ForEach(sports, id: \.0) { key, label in
+                let selected = model.sport == key
+                Button {
+                    if !selected {
+                        model.sport = key
+                        model.competition = ""
+                    }
+                } label: {
+                    Image("sport_\(key)")
+                        .renderingMode(.original)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 28, height: 28)
+                        .frame(width: 48, height: 48)
+                        .background(selected ? Color.blue : Color.secondary.opacity(0.12),
+                                    in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(label))
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding([.horizontal, .top])
+        .padding(.bottom, 8)
+        Text("Choisir une compétition")
+            .font(.subheadline.weight(.semibold))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
         ScrollView(.horizontal,showsIndicators:false) { HStack { Button("Toutes") { model.competition = "" }; ForEach(competitions,id:\.self) { name in Button(name) { model.competition = name }.buttonStyle(.bordered).tint(model.competition == name ? .blue : .secondary) } }.padding(.horizontal) }
         List {
             ForEach(model.matches.filter { string($0,"sportKey") == model.sport && (model.competition.isEmpty || string($0,"competition") == model.competition) },id:\.selfID) { match in
                 VStack(alignment:.leading,spacing:12) {
-                    Text(string(match,"competition")).font(.caption).foregroundStyle(.secondary)
+                    MatchCompetitionBanner(name: string(match,"competition"), sport: string(match,"sportKey"))
                     Text(string(match,"homeTeam") + " — " + string(match,"awayTeam")).font(.headline)
                     Text(string(match,"startDate")).font(.caption)
                     HStack { ForEach([("HOME","1","oddsHome"),("DRAW","N","oddsDraw"),("AWAY","2","oddsAway")],id:\.0) { type,label,key in

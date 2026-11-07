@@ -5,6 +5,8 @@ RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY angular.json tsconfig*.json ./
 COPY src ./src
 COPY public ./public
+COPY assets/competition-banners ./assets/competition-banners
+COPY assets/sport-icons ./assets/sport-icons
 RUN npm run build
 
 FROM node:24-bookworm-slim AS runtime
