@@ -3,24 +3,11 @@ import { randomUUID } from 'node:crypto';
 import { z, amount, username, id } from '../lib/validation.mjs';
 import { ensure, transaction } from '../lib/errors.mjs';
 import { wallet, movement, audit, now } from '../domain/accounts.mjs';
-import { digest } from '../lib/security.mjs';
+import { adminCommand } from '../domain/admin-commands.mjs';
 export function walletRoutes({ db, requireAdmin }) {
   const router = Router();
-  const command = (req, input, action) => {
-    const key = id.parse(req.get('Idempotency-Key'));
-    transaction(db, () => {
-      const hash = digest(JSON.stringify([req.path, input]));
-      const previous = db
-        .prepare('SELECT requestHash FROM wallet_commands WHERE userId=? AND requestKey=?')
-        .get(req.user.id, key);
-      if (previous) {
-        ensure(previous.requestHash === hash, 409, 'Clé de requête déjà utilisée.');
-        return;
-      }
-      action();
-      db.prepare('INSERT INTO wallet_commands VALUES (?,?,?,?)').run(req.user.id, key, hash, now());
-    });
-  };
+  const command = (req, input, action) =>
+    adminCommand(db, req.user.id, id.parse(req.get('Idempotency-Key')), req.path, input, action);
   router.get('/', (req, res) => res.json(wallet(db, req.user.id)));
   router.get('/history', (req, res) => {
     const { limit, skip } = z
@@ -75,6 +62,34 @@ export function walletRoutes({ db, requireAdmin }) {
       audit(db, req.user.id, 'TRANSFER', target.id, { amount: input.amount, reference });
     });
     res.json(wallet(db, req.user.id));
+  });
+  router.post('/admin-credit/:userId', requireAdmin, (req, res) => {
+    const userId = id.parse(req.params.userId);
+    const input = z
+      .object({ currency: z.enum(['VERSE', 'SHARDS']), amount })
+      .strict()
+      .parse(req.body);
+    command(req, input, () => {
+      const previous = wallet(db, userId);
+      if (input.currency === 'VERSE') {
+        movement(db, userId, input.amount, 'CREDIT', 'ADMIN_ADJUSTMENT', randomUUID());
+      } else {
+        const updated = db
+          .prepare(
+            'UPDATE wallets SET shards=shards+?,updatedAt=? WHERE userId=? AND shards+?<=1000000000000',
+          )
+          .run(input.amount, now(), userId, input.amount);
+        ensure(updated.changes === 1, 409, 'Plafond de Shards atteint.');
+      }
+      const before = input.currency === 'VERSE' ? previous.balance : previous.shards;
+      audit(db, req.user.id, 'PLAYER_WALLET_CREDITED', userId, {
+        ...input,
+        before,
+        after: before + input.amount,
+      });
+    });
+    const { balance, shards } = wallet(db, userId);
+    res.json({ balance, shards });
   });
   return router;
 }

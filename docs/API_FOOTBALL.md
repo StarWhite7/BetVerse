@@ -1,5 +1,7 @@
 # API Football : bêta strictement manuelle
 
+> Historique. L’intégration a été retirée du site et du serveur. Utiliser [The Odds API](THE_ODDS_API.md) pour actualiser les matchs et les scores.
+
 Décision utilisateur du 4 novembre 2026 : aucun appel automatique pendant la bêta. Un push, un build, un déploiement, un redémarrage, une migration, un health check et l’ouverture d’une page ne doivent consommer aucune requête API Football.
 
 ## Activation volontaire

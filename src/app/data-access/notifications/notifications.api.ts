@@ -10,7 +10,8 @@ export interface UserNotification {
     | 'AGENCY_INVITE_ACCEPTED'
     | 'AGENCY_INVITE_DECLINED'
     | 'BET_WON'
-    | 'BET_REFUNDED';
+    | 'BET_REFUNDED'
+    | 'BET_CORRECTED';
   title: string;
   message: string;
   metadata?: {

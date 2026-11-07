@@ -52,13 +52,17 @@ export interface PublicProfile {
 }
 
 export interface AdminUserSummary {
-  status?:'ACTIVE'|'SUSPENDED';
+  status?: 'ACTIVE' | 'SUSPENDED';
   id: string;
   username: string | null;
   email: string;
   role: 'USER' | 'ADMIN';
   createdAt: string;
+  balance: number;
+  shards: number;
 }
+
+export type AdminCreditCurrency = 'VERSE' | 'SHARDS';
 
 @Injectable({ providedIn: 'root' })
 export class UsersApiService {
@@ -92,5 +96,13 @@ export class UsersApiService {
   getAdminUsers(query?: string) {
     const params = query ? new HttpParams().set('q', query) : undefined;
     return this.http.get<AdminUserSummary[]>(this.baseUrl, { params });
+  }
+
+  creditPlayer(userId: string, currency: AdminCreditCurrency, amount: number, requestKey: string) {
+    return this.http.post<{ balance: number; shards: number }>(
+      `${environment.apiUrl}/wallet/admin-credit/${userId}`,
+      { currency, amount },
+      { headers: { 'Idempotency-Key': requestKey } },
+    );
   }
 }

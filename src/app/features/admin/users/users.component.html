@@ -23,6 +23,9 @@
   <p class="admin-users__error" *ngIf="error()">
     {{ error() }}
   </p>
+  @if (creditResult()) {
+    <p role="status">{{ creditResult() }}</p>
+  }
 
   <section class="users-table">
     <header>
@@ -39,12 +42,14 @@
           <th>Email</th>
           <th>Role</th>
           <th>Créé le</th>
-          <th>État</th><th>Modération</th>
+          <th>État</th>
+          <th>Modération</th>
+          <th>Portefeuille</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngIf="loading()">
-          <td colspan="7">Chargement...</td>
+          <td colspan="8">Chargement...</td>
         </tr>
         <tr *ngFor="let user of filteredUsers(); trackBy: trackByUser">
           <td>{{ user.id }}</td>
@@ -52,13 +57,102 @@
           <td>{{ user.email }}</td>
           <td>{{ user.role }}</td>
           <td>{{ user.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-          <td>{{ user.status==='SUSPENDED'?'Suspendu':'Actif' }}</td><td><button type="button" [disabled]="loading()||user.role==='ADMIN'" (click)="target.set(user);reason=''">{{user.status==='SUSPENDED'?'Réactiver':'Suspendre'}}</button></td>
+          <td>{{ user.status === 'SUSPENDED' ? 'Suspendu' : 'Actif' }}</td>
+          <td>
+            <button
+              type="button"
+              [disabled]="loading() || user.role === 'ADMIN'"
+              (click)="target.set(user); reason = ''"
+            >
+              {{ user.status === 'SUSPENDED' ? 'Réactiver' : 'Suspendre' }}
+            </button>
+          </td>
+          <td>
+            <span>{{ user.balance | number }} Verse · {{ user.shards | number }} Shards</span>
+            <div class="wallet-actions">
+              <button
+                type="button"
+                (click)="openCredit(user, 'VERSE')"
+                [disabled]="loading() || creditBusy()"
+              >
+                Ajouter Verse
+              </button>
+              <button
+                type="button"
+                (click)="openCredit(user, 'SHARDS')"
+                [disabled]="loading() || creditBusy()"
+              >
+                Ajouter Shards
+              </button>
+            </div>
+          </td>
         </tr>
         <tr *ngIf="!filteredUsers().length && !loading()">
-          <td colspan="7">Aucun utilisateur trouvé.</td>
+          <td colspan="8">Aucun utilisateur trouvé.</td>
         </tr>
       </tbody>
     </table>
   </section>
 </section>
-@if(target();as user){<dialog bvDialog (dialogDismiss)="target.set(null)" class="bv-panel"><h2>{{user.status==='SUSPENDED'?'Réactiver':'Suspendre'}} {{user.username}}</h2><p>Une suspension ferme immédiatement les sessions et bloque la connexion. La décision est journalisée.</p><label>Motif (10 caractères minimum)<textarea [(ngModel)]="reason" maxlength="300"></textarea></label><button (click)="changeStatus()" [disabled]="loading()||reason.trim().length<10">Confirmer</button><button (click)="target.set(null)" [disabled]="loading()">Annuler</button></dialog>}
+@if (target(); as user) {
+  <dialog bvDialog (dialogDismiss)="target.set(null)" class="bv-panel">
+    <h2>{{ user.status === 'SUSPENDED' ? 'Réactiver' : 'Suspendre' }} {{ user.username }}</h2>
+    <p>
+      Une suspension ferme immédiatement les sessions et bloque la connexion. La décision est
+      journalisée.
+    </p>
+    <label
+      >Motif (10 caractères minimum)<textarea
+        [(ngModel)]="reason"
+        maxlength="300"
+      ></textarea></label
+    ><button (click)="changeStatus()" [disabled]="loading() || reason.trim().length < 10">
+      Confirmer</button
+    ><button (click)="target.set(null)" [disabled]="loading()">Annuler</button>
+  </dialog>
+}
+@if (creditTarget(); as target) {
+  <dialog
+    bvDialog
+    class="bv-panel wallet-dialog"
+    aria-labelledby="wallet-credit-title"
+    (dialogDismiss)="closeCredit()"
+  >
+    <h2 id="wallet-credit-title">
+      Ajouter {{ target.currency === 'VERSE' ? 'des Verse' : 'des Shards' }}
+    </h2>
+    <p>
+      Compte de <strong>{{ target.user.username || target.user.email }}</strong>
+    </p>
+    <p>
+      Solde actuel
+      {{
+        target.currency === 'VERSE' ? (target.user.balance | number) : (target.user.shards | number)
+      }}
+    </p>
+    <form (ngSubmit)="credit()">
+      <label>
+        Quantité à ajouter
+        <input
+          type="number"
+          name="amount"
+          min="1"
+          max="1000000"
+          step="1"
+          required
+          [(ngModel)]="creditAmount"
+          [disabled]="creditBusy() || creditUncertain()"
+        />
+      </label>
+      @if (creditError()) {
+        <p class="bv-error" role="alert">{{ creditError() }}</p>
+      }
+      <div class="wallet-actions">
+        <button type="button" (click)="closeCredit()" [disabled]="creditBusy()">Fermer</button>
+        <button type="submit" [disabled]="creditBusy() || !validCreditAmount()">
+          {{ creditBusy() ? 'Enregistrement…' : creditUncertain() ? 'Réessayer' : 'Confirmer' }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}

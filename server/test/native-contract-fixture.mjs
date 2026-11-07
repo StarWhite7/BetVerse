@@ -13,7 +13,6 @@ const config = {
   test: true,
   database: ':memory:',
   staticDir: '/nonexistent-betverse-test',
-  footballMode: 'disabled',
 };
 createUser(db, {
   email: 'native@example.test',

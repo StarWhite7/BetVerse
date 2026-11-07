@@ -41,7 +41,7 @@ Se connecter sur le site avec ce compte et ouvrir **Admin → Panel** :
 4. Le serveur règle tous les tickets et pronostics, verse les gains et enregistre les opérations atomiquement.
 5. En cas de report ou d'annulation, « Annuler et rembourser » restitue chaque mise une seule fois. Recréer ensuite une rencontre avec la bonne date.
 
-Le catalogue sportif est **manuel**. L’import API Football est optionnel, désactivé par défaut et réservé aux actions volontaires de l’administrateur. Aucun push, build ou démarrage ne déclenche d’appel fournisseur. Voir [les garde-fous et la configuration](docs/API_FOOTBALL.md).
+Le catalogue sportif s’actualise depuis l’administration avec The Odds API. Aucun push, build ou démarrage ne déclenche d’appel fournisseur. Voir [les garde-fous et la configuration](docs/THE_ODDS_API.md).
 
 ## Fonctionnalités livrées
 

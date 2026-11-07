@@ -11,7 +11,6 @@ https://the-odds-api.com/liveapi/guides/v4/ et https://the-odds-api.com/sports-o
 | `THE_ODDS_API_MODE`          | `manual` pour activer les actualisations ; défaut `disabled`, même avec une clé                |
 | `THE_ODDS_API_DAILY_LIMIT`   | `10` par défaut, tentatives sur 24 h glissantes                                                |
 | `THE_ODDS_API_MONTHLY_LIMIT` | `400` par défaut, crédits sur **31 jours glissants**, plafond configurable jusqu’à 500        |
-| `API_FOOTBALL_MODE`          | `disabled` recommandé pour l’ancien fournisseur suspendu                                       |
 
 Le stockage SQLite doit rester sur le disque persistant `/var/data`. Aucun secret GitHub ou Firebase supplémentaire.
 Ces plafonds locaux conservateurs sont distincts de la facturation mensuelle du fournisseur et ne voient pas l’usage d’autres projets avec la même clé.

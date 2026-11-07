@@ -43,6 +43,73 @@ function combinedOdds(legs) {
   const divisor = 100n ** BigInt(Math.max(0, legs.length - 1));
   return Number((product + divisor / 2n) / divisor);
 }
+
+export function correctBetStatus(db, actorId, betId, { expectedStatus, outcome, reason }) {
+  const bet = db.prepare('SELECT * FROM bets WHERE id=?').get(betId);
+  ensure(bet, 404, 'Pari introuvable.');
+  ensure(bet.status === expectedStatus, 409, 'Le statut du pari a changé. Actualisez la liste.');
+  if (outcome === 'DRAW') {
+    const match = db.prepare('SELECT sportKey FROM matches WHERE id=?').get(bet.matchId);
+    ensure(
+      bet.kind === 'SINGLE' && match?.sportKey === 'football',
+      400,
+      'Le match nul s’applique à un pari simple 1N2. Pour un combiné, clôturez la rencontre concernée.',
+    );
+  }
+  const status = outcome === 'DRAW' ? (bet.betType === 'DRAW' ? 'WON' : 'LOST') : outcome;
+  if (status === bet.status) return;
+
+  let effectiveOdds = bet.odds;
+  if (status === 'WON' && bet.kind === 'COMBO') {
+    const legs = db
+      .prepare("SELECT odds FROM bet_legs WHERE betId=? AND status!='VOID'")
+      .all(betId);
+    ensure(legs.length, 409, 'Toutes les sélections ont été annulées. Remboursez le ticket.');
+    effectiveOdds = combinedOdds(legs);
+  }
+  const payout =
+    status === 'WON'
+      ? Number((BigInt(bet.amount) * BigInt(effectiveOdds) + 50n) / 100n)
+      : status === 'VOID'
+        ? bet.amount
+        : 0;
+  const delta = payout - (bet.payout || 0);
+  if (delta) {
+    movement(
+      db,
+      bet.userId,
+      Math.abs(delta),
+      delta > 0 ? 'CREDIT' : 'DEBIT',
+      'BET_ADMIN_CORRECTION',
+      randomUUID(),
+    );
+  }
+  const xp = (Number(status === 'WON') - Number(bet.status === 'WON')) * 50;
+  if (xp) db.prepare('UPDATE users SET xp=MAX(0,xp+?) WHERE id=?').run(xp, bet.userId);
+  db.prepare('UPDATE bets SET status=?,payout=?,resolvedAt=? WHERE id=?').run(
+    status,
+    status === 'PENDING' ? null : payout,
+    status === 'PENDING' ? null : now(),
+    betId,
+  );
+  audit(db, actorId, 'BET_STATUS_CORRECTED', betId, {
+    userId: bet.userId,
+    before: bet.status,
+    after: status,
+    outcome,
+    reason,
+    delta,
+  });
+  notify(
+    db,
+    bet.userId,
+    'BET_CORRECTED',
+    'Statut du pari mis à jour',
+    'Le statut de votre ticket a été corrigé. Retrouvez le détail dans Mes paris.',
+    { betId, status, payout, delta },
+  );
+}
+
 export function placeCombinedBet(db, userId, input, requestKey) {
   return transaction(db, () => {
     ensure(

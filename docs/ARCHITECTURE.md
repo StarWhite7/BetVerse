@@ -68,6 +68,6 @@ Le catalogue et la liste d'agences sont bornés à 500 résultats, le classement
 
 Les notifications sont récupérées toutes les 30 secondes lorsque la page est visible ; le catalogue des rencontres également. Aucun système de WebSocket ou présence en ligne fictif n'est annoncé.
 
-Ces consultations lisent uniquement SQLite. L’intégration API Football sous `/api/admin/football` est désactivée par défaut : seuls trois POST administrateur peuvent contacter le fournisseur, chacun avec une requête maximum. Aucune tâche planifiée, aucun appel au démarrage ou dans le build. Le cache et les réservations de quota sont persistants ; les erreurs ne sont pas retentées. Voir [API_FOOTBALL.md](API_FOOTBALL.md).
+Ces consultations lisent uniquement SQLite. The Odds API fournit les actualisations sportives. Les matchs publiés auparavant restent dans le catalogue.
 
 The Odds API possède un circuit séparé sous `/api/admin/odds`, désactivé par défaut. Le panneau administrateur déclenche `POST /sync` pour publier les cotes, régler les scores admissibles ou combiner ces actions. Le chargement de scores est limité aux cinq grands championnats. Chaque lot réserve un reçu persistant, interdit les chargements concurrents, réutilise le cache et s’arrête au premier échec fournisseur. Les modifications admissibles et le reçu sont appliqués dans une transaction. Les compteurs de requêtes sur 24 h et de crédits sur 31 jours et les liens de publication sont persistants. Voir [THE_ODDS_API.md](THE_ODDS_API.md).

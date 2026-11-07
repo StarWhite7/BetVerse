@@ -93,7 +93,7 @@ export function userRoutes({ db, config, requireAdmin }) {
     res.json(
       db
         .prepare(
-          'SELECT id,email,username,role,createdAt,status FROM users WHERE instr(lower(email||username||id),lower(?))>0 ORDER BY createdAt DESC LIMIT 100',
+          'SELECT u.id,u.email,u.username,u.role,u.createdAt,u.status,w.balance,w.shards FROM users u JOIN wallets w ON w.userId=u.id WHERE instr(lower(u.email||u.username||u.id),lower(?))>0 ORDER BY u.createdAt DESC LIMIT 100',
         )
         .all(q),
     );

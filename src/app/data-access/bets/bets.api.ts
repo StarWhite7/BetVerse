@@ -24,6 +24,13 @@ export interface CreateBetPayload {
   requestKey: string;
 }
 
+export interface AdminBet extends BetEntity {
+  username: string;
+  sportKey: string;
+  payout: number | null;
+}
+export type BetCorrection = BetEntity['status'] | 'DRAW';
+
 export interface BetsQuery {
   status?: 'PENDING' | 'WON' | 'LOST' | 'VOID';
   order?: 'asc' | 'desc';
@@ -44,11 +51,19 @@ export class BetsApiService {
     });
   }
 
-  getAdminBets(query: BetsQuery = {}) {
+  getAdminBets(query: BetsQuery & { username?: string } = {}) {
     let params = new HttpParams();
     for (const [key, value] of Object.entries(query))
       if (value !== undefined) params = params.set(key, value);
-    return this.http.get<BetEntity[]>(`${this.baseUrl}/admin-bets`, { params });
+    return this.http.get<AdminBet[]>(`${this.baseUrl}/admin-bets`, { params, observe: 'response' });
+  }
+
+  correctStatus(bet: AdminBet, outcome: BetCorrection, reason: string, requestKey: string) {
+    return this.http.patch<{ success: true }>(
+      `${this.baseUrl}/admin-bets/${bet.id}/status`,
+      { expectedStatus: bet.status, outcome, reason },
+      { headers: { 'Idempotency-Key': requestKey } },
+    );
   }
 
   getMyBetsPage(query: BetsQuery = {}) {

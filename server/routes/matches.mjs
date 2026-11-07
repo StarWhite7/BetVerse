@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
-import { z, amount, choice, id, queryPage } from '../lib/validation.mjs';
+import { z, amount, choice, id, queryPage, username } from '../lib/validation.mjs';
 import { ensure, transaction } from '../lib/errors.mjs';
 import { now, audit } from '../domain/accounts.mjs';
+import { adminCommand } from '../domain/admin-commands.mjs';
 import {
   matchDto,
   betDto,
@@ -11,8 +12,8 @@ import {
   hasMatchBets,
   finishMatch,
   cancelMatch,
+  correctBetStatus,
 } from '../domain/matches.mjs';
-import { manualFootball } from '../domain/football.mjs';
 const odds = z
   .number()
   .min(1)
@@ -31,7 +32,7 @@ const matchInput = z
     competition: z.string().trim().min(1).max(80).default('Catalogue BetVerse'),
   })
   .strict();
-export function matchRoutes({ db, requireAdmin, config }) {
+export function matchRoutes({ db, requireAdmin }) {
   const router = Router();
   router.get('/', (req, res) => {
     const { status } = z
@@ -58,9 +59,6 @@ export function matchRoutes({ db, requireAdmin, config }) {
     else rows = db.prepare('SELECT * FROM matches ORDER BY startDate DESC,id LIMIT 500').all();
     res.json(rows.map(matchDto));
   });
-  router.get('/usage', requireAdmin, (_req, res) =>
-    res.json(manualFootball({ db, config }).usage()),
-  );
   router.get('/:id', (req, res) => {
     const match = db.prepare('SELECT * FROM matches WHERE id=?').get(id.parse(req.params.id));
     ensure(match, 404, 'Match introuvable.');
@@ -201,20 +199,27 @@ export function betRoutes({ db, requireAdmin }) {
       params = [],
       conditions = [];
     if (!admin) {
-      conditions.push('userId=?');
+      conditions.push('b.userId=?');
       params.push(req.user.id);
     }
+    if (admin && req.query.username !== undefined) {
+      conditions.push('u.username=? COLLATE NOCASE');
+      params.push(username.parse(req.query.username));
+    }
     if (page.status) {
-      conditions.push('status=?');
+      conditions.push('b.status=?');
       params.push(page.status);
     }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const sort = page.order === 'asc' ? 'ASC' : 'DESC';
-    const count = db.prepare(`SELECT COUNT(*) total FROM bets ${where}`).get(...params).total;
+    const from = admin
+      ? 'bets b JOIN users u ON u.id=b.userId JOIN matches m ON m.id=b.matchId'
+      : 'bets b';
+    const count = db.prepare(`SELECT COUNT(*) total FROM ${from} ${where}`).get(...params).total;
     res.set('X-Total-Count', String(count)).json(
       db
         .prepare(
-          `SELECT id,matchId,match,betType,amount,odds,status,payout,createdAt,kind FROM bets ${where} ORDER BY createdAt ${sort},id ${sort} LIMIT ? OFFSET ?`,
+          `SELECT b.id,b.matchId,b.match,b.betType,b.amount,b.odds,b.status,b.payout,b.createdAt,b.kind${admin ? ',u.username,m.sportKey' : ''} FROM ${from} ${where} ORDER BY b.createdAt ${sort},b.id ${sort} LIMIT ? OFFSET ?`,
         )
         .all(...params, page.limit, page.skip)
         .map((row) => betDto(row, db)),
@@ -222,5 +227,20 @@ export function betRoutes({ db, requireAdmin }) {
   };
   router.get('/my-bets', list(false));
   router.get('/admin-bets', requireAdmin, list(true));
+  router.patch('/admin-bets/:id/status', requireAdmin, (req, res) => {
+    const betId = id.parse(req.params.id);
+    const input = z
+      .object({
+        expectedStatus: z.enum(['PENDING', 'WON', 'LOST', 'VOID']),
+        outcome: z.enum(['PENDING', 'WON', 'LOST', 'DRAW', 'VOID']),
+        reason: z.string().trim().min(10).max(300),
+      })
+      .strict()
+      .parse(req.body);
+    adminCommand(db, req.user.id, id.parse(req.get('Idempotency-Key')), req.path, input, () =>
+      correctBetStatus(db, req.user.id, betId, input),
+    );
+    res.json({ success: true });
+  });
   return router;
 }

@@ -10,7 +10,6 @@ import {
 import { NotificationService } from '../../../core/services/notification.service';
 import { FormsModule } from '@angular/forms';
 import { DialogDirective } from '../../../shared/directives/dialog.directive';
-import { FootballImportComponent } from './football-import.component';
 import { OddsImportComponent } from './odds-import.component';
 
 type FilterValue = MatchStatus | 'ALL';
@@ -18,14 +17,7 @@ type FilterValue = MatchStatus | 'ALL';
 @Component({
   selector: 'admin-matches',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    DialogDirective,
-    FootballImportComponent,
-    OddsImportComponent,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DialogDirective, OddsImportComponent],
   templateUrl: './matches.component.html',
   styleUrl: './matches.component.css',
 })

@@ -753,66 +753,177 @@ test('started matches appear live and preserve the database foreign keys', async
   assert.equal(f.db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
 });
 
-test('startup, health, admin reads and unauthorized actions never call API Football', async (t) => {
-  let calls = 0;
-  const f = await fixture(t, {
-    football: {
-      footballMode: 'manual',
-      footballKey: 'fake-test-only-key',
-      footballDailyLimit: 10,
-      footballFetch: async () => {
-        calls++;
-        return Response.json({ errors: [], response: [] });
-      },
-    },
-  });
-  assert.equal(calls, 0);
-  assert.equal((await f.request('/health')).status, 200);
-  assert.equal((await f.request('/matches', { session: f.aliceSession })).status, 200);
+test('retired football provider routes are unavailable even to admins', async (t) => {
+  const f = await fixture(t);
+  assert.equal((await f.request('/admin/football', { session: f.adminSession })).status, 404);
   assert.equal(
-    (await f.request('/admin/football', { session: f.adminSession })).body.usage.mode,
-    'manual',
+    (
+      await f.request('/admin/football/fixtures', {
+        session: f.adminSession,
+        method: 'POST',
+        body: {},
+      })
+    ).status,
+    404,
   );
-  assert.equal((await f.request('/admin/football', { session: f.aliceSession })).status, 403);
+  assert.equal((await f.request('/admin/odds', { session: f.adminSession })).status, 200);
+});
+
+test('admins find all statuses by exact pseudo and correct a ticket atomically with its payout', async (t) => {
+  const f = await fixture(t);
+  const match = await f.makeMatch();
+  await f.claim();
+  const placed = await f.bet(match, 100, { betType: 'DRAW' });
+  assert.equal(placed.status, 201);
+  const path = '/bet/admin-bets/' + placed.body.id + '/status';
   const action = {
-    method: 'POST',
-    body: { date: '2026-11-04' },
+    method: 'PATCH',
+    session: f.adminSession,
+    body: { expectedStatus: 'PENDING', outcome: 'DRAW', reason: 'Score officiel confirmé.' },
     headers: { 'Idempotency-Key': randomUUID() },
   };
-  assert.equal((await f.request('/admin/football/fixtures', action)).status, 401);
-  assert.equal(
-    (await f.request('/admin/football/fixtures', { ...action, session: f.aliceSession })).status,
-    403,
+  const search = '/bet/admin-bets?username=ALICE&limit=1';
+  const list = await f.request(search, { session: f.adminSession });
+  assert.equal(list.headers.get('x-total-count'), '1');
+  assert.equal(list.body[0].username, 'alice');
+  assert.deepEqual(
+    (await f.request('/bet/admin-bets?username=bob', { session: f.adminSession })).body,
+    [],
   );
+  assert.equal((await f.request(search, { session: f.aliceSession })).status, 403);
+  assert.equal((await f.request(path, { ...action, session: f.aliceSession })).status, 403);
   assert.equal(
     (
-      await f.request('/admin/football/fixtures', {
+      await f.request(path, {
         ...action,
-        session: f.adminSession,
-        headers: {
-          ...action.headers,
-          'X-CSRF-Token': 'invalid',
-        },
+        headers: { ...action.headers, 'X-CSRF-Token': 'invalid' },
       })
     ).status,
     403,
   );
+  assert.equal((await f.request(path, action)).status, 200);
+  assert.equal((await f.request(path, action)).status, 200);
+  const wallet = async () => (await f.request('/wallet', { session: f.aliceSession })).body.balance;
+  assert.equal(await wallet(), 710);
+  assert.equal((await f.request(search, { session: f.adminSession })).body[0].status, 'WON');
+  assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=?').get(f.alice.id).xp, 60);
+  assert.equal(
+    (await f.request(path, { ...action, headers: { 'Idempotency-Key': randomUUID() } })).status,
+    409,
+  );
+  const correct = (expectedStatus, outcome) =>
+    f.request(path, {
+      ...action,
+      body: { ...action.body, expectedStatus, outcome },
+      headers: { 'Idempotency-Key': randomUUID() },
+    });
+  assert.equal((await correct('WON', 'VOID')).status, 200);
+  assert.equal(await wallet(), 500);
+  assert.equal((await correct('VOID', 'PENDING')).status, 200);
+  assert.equal(await wallet(), 400);
+  assert.equal((await correct('PENDING', 'LOST')).status, 200);
+  assert.equal(await wallet(), 400);
+  assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=?').get(f.alice.id).xp, 10);
+  assert.equal(
+    f.db.prepare('SELECT status FROM matches WHERE id=?').get(match.id).status,
+    'UPCOMING',
+  );
+  assert.equal((await correct('LOST', 'WON')).status, 200);
+  f.db.prepare('UPDATE wallets SET balance=0 WHERE userId=?').run(f.alice.id);
+  assert.equal((await correct('WON', 'LOST')).status, 409);
+  assert.equal((await f.request(search, { session: f.adminSession })).body[0].status, 'WON');
+});
+
+test('manual combination win uses accepted odds of non-void legs and cannot pay again at match closure', async (t) => {
+  const f = await fixture(t);
+  const a = await f.makeMatch();
+  const b = await f.makeMatch({ homeTeam: 'Second FC' });
+  await f.claim();
+  const placed = await f.request('/bet/combined', {
+    method: 'POST',
+    session: f.aliceSession,
+    body: {
+      amount: 100,
+      selections: [a, b].map((match) => ({ matchId: match.id, betType: 'HOME', odds: 1.8 })),
+    },
+    headers: { 'Idempotency-Key': randomUUID() },
+  });
+  assert.equal(placed.status, 201);
   assert.equal(
     (
-      await f.request('/admin/football/fixtures', {
-        ...action,
+      await f.request('/matches/' + a.id + '/cancel', {
+        method: 'POST',
         session: f.adminSession,
-        body: { date: 'invalid' },
+        body: { reason: 'Rencontre de test annulée.' },
       })
     ).status,
-    400,
-  );
-  assert.equal(calls, 0);
-  assert.equal(
-    (await f.request('/admin/football/fixtures', { ...action, session: f.adminSession })).status,
     200,
   );
-  assert.equal(calls, 1);
+  const correct = (outcome) =>
+    f.request('/bet/admin-bets/' + placed.body.id + '/status', {
+      method: 'PATCH',
+      session: f.adminSession,
+      body: { expectedStatus: 'PENDING', outcome, reason: 'Correction de recette.' },
+      headers: { 'Idempotency-Key': randomUUID() },
+    });
+  assert.equal((await correct('DRAW')).status, 400);
+  assert.equal((await correct('WON')).status, 200);
+  f.db
+    .prepare('UPDATE matches SET startDate=? WHERE id=?')
+    .run(new Date(Date.now() - 1000).toISOString(), b.id);
+  assert.equal(
+    (
+      await f.request('/matches/' + b.id + '/finish', {
+        method: 'POST',
+        session: f.adminSession,
+        body: { result: 'HOME', homeScore: 1, awayScore: 0 },
+      })
+    ).status,
+    200,
+  );
+  assert.equal((await f.request('/wallet', { session: f.aliceSession })).body.balance, 580);
+  assert.equal(f.db.prepare('SELECT payout FROM bets WHERE id=?').get(placed.body.id).payout, 180);
+});
+
+test('admin Verse and Shards credits are isolated, validated and idempotent', async (t) => {
+  const f = await fixture(t);
+  const path = '/wallet/admin-credit/' + f.alice.id;
+  const credit = {
+    method: 'POST',
+    session: f.adminSession,
+    body: { currency: 'VERSE', amount: 75 },
+    headers: { 'Idempotency-Key': randomUUID() },
+  };
+  assert.equal((await f.request(path, { ...credit, session: f.aliceSession })).status, 403);
+  assert.equal(
+    (await f.request(path, { ...credit, body: { currency: 'SHARDS', amount: -1 } })).status,
+    400,
+  );
+  assert.deepEqual((await f.request(path, credit)).body, { balance: 75, shards: 100 });
+  assert.deepEqual((await f.request(path, credit)).body, { balance: 75, shards: 100 });
+  assert.equal(
+    (await f.request(path, { ...credit, body: { currency: 'VERSE', amount: 76 } })).status,
+    409,
+  );
+  assert.deepEqual(
+    (
+      await f.request(path, {
+        ...credit,
+        body: { currency: 'SHARDS', amount: 25 },
+        headers: { 'Idempotency-Key': randomUUID() },
+      })
+    ).body,
+    { balance: 75, shards: 125 },
+  );
+  const player = (await f.request('/users?q=alice', { session: f.adminSession })).body[0];
+  assert.equal(player.balance, 75);
+  assert.equal(player.shards, 125);
+  const bob = await f.login('bob');
+  assert.equal((await f.request('/wallet', { session: bob })).body.balance, 0);
+  assert.equal(
+    f.db.prepare("SELECT COUNT(*) n FROM audit_log WHERE action='PLAYER_WALLET_CREDITED'").get().n,
+    2,
+  );
 });
 
 test('The Odds API routes enforce admin, CSRF, consent and schema before any provider call', async (t) => {

@@ -17,22 +17,41 @@
     </div>
   </header>
   <p class="admin-bets__error" *ngIf="error()">{{ error() }}</p>
+  @if (result()) {
+    <p role="status">{{ result() }}</p>
+  }
   <p>
     Les résultats proviennent de la clôture des rencontres.
     <a routerLink="/admin/matches">Saisir un score officiel</a>.
   </p>
   <section class="bets-table">
     <header>
-      <h3>Tickets · page de 100</h3>
-      <label
-        >Rechercher dans la page
-        <input [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)" /></label
-      ><button type="button" (click)="loadBets()" [disabled]="loading()">Actualiser</button>
+      <h3>
+        {{ total() }} ticket(s)
+        @if (username()) {
+          · {{ username() }}
+        }
+      </h3>
+      <div class="bets-table__filters">
+        <label>
+          Rechercher dans la page
+          <input [value]="searchTerm()" (input)="searchTerm.set($any($event.target).value)" />
+        </label>
+        <form class="bets-table__filters" (ngSubmit)="searchPlayer()">
+          <label>
+            Pseudo du joueur
+            <input name="username" [(ngModel)]="usernameInput" maxlength="24" />
+          </label>
+          <button type="submit" [disabled]="loading()">Rechercher</button>
+        </form>
+        <button type="button" (click)="loadBets()" [disabled]="loading()">Actualiser</button>
+      </div>
     </header>
     <table>
       <thead>
         <tr>
           <th>ID</th>
+          <th>Joueur</th>
           <th>Match</th>
           <th>Choix</th>
           <th>Mise</th>
@@ -44,6 +63,7 @@
       <tbody>
         <tr *ngFor="let bet of filteredBets(); trackBy: trackByBet">
           <td>{{ bet.id }}</td>
+          <td>{{ bet.username }}</td>
           <td>{{ bet.match }}</td>
           <td>
             @if (bet.kind === 'COMBO') {
@@ -56,11 +76,20 @@
           </td>
           <td>{{ bet.amount }} V</td>
           <td>{{ bet.odds }}</td>
-          <td>{{ bet.status }}</td>
+          <td>
+            <button
+              type="button"
+              (click)="openCorrection(bet)"
+              [disabled]="loading()"
+              [attr.aria-label]="'Modifier le statut du pari ' + bet.id + ' de ' + bet.username"
+            >
+              {{ statuses[bet.status] }}
+            </button>
+          </td>
           <td>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
         </tr>
-        <tr *ngIf="!loading() && !error() && !bets().length">
-          <td colspan="7">Aucun ticket.</td>
+        <tr *ngIf="!loading() && !error() && !filteredBets().length">
+          <td colspan="8">Aucun ticket correspondant.</td>
         </tr>
       </tbody>
     </table>
@@ -69,9 +98,62 @@
     <button type="button" (click)="previous()" [disabled]="loading() || offset() === 0">
       Précédent
     </button>
-    <span>À partir du ticket {{ offset() + 1 }}</span>
-    <button type="button" (click)="next()" [disabled]="loading() || bets().length < 100">
+    <span>{{ total() ? offset() + 1 : 0 }} / {{ total() }}</span>
+    <button type="button" (click)="next()" [disabled]="loading() || offset() + pageSize >= total()">
       Suivant
     </button>
   </nav>
 </section>
+@if (target(); as bet) {
+  <dialog
+    bvDialog
+    class="bv-panel admin-bet-dialog"
+    aria-labelledby="bet-correction-title"
+    (dialogDismiss)="closeCorrection()"
+  >
+    <h2 id="bet-correction-title">Modifier le statut du pari</h2>
+    <p>{{ bet.username }} · {{ bet.match }} · {{ bet.amount | number }} Verse</p>
+    <p>Le solde sera ajusté au nouveau statut de ce ticket. Le score du match reste indépendant.</p>
+    <form (ngSubmit)="correct()">
+      <label>
+        Nouveau statut
+        <select name="outcome" [(ngModel)]="outcome" [disabled]="saving() || uncertain()">
+          @for (value of corrections; track value) {
+            @if (value !== 'DRAW' || (bet.kind !== 'COMBO' && bet.sportKey === 'football')) {
+              <option [ngValue]="value">
+                {{ value === 'DRAW' ? 'Match nul (1N2)' : statuses[value] }}
+              </option>
+            }
+          }
+        </select>
+      </label>
+      @if (outcome === 'DRAW') {
+        <p>
+          Le ticket sera {{ bet.betType === 'DRAW' ? 'gagnant' : 'perdant' }} selon le choix du
+          joueur.
+        </p>
+      }
+      <label>
+        Motif (10 caractères minimum)
+        <textarea
+          name="reason"
+          [(ngModel)]="reason"
+          maxlength="300"
+          [disabled]="saving() || uncertain()"
+        ></textarea>
+      </label>
+      @if (correctionError()) {
+        <p class="bv-error" role="alert">{{ correctionError() }}</p>
+      }
+      <div class="bets-table__actions">
+        <button type="button" (click)="closeCorrection()" [disabled]="saving()">Fermer</button>
+        <button
+          type="submit"
+          [disabled]="saving() || outcome === bet.status || reason.trim().length < 10"
+        >
+          {{ saving() ? 'Enregistrement…' : uncertain() ? 'Réessayer' : 'Confirmer' }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}
