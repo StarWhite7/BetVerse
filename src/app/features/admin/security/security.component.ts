@@ -2,14 +2,15 @@ import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { AdminAccessService } from '../../../core/services/admin-access.service';
 import { authenticatorQr, AuthenticatorQr } from './authenticator-qr';
 @Component({
   standalone: true,
   imports: [FormsModule, RouterLink],
   template: `<h2>Sécurité administrateur</h2>
     <p>
-      Une application d’authentification protège les actions administratives. Chaque vérification
-      est valable 30 minutes.
+      Une application d’authentification protège les actions administratives. La vérification
+      s’applique à cet onglet jusqu’à la fin de la connexion.
     </p>
     <section class="bv-panel">
       @if (status(); as data) {
@@ -59,7 +60,7 @@ import { authenticatorQr, AuthenticatorQr } from './authenticator-qr';
             <code style="overflow-wrap:anywhere">{{ secret() }}</code>
           </details>
         }
-        @if (data.enrolled || secret()) {
+        @if (secret()) {
           <label
             >Code de l’application ou code de récupération<input
               [(ngModel)]="code"
@@ -107,9 +108,8 @@ import { authenticatorQr, AuthenticatorQr } from './authenticator-qr';
 })
 export class SecurityComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
-  readonly status = signal<{ configured: boolean; enrolled: boolean; verified: boolean } | null>(
-    null,
-  );
+  private readonly access = inject(AdminAccessService);
+  readonly status = this.access.status;
   readonly secret = signal('');
   readonly qr = signal<AuthenticatorQr | null>(null);
   readonly recovery = signal<string[]>([]);
@@ -129,9 +129,7 @@ export class SecurityComponent implements OnInit, OnDestroy {
     this.code = '';
   }
   read() {
-    this.http
-      .get<{ configured: boolean; enrolled: boolean; verified: boolean }>('/api/admin/security')
-      .subscribe({ next: (v) => this.status.set(v), error: (e) => this.failed(e) });
+    this.access.read().subscribe({ error: (e) => this.failed(e) });
   }
   setup() {
     if (this.busy()) return;
@@ -165,27 +163,22 @@ export class SecurityComponent implements OnInit, OnDestroy {
   verify() {
     if (this.busy()) return;
     this.busy.set(true);
-    this.http
-      .post<{ recoveryCodes?: string[] }>('/api/admin/security/verify', {
-        code: this.code,
-        setup: !!this.secret(),
-      })
-      .subscribe({
-        next: (v) => {
-          this.code = '';
-          this.secret.set('');
-          this.qr.set(null);
-          this.recovery.set(v.recoveryCodes || []);
-          this.busy.set(false);
-          this.error.set(false);
-          this.message.set('Session administrateur vérifiée.');
-          this.read();
-        },
-        error: (e) => {
-          this.code = '';
-          this.failed(e);
-        },
-      });
+    this.access.verify(this.code.trim(), !!this.secret()).subscribe({
+      next: (v) => {
+        this.code = '';
+        this.secret.set('');
+        this.qr.set(null);
+        this.recovery.set(v.recoveryCodes || []);
+        this.busy.set(false);
+        this.error.set(false);
+        this.message.set('Session administrateur vérifiée.');
+        this.read();
+      },
+      error: (e) => {
+        this.code = '';
+        this.failed(e);
+      },
+    });
   }
   private failed(e: any) {
     this.busy.set(false);

@@ -1125,7 +1125,7 @@ test('suspension revokes sessions and blocks login; notification preferences are
     false,
   );
 });
-test('admin TOTP enrollment, recovery and step-up gate all administrative mutations', async (t) => {
+test('admin TOTP grants are scoped to a tab and login, last past thirty minutes and revoke on logout', async (t) => {
   const f = await fixture(t, { football: { adminMfaKey: 'ab'.repeat(32) } });
   const setup = await f.request('/admin/security/setup', {
     method: 'POST',
@@ -1147,11 +1147,25 @@ test('admin TOTP enrollment, recovery and step-up gate all administrative mutati
   });
   assert.equal(verified.status, 200);
   assert.equal(verified.body.recoveryCodes.length, 8);
-  assert.equal((await f.request('/admin/odds', { session: f.adminSession })).status, 200);
-  f.db.prepare('DELETE FROM session_mfa').run();
-  const blocked = await f.request('/admin/odds', { session: f.adminSession });
+  const tab = {
+    session: f.adminSession,
+    headers: { 'X-Admin-Tab': verified.body.tabProof },
+  };
+  const access = (options = tab) => f.request('/admin/odds', options);
+  assert.equal((await access()).status, 200);
+  assert.equal((await f.request('/admin/security', tab)).body.verified, true);
+  const blocked = await access({ session: f.adminSession });
   assert.equal(blocked.status, 403);
   assert.equal(blocked.body.code, 'ADMIN_MFA_REQUIRED');
+  const anotherLogin = await f.login('admin');
+  assert.equal((await access({ ...tab, session: anotherLogin })).status, 403);
+  const actualNow = Date.now;
+  const later = t.mock.method(Date, 'now', () => actualNow() + 31 * 60000);
+  try {
+    assert.equal((await access()).status, 200);
+  } finally {
+    later.mock.restore();
+  }
   assert.equal(
     (
       await f.request('/admin/security/verify', {
@@ -1162,17 +1176,18 @@ test('admin TOTP enrollment, recovery and step-up gate all administrative mutati
     ).status,
     403,
   );
-  assert.equal(
-    (
-      await f.request('/admin/security/verify', {
-        method: 'POST',
-        session: f.adminSession,
-        body: { code: verified.body.recoveryCodes[0] },
-      })
-    ).status,
-    200,
-  );
-  f.db.prepare('DELETE FROM session_mfa').run();
+  const recovered = await f.request('/admin/security/verify', {
+    method: 'POST',
+    session: f.adminSession,
+    body: { code: verified.body.recoveryCodes[0] },
+  });
+  assert.equal(recovered.status, 200);
+  const secondTab = {
+    session: f.adminSession,
+    headers: { 'X-Admin-Tab': recovered.body.tabProof },
+  };
+  assert.equal((await access(secondTab)).status, 200);
+  assert.equal((await access()).status, 200);
   assert.equal(
     (
       await f.request('/admin/security/verify', {
@@ -1183,6 +1198,10 @@ test('admin TOTP enrollment, recovery and step-up gate all administrative mutati
     ).status,
     403,
   );
+  assert.equal((await f.request('/auth/logout', { ...tab, method: 'POST', body: {} })).status, 200);
+  assert.equal((await access()).status, 401);
+  assert.equal((await access(secondTab)).status, 401);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM admin_tab_grants').get().n, 0);
 });
 
 test('manual result batches preview without provider calls, roll back atomically and replay once', async (t) => {

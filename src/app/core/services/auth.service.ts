@@ -1,12 +1,14 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError, of, timeout, map } from 'rxjs';
 import { User } from '../../shared/models/user.model';
 import { environment } from '../config/environment';
+import { AdminAccessService } from './admin-access.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly adminAccess = inject(AdminAccessService);
   private readonly userSignal = signal<User | null>(null);
   private readonly csrfSignal = signal<string | null>(null);
   readonly startupError = signal<string | null>(null);
@@ -33,6 +35,7 @@ export class AuthService {
     return this.userSignal() !== null;
   }
   private clearSession() {
+    this.adminAccess.clear();
     this.userSignal.set(null);
     this.csrfSignal.set(null);
     this.sessionVersion.update((value) => value + 1);

@@ -18,7 +18,7 @@ Ces plafonds locaux conservateurs sont distincts de la facturation mensuelle du 
 
 ## Parcours administrateur
 
-1. Ouvrir **Administration → Matchs**. Si la session demande une double authentification, la valider dans l’onglet **Sécurité**.
+1. Ouvrir **Administration → Matchs**. Si la fenêtre de double authentification s’affiche, saisir le code pour ouvrir le panneau.
 2. Sélectionner les compétitions, le bookmaker et le premier jour UTC de la fenêtre de sept jours (aujourd’hui à J+7).
 3. **Actualiser les matchs et cotes** publie les matchs admissibles et met à jour leurs cotes dans le catalogue commun. Compter au plus un crédit par compétition.
 4. **Actualiser les résultats** règle les matchs admissibles des trois derniers jours parmi les cinq grands championnats sélectionnés. Compter au plus deux crédits par championnat.

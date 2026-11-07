@@ -17,7 +17,52 @@
       <a routerLink="/admin/matches">Gérer les matchs</a>
     </header>
     <main class="admin-shell__main">
-      <router-outlet></router-outlet>
+      @if (loadError()) {
+        <p role="alert">Impossible de vérifier l’accès au panneau administrateur.</p>
+        <button type="button" (click)="checkAccess()">Réessayer</button>
+      } @else if (!checked() || !status()) {
+        <p role="status">Vérification de la session administrateur…</p>
+      } @else if (needsSetup() && !setupPage()) {
+        <p role="status">
+          Configurez votre application de double authentification pour ouvrir le panneau.
+        </p>
+        <a routerLink="/admin/security">Configurer le second facteur</a>
+      } @else if (!challenge()) {
+        <router-outlet></router-outlet>
+      }
     </main>
   </section>
 </div>
+@if (challenge()) {
+  <dialog
+    bvDialog
+    class="admin-verification"
+    aria-labelledby="admin-verification-title"
+    (dialogDismiss)="leave()"
+  >
+    <h2 id="admin-verification-title">Vérification administrateur</h2>
+    <p>Entre le code de ton application d’authentification pour ouvrir le panneau.</p>
+    <form (ngSubmit)="verify()">
+      <label for="admin-auth-code">Code d’authentification ou de récupération</label>
+      <input
+        id="admin-auth-code"
+        name="adminAuthCode"
+        [(ngModel)]="code"
+        autocomplete="one-time-code"
+        autocapitalize="off"
+        spellcheck="false"
+        maxlength="32"
+        [disabled]="verifying()"
+      />
+      @if (codeError()) {
+        <p class="bv-error" role="alert">{{ codeError() }}</p>
+      }
+      <div class="admin-verification__actions">
+        <button type="button" (click)="leave()" [disabled]="verifying()">Quitter le panneau</button>
+        <button type="submit" [disabled]="verifying() || !code.trim()">
+          {{ verifying() ? 'Vérification…' : 'Vérifier' }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}

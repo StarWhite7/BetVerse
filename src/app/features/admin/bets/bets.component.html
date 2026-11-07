@@ -59,7 +59,7 @@
           <td>{{ bet.status }}</td>
           <td>{{ bet.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
         </tr>
-        <tr *ngIf="!loading() && !bets().length">
+        <tr *ngIf="!loading() && !error() && !bets().length">
           <td colspan="7">Aucun ticket.</td>
         </tr>
       </tbody>

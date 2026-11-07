@@ -86,7 +86,10 @@ describe('MFA enrolment screen', () => {
     expect(component.password).toBe('');
     component.code = '123456';
     component.verify();
-    http.expectOne('/api/admin/security/verify').flush({ recoveryCodes: ['SYNTHETIC-RECOVERY'] });
+    http.expectOne('/api/admin/security/verify').flush({
+      tabProof: 'a'.repeat(64),
+      recoveryCodes: ['SYNTHETIC-RECOVERY'],
+    });
     http
       .expectOne('/api/admin/security')
       .flush({ configured: true, enrolled: true, verified: true });

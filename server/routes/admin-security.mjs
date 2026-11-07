@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { z } from '../lib/validation.mjs';
 import { ensure, transaction } from '../lib/errors.mjs';
 import { verifyPassword, digest } from '../lib/security.mjs';
+import { adminTabProof, hasAdminTabGrant } from '../lib/admin-tab.mjs';
 import { audit } from '../domain/accounts.mjs';
 import { base32, encryptSecret, decryptSecret, validStep } from '../lib/totp.mjs';
 export function adminSecurityRoutes({ db, config }) {
@@ -21,11 +22,7 @@ export function adminSecurityRoutes({ db, config }) {
           .prepare('SELECT 1 FROM admin_mfa WHERE userId=? AND secretCipher IS NOT NULL')
           .get(req.user.id),
       ),
-      verified: Boolean(
-        db
-          .prepare('SELECT 1 FROM session_mfa WHERE tokenHash=? AND expiresAt>?')
-          .get(req.session.tokenHash, Date.now()),
-      ),
+      verified: hasAdminTabGrant(db, req),
     }),
   );
   router.use(
@@ -60,10 +57,7 @@ export function adminSecurityRoutes({ db, config }) {
         .prepare('SELECT secretCipher FROM admin_mfa WHERE userId=?')
         .get(req.user.id)?.secretCipher;
       ensure(
-        !enrolled ||
-          db
-            .prepare('SELECT 1 FROM session_mfa WHERE tokenHash=? AND expiresAt>?')
-            .get(req.session.tokenHash, Date.now()),
+        !enrolled || hasAdminTabGrant(db, req),
         403,
         'Vérifier d’abord le second facteur existant.',
       );
@@ -88,12 +82,18 @@ export function adminSecurityRoutes({ db, config }) {
       .parse(req.body);
     ensure(config.adminMfaKey, 409, 'La protection administrateur n’est pas configurée.');
     const recoveryCodes = [];
+    const tabProof = randomBytes(32).toString('hex');
     transaction(db, () => {
       const row = db.prepare('SELECT * FROM admin_mfa WHERE userId=?').get(req.user.id);
       ensure(
         row && (setup ? row.pendingCipher && row.pendingUntil > Date.now() : row.secretCipher),
         409,
         'Configurer votre application d’authentification.',
+      );
+      ensure(
+        !setup || !row.secretCipher || hasAdminTabGrant(db, req),
+        403,
+        'Vérifier d’abord le second facteur existant.',
       );
       const secret = decryptSecret(
         setup ? row.pendingCipher : row.secretCipher,
@@ -108,6 +108,9 @@ export function adminSecurityRoutes({ db, config }) {
         db.prepare(
           'UPDATE admin_mfa SET secretCipher=pendingCipher,pendingCipher=NULL,pendingUntil=NULL,lastStep=?,recoveryHashes=? WHERE userId=?',
         ).run(step, JSON.stringify(recoveryCodes.map(digest)), req.user.id);
+        db.prepare(
+          'DELETE FROM admin_tab_grants WHERE tokenHash IN (SELECT tokenHash FROM sessions WHERE userId=?)',
+        ).run(req.user.id);
       } else if (recoveryIndex >= 0) {
         recoveries.splice(recoveryIndex, 1);
         db.prepare('UPDATE admin_mfa SET recoveryHashes=? WHERE userId=?').run(
@@ -115,14 +118,23 @@ export function adminSecurityRoutes({ db, config }) {
           req.user.id,
         );
       } else db.prepare('UPDATE admin_mfa SET lastStep=? WHERE userId=?').run(step, req.user.id);
-      db.prepare(
-        'INSERT INTO session_mfa (tokenHash,expiresAt) VALUES (?,?) ON CONFLICT(tokenHash) DO UPDATE SET expiresAt=excluded.expiresAt',
-      ).run(req.session.tokenHash, Date.now() + 30 * 60000);
+      const previous = adminTabProof(req);
+      if (previous) {
+        db.prepare('DELETE FROM admin_tab_grants WHERE tokenHash=? AND proofHash=?').run(
+          req.session.tokenHash,
+          digest(previous),
+        );
+      }
+      db.prepare('INSERT INTO admin_tab_grants (tokenHash,proofHash) VALUES (?,?)').run(
+        req.session.tokenHash,
+        digest(tabProof),
+      );
       audit(db, req.user.id, setup ? 'ADMIN_MFA_ENROLLED' : 'ADMIN_MFA_VERIFIED');
     });
     res.json({
       verified: true,
-      expiresInSeconds: 1800,
+      tabProof,
+      expiresInSeconds: Math.max(0, Math.floor((req.session.expiresAt - Date.now()) / 1000)),
       ...(recoveryCodes.length ? { recoveryCodes } : {}),
     });
   });

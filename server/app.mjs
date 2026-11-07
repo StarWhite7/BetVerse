@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { ZodError } from 'zod';
 import { AppError, ensure } from './lib/errors.mjs';
 import { readCookie, digest } from './lib/security.mjs';
+import { hasAdminTabGrant } from './lib/admin-tab.mjs';
 import { publicUser } from './domain/accounts.mjs';
 import { authRoutes } from './routes/auth.mjs';
 import { walletRoutes } from './routes/wallet.mjs';
@@ -140,16 +141,11 @@ export async function createApp({ db, config }) {
     const enrolled = db
       .prepare('SELECT 1 FROM admin_mfa WHERE userId=? AND secretCipher IS NOT NULL')
       .get(req.user.id);
-    if (
-      (config.adminMfaRequired || enrolled) &&
-      !db
-        .prepare('SELECT 1 FROM session_mfa WHERE tokenHash=? AND expiresAt>?')
-        .get(req.session.tokenHash, Date.now())
-    ) {
+    if ((config.adminMfaRequired || enrolled) && !hasAdminTabGrant(db, req)) {
       return res.status(403).json({
         code: 'ADMIN_MFA_REQUIRED',
         message:
-          'Validez votre session avec votre code de double authentification dans l’onglet Sécurité.',
+          'Validez votre session avec votre code de double authentification pour ouvrir le panneau administrateur.',
         requestId: req.requestId,
       });
     }
