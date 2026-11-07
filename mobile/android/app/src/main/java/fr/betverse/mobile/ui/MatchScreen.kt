@@ -44,7 +44,6 @@ import fr.betverse.mobile.data.*
     val selectedCompetition = state.competition?.takeIf { it in competitions }
     val fixtures = available.filter { selectedCompetition == null || it.competition == selectedCompetition }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        item { Text("Matchs", style = MaterialTheme.typography.headlineLarge) }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for ((key, label, icon) in sportFilters) {
@@ -61,35 +60,26 @@ import fr.betverse.mobile.data.*
             }
         }
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Choisir une compétition", style = MaterialTheme.typography.labelLarge)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    item { FilterChip(selected = selectedCompetition == null, onClick = { onCompetition(null) }, label = { Text("Toutes") }, colors = clubFilterColors(), modifier = Modifier.heightIn(min = 48.dp)) }
-                    items(competitions) { competition ->
-                        FilterChip(selected = selectedCompetition == competition, onClick = { onCompetition(competition) }, label = { Text(competition) },
-                            colors = clubFilterColors(),
-                            modifier = Modifier.heightIn(min = 48.dp))
-                    }
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                item {
+                    CompetitionFilterCard("Toutes", selectedCompetition == null) { onCompetition(null) }
+                }
+                items(competitions, key = { it }) { competition ->
+                    CompetitionFilterCard(
+                        name = competition,
+                        selected = selectedCompetition == competition,
+                        banner = competitionArtwork(competition, state.sport),
+                        onClick = { onCompetition(competition) },
+                    )
                 }
             }
-        }
-        item {
-            Text("Calendrier enregistré sur BetVerse · heures locales",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (fixtures.isEmpty()) item {
             EmptyState("Aucun match disponible",
                 "Essayez un autre sport ou une autre compétition. Seules les rencontres à venir enregistrées par l’administration sont proposées.")
         }
-        fixtures.groupBy { it.competition }.forEach { (competition, matches) ->
-            if (competitionArtwork(matches.first()) == null) {
-                item(key = "competition:" + competition) {
-                    Text(competition, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
-                }
-            }
-            items(matches, key = { it.id }) { fixture ->
-                FixtureCard(fixture, state.draft, !state.busy && fixture.available(state.now), onSelect)
-            }
+        items(fixtures, key = { it.id }) { fixture ->
+            FixtureCard(fixture, state.draft, !state.busy && fixture.available(state.now), onSelect)
         }
         item { Text("Pronostics en monnaie virtuelle · Aucun gain en argent",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -123,13 +113,18 @@ import fr.betverse.mobile.data.*
             Choice.entries.forEach { choice ->
                 val odds = fixture.odds(choice)
                 val selected = draft?.selections?.any { it.fixture.id == fixture.id && it.choice == choice } == true
+                val available = enabled && odds != null
                 Surface(Modifier.weight(1f).heightIn(min = 54.dp)
-                    .selectable(selected = selected, enabled = enabled && odds != null, role = Role.Button,
+                    .selectable(selected = selected, enabled = available, role = Role.Button,
                         onClick = { onSelect(fixture, choice) })
                     .semantics { contentDescription = fixture.label(choice) + ", cote " + (odds?.let(::quote) ?: "indisponible") },
                     shape = RoundedCornerShape(8.dp),
-                    color = if (selected) ClubCobalt else MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
+                    color = if (selected) ClubCobalt else OddsCream,
+                    contentColor = when {
+                        selected -> Color.White
+                        available -> OddsInk
+                        else -> OddsInk.copy(alpha = .6f)
+                    },
                     border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                     if (LocalDensity.current.fontScale > 1.2f || (odds?.let(::quote)?.length ?: 0) > 5) {
                         Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -152,49 +147,96 @@ import fr.betverse.mobile.data.*
     }
 }
 
+private val OddsCream = Color(0xFFFFF5E3)
+private val OddsInk = Color(0xFF142234)
+
 private data class Banner(
     val artwork: Int,
+    val filterArtwork: Int,
     val background: Color,
     val foreground: Color = Color(0xFFF3F6FC)
 )
 
-private fun competitionArtwork(fixture: Fixture): Banner? {
-    if (fixture.sport != "football") return null
-    return when (fixture.competition.trim().lowercase()) {
-        "ligue 1", "france" -> Banner(R.drawable.ligue_1, Color(0xFF12327E))
-        "premier league", "epl" -> Banner(R.drawable.premier_league, Color(0xFF3C164B))
-        "la liga", "laliga", "spain" -> Banner(R.drawable.la_liga, Color(0xFF792919))
-        "serie a", "italy" -> Banner(R.drawable.serie_a, Color(0xFFF4E5C4), Color(0xFF142137))
-        "bundesliga", "germany" -> Banner(R.drawable.bundesliga, Color(0xFF591719))
+private fun competitionArtwork(competition: String, sport: String): Banner? {
+    if (sport != "football") return null
+    return when (competition.trim().lowercase()) {
+        "ligue 1", "france" -> Banner(R.drawable.ligue_1, R.drawable.tribune_ligue_1, Color(0xFF12327E))
+        "premier league", "epl" -> Banner(R.drawable.premier_league, R.drawable.tribune_premier_league, Color(0xFF3C164B))
+        "la liga", "laliga", "spain" -> Banner(R.drawable.la_liga, R.drawable.tribune_la_liga, Color(0xFF792919))
+        "serie a", "italy" -> Banner(R.drawable.serie_a, R.drawable.tribune_serie_a, Color(0xFFF4E5C4), Color(0xFF142137))
+        "bundesliga", "germany" -> Banner(R.drawable.bundesliga, R.drawable.tribune_bundesliga, Color(0xFF591719))
         else -> null
     }
 }
 
+@Composable private fun CompetitionFilterCard(
+    name: String,
+    selected: Boolean,
+    banner: Banner? = null,
+    onClick: () -> Unit,
+) {
+    val theme = MaterialTheme.colorScheme
+    Surface(
+        selected = selected,
+        onClick = onClick,
+        modifier = Modifier.heightIn(min = 44.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = banner?.background ?: if (selected) ClubCobalt else theme.surfaceVariant,
+        contentColor = banner?.foreground ?: if (selected) Color.White else theme.onSurface,
+        border = if (selected) BorderStroke(2.dp, theme.primary) else BorderStroke(1.dp, theme.outlineVariant),
+    ) {
+        Box(
+            modifier = Modifier.widthIn(min = if (banner != null) 144.dp else 0.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (banner != null) {
+                Image(
+                    painter = painterResource(banner.filterArtwork),
+                    contentDescription = null,
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = ContentScale.FillBounds,
+                )
+            }
+            Text(
+                name.trim(),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+        }
+    }
+}
+
 @Composable private fun CompetitionBanner(fixture: Fixture) {
-    val banner = competitionArtwork(fixture) ?: return
+    val banner = competitionArtwork(fixture.competition, fixture.sport)
     Box(
-        Modifier.fillMaxWidth().heightIn(min = 40.dp).background(banner.background),
+        Modifier.fillMaxWidth().heightIn(min = 40.dp)
+            .background(banner?.background ?: MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.CenterStart
     ) {
-        Box(Modifier.matchParentSize().clipToBounds()) {
-            Image(
-                painter = painterResource(banner.artwork),
-                contentDescription = null,
-                modifier = Modifier.align(Alignment.CenterEnd).fillMaxWidth(.65f).fillMaxHeight(),
-                contentScale = ContentScale.Crop,
-                alignment = Alignment.CenterEnd
-            )
-            Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
-                .45f to banner.background, .70f to banner.background.copy(alpha = 0f)
-            )))
-        }
+        if (banner != null) BannerTexture(banner, Modifier.matchParentSize())
         Text(
             fixture.competition.trim(),
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = banner.foreground
+            color = banner?.foreground ?: MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable private fun BannerTexture(banner: Banner, modifier: Modifier) {
+    Box(modifier.clipToBounds()) {
+        Image(
+            painter = painterResource(banner.artwork),
+            contentDescription = null,
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxWidth(.65f).fillMaxHeight(),
+            contentScale = ContentScale.Crop,
+            alignment = Alignment.CenterEnd
+        )
+        Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
+            .45f to banner.background, .70f to banner.background.copy(alpha = 0f)
+        )))
     }
 }
 

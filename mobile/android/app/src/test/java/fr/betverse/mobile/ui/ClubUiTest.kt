@@ -109,6 +109,28 @@ class ClubUiTest {
         assertNull(ClubBadgeArtwork.image(assets, "Club sans badge"))
     }
 
+    @Test fun allCompetitionsSortByKickoffAcrossLeagues() {
+        val first = fixture.copy(id = "early", home = "Napoli", away = "Lazio", competition = "Serie A")
+        val second = fixture.copy(id = "middle", home = "Valencia", away = "Real Betis",
+            competition = "La Liga", start = first.start.plusSeconds(3600))
+        val third = fixture.copy(id = "late", home = "Monza", away = "Atalanta BC",
+            competition = "Serie A", start = second.start.plusSeconds(3600))
+        var current by mutableStateOf(state().copy(fixtures = listOf(third, first, second)))
+        compose.setContent {
+            ClubTheme(ThemePreference.DARK) {
+                MatchesScreen(current, {}, { current = current.copy(competition = it) }, { _, _ -> })
+            }
+        }
+
+        fun top(team: String) = compose.onNodeWithText(team).getUnclippedBoundsInRoot().top
+        assertTrue(top("Napoli") < top("Valencia"))
+        assertTrue(top("Valencia") < top("Monza"))
+
+        compose.onNode(hasText("La Liga") and hasClickAction()).performClick().assertIsSelected()
+        compose.onNodeWithText("Valencia").assertExists()
+        compose.onNodeWithText("Napoli").assertDoesNotExist()
+    }
+
     private fun renderForVisualReview(theme: ThemePreference, name: String) {
         val preview = state().copy(fixtures = listOf(
             fixture.copy(away = "Marseille", competition = "Ligue 1"),
